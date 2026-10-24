@@ -106,6 +106,12 @@ billiard table, has nothing to install software on. For those, use the **"Add Co
   text until then).
 - **Theme**: Settings > General > "Theme" (Light/Dark) - should apply immediately on Save, no
   restart needed, including the main table's row colors and grid lines.
+- **Auto-shutdown**: Settings > General > "Shut down idle locked PCs after" (minutes, 0 =
+  disabled; default 1 on a fresh install). Lock a PC (end its session, or just leave a configured
+  PC unstarted) and wait - it should shut itself down on its own once the timer elapses. It must
+  **not** shut down while "Limit reached" (waiting for payment) or mid-session. If you're
+  upgrading an existing installation rather than starting fresh, this is **disabled (0)** by
+  default on your existing settings row - set it explicitly in Settings if you want it.
 - **Bulk start**: select several PCs (or billiards) that share one tariff (Ctrl/Shift-click or
   drag), click Start (or right-click > Free) - one dialog should start identical sessions on all
   of them. Try mixing PCs with different tariffs selected together - it should refuse with a clear
