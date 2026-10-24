@@ -206,6 +206,9 @@ namespace ClubControl.Server.Data.Migrations
                     b.Property<Guid>("ServerId")
                         .HasColumnType("TEXT");
 
+                    b.Property<int>("UiTheme")
+                        .HasColumnType("INTEGER");
+
                     b.Property<int>("WarningMinutes1")
                         .HasColumnType("INTEGER");
 
