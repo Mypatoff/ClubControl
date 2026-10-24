@@ -185,6 +185,9 @@ namespace ClubControl.Server.Data.Migrations
                     b.Property<int>("AfterSessionAction")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int>("AutoShutdownAfterMinutes")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("ClubName")
                         .IsRequired()
                         .HasColumnType("TEXT");
