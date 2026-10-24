@@ -104,6 +104,18 @@ billiard table, has nothing to install software on. For those, use the **"Add Co
   language" (Uzbek/Russian/English). The lock screen/timer on the client update immediately; the
   admin panel asks you to restart ClubControl to fully switch (already-open windows keep their
   text until then).
+- **Theme**: Settings > General > "Theme" (Light/Dark) - should apply immediately on Save, no
+  restart needed, including the main table's row colors and grid lines.
+- **Bulk start**: select several PCs (or billiards) that share one tariff (Ctrl/Shift-click or
+  drag), click Start (or right-click > Free) - one dialog should start identical sessions on all
+  of them. Try mixing PCs with different tariffs selected together - it should refuse with a clear
+  message instead of guessing. Try it with one of the selected PCs already mid-session - it should
+  start the rest and tell you which one it skipped.
+- **Right-click menu**: right-click an actual row for the action menu; right-click empty space
+  below the last row, or the column headers, and confirm nothing pops up.
+- **Amount column**: start a prepay session and watch the Amount column over time - it should read
+  "consumed / total UZS" and the consumed side should grow as time passes. Start a postpay session
+  and confirm it reads "current cost / tariff max UZS".
 - **Firewall rule on first run**: on a fresh admin laptop (rules not yet added), run
   `ClubControl.Server.exe` as Administrator once, or run `install-server.ps1` - check
   `netsh advfirewall firewall show rule name="ClubControl Server (TCP 5050)"` reports the rule.

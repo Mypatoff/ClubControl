@@ -23,6 +23,7 @@ public class PcRow
     public required bool IsManual { get; init; }
     public required ResourceKind Kind { get; init; }
     public required int? Number { get; init; }
+    public required int? TariffId { get; init; }
     public required PcState State { get; init; }
 
     public required string KindIcon { get; init; }

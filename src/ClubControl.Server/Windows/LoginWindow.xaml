@@ -13,7 +13,7 @@
         <TextBlock x:Name="ConfirmLabel" Margin="0,0,0,4" />
         <PasswordBox x:Name="ConfirmPasswordBox" Margin="0,0,0,8" />
 
-        <TextBlock x:Name="ErrorText" Foreground="Red" TextWrapping="Wrap" Margin="0,0,0,8" />
+        <TextBlock x:Name="ErrorText" Foreground="{StaticResource ErrorBrush}" TextWrapping="Wrap" Margin="0,0,0,8" />
 
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
             <Button x:Name="CancelButton" Width="80" Margin="0,0,8,0" Style="{StaticResource SecondaryButtonStyle}" Click="OnCancel" />

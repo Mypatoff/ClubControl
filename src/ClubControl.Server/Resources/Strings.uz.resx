@@ -112,11 +112,26 @@
   <data name="SelectExactlyOnePc" xml:space="preserve">
     <value>Faqat bitta kompyuterni tanlang.</value>
   </data>
-  <data name="AssignNumberAndClassFirst" xml:space="preserve">
-    <value>Avval shu kompyuterga raqam va tarif belgilang (Sozlamalar &gt; Kompyuterlar va billiard).</value>
+  <data name="SelectAtLeastOnePc" xml:space="preserve">
+    <value>Kamida bitta kompyuter yoki billiardni tanlang.</value>
   </data>
-  <data name="PcAlreadyHasSession" xml:space="preserve">
-    <value>Bu kompyuterda allaqachon faol sessiya bor.</value>
+  <data name="SelectedNotReadyToStart" xml:space="preserve">
+    <value>Tanlangan elementlardan biri yoki bir nechtasi boshlashga tayyor emas (sozlanmagan yoki allaqachon sessiyasi bor).</value>
+  </data>
+  <data name="SelectedMustShareTariff" xml:space="preserve">
+    <value>Tanlangan barcha elementlar bitta tarifdan foydalanishi kerak.</value>
+  </data>
+  <data name="SomeFailedTitle" xml:space="preserve">
+    <value>Ba'zilari muvaffaqiyatsiz tugadi</value>
+  </data>
+  <data name="KindComputerPlural" xml:space="preserve">
+    <value>Kompyuterlar</value>
+  </data>
+  <data name="KindBilliardPlural" xml:space="preserve">
+    <value>Billiardlar</value>
+  </data>
+  <data name="MultiTargetFormat" xml:space="preserve">
+    <value>{0}: {1} ({2})</value>
   </data>
   <data name="ExtendOnlyActivePrepay" xml:space="preserve">
     <value>Uzaytirish faqat faol oldindan toʻlov sessiyasi uchun ishlaydi.</value>
@@ -165,6 +180,15 @@
   </data>
   <data name="LabelAdminPanelLanguage" xml:space="preserve">
     <value>Boshqaruv paneli tili</value>
+  </data>
+  <data name="LabelUiTheme" xml:space="preserve">
+    <value>Mavzu</value>
+  </data>
+  <data name="ThemeLight" xml:space="preserve">
+    <value>Yorugʻ</value>
+  </data>
+  <data name="ThemeDark" xml:space="preserve">
+    <value>Qorongʻu</value>
   </data>
   <data name="LabelWarningMinutes" xml:space="preserve">
     <value>Ogohlantirish daqiqalari (birinchi, ikkinchi)</value>
@@ -277,11 +301,14 @@
   <data name="Postpay" xml:space="preserve">
     <value>Keyin toʻlov (vaqt ortib boradi, oxirida toʻlanadi)</value>
   </data>
-  <data name="FreeSession" xml:space="preserve">
-    <value>Bepul (toʻlovsiz)</value>
-  </data>
   <data name="ButtonStart" xml:space="preserve">
     <value>Boshlash</value>
+  </data>
+  <data name="FreeSessionTitle" xml:space="preserve">
+    <value>Bepul</value>
+  </data>
+  <data name="LabelNote" xml:space="preserve">
+    <value>Izoh (ixtiyoriy)</value>
   </data>
   <data name="ExtendSessionTitle" xml:space="preserve">
     <value>Sessiyani uzaytirish</value>

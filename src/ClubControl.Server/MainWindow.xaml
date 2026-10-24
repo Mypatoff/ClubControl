@@ -47,6 +47,7 @@
                 <DataGrid.ContextMenu>
                     <ContextMenu>
                         <MenuItem x:Name="CtxStart" Click="OnStart" />
+                        <MenuItem x:Name="CtxFree" Click="OnFree" />
                         <MenuItem x:Name="CtxExtend" Click="OnExtend" />
                         <MenuItem x:Name="CtxStop" Click="OnStop" />
                         <MenuItem x:Name="CtxMove" Click="OnMove" />

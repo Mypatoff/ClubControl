@@ -38,6 +38,7 @@ public partial class MainWindow : Window
     private void ApplyLocalization()
     {
         StartButton.Content = CtxStart.Header = Strings.Get("ToolbarStart");
+        CtxFree.Header = Strings.Get("FreeSessionTitle");
         ExtendButton.Content = CtxExtend.Header = Strings.Get("ToolbarExtend");
         StopButton.Content = CtxStop.Header = Strings.Get("ToolbarStop");
         MoveButton.Content = CtxMove.Header = Strings.Get("ToolbarMove");
@@ -123,7 +124,9 @@ public partial class MainWindow : Window
         if (snap is not null)
         {
             sessionType = Strings.SessionTypeName(snap.Type, snap.IsFree);
-            amount = $"{snap.AmountOrCostUzs:N0} UZS";
+            amount = snap.CapUzs > 0
+                ? $"{snap.ConsumedUzs:N0} / {snap.CapUzs:N0} UZS"
+                : $"{snap.AmountOrCostUzs:N0} UZS";
             start = snap.StartUtc.ToLocalTime().ToString("HH:mm:ss");
 
             if (snap.PlannedEndUtc.HasValue)
@@ -142,6 +145,7 @@ public partial class MainWindow : Window
             IsManual = pc.IsManual,
             Kind = pc.Kind,
             Number = pc.Number,
+            TariffId = pc.TariffId,
             State = pc.State,
             KindIcon = pc.Kind == ResourceKind.Billiard ? "🎱" : "🖥",
             TariffDisplay = pc.TariffId.HasValue ? tariffNames.GetValueOrDefault(pc.TariffId.Value, "") : "",
@@ -201,27 +205,57 @@ public partial class MainWindow : Window
         return null;
     }
 
+    /// <summary>
+    /// Validates the current selection for Start/Free (SPEC extension: bulk-start several PCs or
+    /// billiards at once, as long as they all share one tariff - that's what makes "apply the same
+    /// prepay/postpay/free parameters to each" unambiguous). Shows the relevant error and returns
+    /// null if the selection isn't usable.
+    /// </summary>
+    private List<PcRow>? GetReadySelectionForStart()
+    {
+        var selected = PcGrid.SelectedItems.Cast<PcRow>().ToList();
+        if (selected.Count == 0)
+        {
+            MessageBox.Show(Strings.Get("SelectAtLeastOnePc"), Strings.Get("ConfirmTitle"),
+                MessageBoxButton.OK, MessageBoxImage.Information);
+            return null;
+        }
+
+        if (selected.Any(p => !p.Number.HasValue || !p.TariffId.HasValue || p.HasActiveSession))
+        {
+            MessageBox.Show(Strings.Get("SelectedNotReadyToStart"), Strings.Get("ConfirmTitle"),
+                MessageBoxButton.OK, MessageBoxImage.Information);
+            return null;
+        }
+
+        if (selected.Select(p => p.TariffId!.Value).Distinct().Count() > 1)
+        {
+            MessageBox.Show(Strings.Get("SelectedMustShareTariff"), Strings.Get("ConfirmTitle"),
+                MessageBoxButton.OK, MessageBoxImage.Information);
+            return null;
+        }
+
+        return selected;
+    }
+
     private async void OnStart(object sender, RoutedEventArgs e)
     {
-        var pc = GetSingleSelectedPc();
-        if (pc is null)
+        var targets = GetReadySelectionForStart();
+        if (targets is null)
             return;
 
-        if (!pc.Number.HasValue || string.IsNullOrEmpty(pc.TariffDisplay))
-        {
-            MessageBox.Show(Strings.Get("AssignNumberAndClassFirst"), Strings.Get("ConfirmTitle"),
-                MessageBoxButton.OK, MessageBoxImage.Information);
-            return;
-        }
+        var window = new StartSessionWindow(Services, targets) { Owner = this };
+        if (window.ShowDialog() == true)
+            await RefreshAsync();
+    }
 
-        if (pc.HasActiveSession)
-        {
-            MessageBox.Show(Strings.Get("PcAlreadyHasSession"), Strings.Get("ConfirmTitle"),
-                MessageBoxButton.OK, MessageBoxImage.Information);
+    private async void OnFree(object sender, RoutedEventArgs e)
+    {
+        var targets = GetReadySelectionForStart();
+        if (targets is null)
             return;
-        }
 
-        var window = new StartSessionWindow(Services, pc) { Owner = this };
+        var window = new FreeSessionWindow(Services, targets) { Owner = this };
         if (window.ShowDialog() == true)
             await RefreshAsync();
     }

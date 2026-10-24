@@ -112,11 +112,26 @@
   <data name="SelectExactlyOnePc" xml:space="preserve">
     <value>Выберите ровно один ПК.</value>
   </data>
-  <data name="AssignNumberAndClassFirst" xml:space="preserve">
-    <value>Сначала назначьте номер и тариф этому ПК (Настройки &gt; Компьютеры и бильярд).</value>
+  <data name="SelectAtLeastOnePc" xml:space="preserve">
+    <value>Выберите хотя бы один ПК или бильярд.</value>
   </data>
-  <data name="PcAlreadyHasSession" xml:space="preserve">
-    <value>У этого ПК уже есть активная сессия.</value>
+  <data name="SelectedNotReadyToStart" xml:space="preserve">
+    <value>Один или несколько выбранных элементов не готовы к запуску (не настроены или уже имеют сессию).</value>
+  </data>
+  <data name="SelectedMustShareTariff" xml:space="preserve">
+    <value>Все выбранные элементы должны использовать один и тот же тариф.</value>
+  </data>
+  <data name="SomeFailedTitle" xml:space="preserve">
+    <value>Некоторые не удались</value>
+  </data>
+  <data name="KindComputerPlural" xml:space="preserve">
+    <value>ПК</value>
+  </data>
+  <data name="KindBilliardPlural" xml:space="preserve">
+    <value>Бильярды</value>
+  </data>
+  <data name="MultiTargetFormat" xml:space="preserve">
+    <value>{0}: {1} ({2})</value>
   </data>
   <data name="ExtendOnlyActivePrepay" xml:space="preserve">
     <value>Продление работает только для активной сессии предоплаты.</value>
@@ -165,6 +180,15 @@
   </data>
   <data name="LabelAdminPanelLanguage" xml:space="preserve">
     <value>Язык панели администратора</value>
+  </data>
+  <data name="LabelUiTheme" xml:space="preserve">
+    <value>Тема</value>
+  </data>
+  <data name="ThemeLight" xml:space="preserve">
+    <value>Светлая</value>
+  </data>
+  <data name="ThemeDark" xml:space="preserve">
+    <value>Тёмная</value>
   </data>
   <data name="LabelWarningMinutes" xml:space="preserve">
     <value>Минуты предупреждения (первое, второе)</value>
@@ -277,11 +301,14 @@
   <data name="Postpay" xml:space="preserve">
     <value>Постоплата (счёт идёт вверх, оплата в конце)</value>
   </data>
-  <data name="FreeSession" xml:space="preserve">
-    <value>Бесплатно (без оплаты)</value>
-  </data>
   <data name="ButtonStart" xml:space="preserve">
     <value>Старт</value>
+  </data>
+  <data name="FreeSessionTitle" xml:space="preserve">
+    <value>Бесплатно</value>
+  </data>
+  <data name="LabelNote" xml:space="preserve">
+    <value>Заметка (необязательно)</value>
   </data>
   <data name="ExtendSessionTitle" xml:space="preserve">
     <value>Продлить сессию</value>

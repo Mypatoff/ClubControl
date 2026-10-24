@@ -354,8 +354,14 @@ public class SessionService
 
     // ---- read-only queries for the admin panel (Phase 4) ----
 
-    /// <summary>One row's worth of session info for the main table: amount is "paid" for prepay, "current cost" otherwise.</summary>
-    public record ActiveSessionSnapshot(int SessionId, SessionType Type, DateTime StartUtc, DateTime? PlannedEndUtc, int AmountOrCostUzs, int RemainingSeconds, bool IsFree);
+    /// <summary>
+    /// One row's worth of session info for the main table: amount is "paid" for prepay, "current
+    /// cost" otherwise. ConsumedUzs/CapUzs let the UI show progress toward a ceiling (money spent
+    /// so far vs. the prepaid total, or current postpay cost vs. the tariff max) - CapUzs is 0 for
+    /// free sessions, which have no such ceiling to show.
+    /// </summary>
+    public record ActiveSessionSnapshot(int SessionId, SessionType Type, DateTime StartUtc, DateTime? PlannedEndUtc,
+        int AmountOrCostUzs, int RemainingSeconds, bool IsFree, int ConsumedUzs, int CapUzs);
 
     public async Task<Dictionary<int, ActiveSessionSnapshot>> GetActiveSessionSnapshotsAsync()
     {
@@ -388,7 +394,34 @@ public class SessionService
     {
         var info = await BuildSessionInfoAsync(pc, session);
         var amountOrCost = session.Type == SessionType.Prepay ? session.AmountUzs : info.CurrentCostUzs;
-        return new ActiveSessionSnapshot(session.Id, session.Type, session.StartUtc, session.PlannedEndUtc, amountOrCost, info.RemainingSeconds, session.IsFree);
+
+        int consumedUzs;
+        int capUzs;
+
+        if (session.Type == SessionType.Prepay && session.PlannedEndUtc.HasValue)
+        {
+            // Pure progress indicator (not a billing calculation) - how much of the prepaid time/
+            // money has elapsed so far, proportional to the planned total.
+            var totalPlannedSeconds = (session.PlannedEndUtc.Value - session.StartUtc).TotalSeconds;
+            var elapsedSeconds = totalPlannedSeconds - info.RemainingSeconds;
+            var fraction = totalPlannedSeconds > 0 ? Math.Clamp(elapsedSeconds / totalPlannedSeconds, 0, 1) : 0;
+            capUzs = session.AmountUzs;
+            consumedUzs = (int)Math.Round(capUzs * fraction);
+        }
+        else if (session.Type == SessionType.Postpay)
+        {
+            var tariff = await GetTariffAsync(pc.TariffId!.Value);
+            capUzs = tariff.MaxPaymentUzs;
+            consumedUzs = info.CurrentCostUzs;
+        }
+        else
+        {
+            capUzs = 0;
+            consumedUzs = 0;
+        }
+
+        return new ActiveSessionSnapshot(session.Id, session.Type, session.StartUtc, session.PlannedEndUtc,
+            amountOrCost, info.RemainingSeconds, session.IsFree, consumedUzs, capUzs);
     }
 
     /// <summary>Pushes the current General settings to every online, configured PC (SPEC section 8).</summary>

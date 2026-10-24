@@ -112,11 +112,26 @@
   <data name="SelectExactlyOnePc" xml:space="preserve">
     <value>Select exactly one PC.</value>
   </data>
-  <data name="AssignNumberAndClassFirst" xml:space="preserve">
-    <value>Assign a number and tariff to this PC first (Settings &gt; Computers &amp; Billiards).</value>
+  <data name="SelectAtLeastOnePc" xml:space="preserve">
+    <value>Select at least one PC or billiard.</value>
   </data>
-  <data name="PcAlreadyHasSession" xml:space="preserve">
-    <value>That PC already has an active session.</value>
+  <data name="SelectedNotReadyToStart" xml:space="preserve">
+    <value>One or more selected items are not ready to start (not configured yet, or already have a session).</value>
+  </data>
+  <data name="SelectedMustShareTariff" xml:space="preserve">
+    <value>Selected items must all use the same tariff.</value>
+  </data>
+  <data name="SomeFailedTitle" xml:space="preserve">
+    <value>Some failed</value>
+  </data>
+  <data name="KindComputerPlural" xml:space="preserve">
+    <value>PCs</value>
+  </data>
+  <data name="KindBilliardPlural" xml:space="preserve">
+    <value>Billiards</value>
+  </data>
+  <data name="MultiTargetFormat" xml:space="preserve">
+    <value>{0}: {1} ({2})</value>
   </data>
   <data name="ExtendOnlyActivePrepay" xml:space="preserve">
     <value>Extend only works on an active prepay session.</value>
@@ -165,6 +180,15 @@
   </data>
   <data name="LabelAdminPanelLanguage" xml:space="preserve">
     <value>Admin panel language</value>
+  </data>
+  <data name="LabelUiTheme" xml:space="preserve">
+    <value>Theme</value>
+  </data>
+  <data name="ThemeLight" xml:space="preserve">
+    <value>Light</value>
+  </data>
+  <data name="ThemeDark" xml:space="preserve">
+    <value>Dark</value>
   </data>
   <data name="LabelWarningMinutes" xml:space="preserve">
     <value>Warning minutes (first, second)</value>
@@ -277,11 +301,14 @@
   <data name="Postpay" xml:space="preserve">
     <value>Postpay (counts up, pay at the end)</value>
   </data>
-  <data name="FreeSession" xml:space="preserve">
-    <value>Free (no charge)</value>
-  </data>
   <data name="ButtonStart" xml:space="preserve">
     <value>Start</value>
+  </data>
+  <data name="FreeSessionTitle" xml:space="preserve">
+    <value>Free</value>
+  </data>
+  <data name="LabelNote" xml:space="preserve">
+    <value>Note (optional)</value>
   </data>
   <data name="ExtendSessionTitle" xml:space="preserve">
     <value>Extend session</value>
