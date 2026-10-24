@@ -37,20 +37,28 @@ public partial class MainWindow : Window
 
     private void ApplyLocalization()
     {
-        StartButton.Content = CtxStart.Header = Strings.Get("ToolbarStart");
+        StartButton.Content = "▶ " + Strings.Get("ToolbarStart");
         StartButton.ToolTip = Strings.Get("TooltipStart");
+        StopButton.Content = "⏹ " + Strings.Get("ToolbarStop");
         StopButton.ToolTip = Strings.Get("TooltipStop");
-        CtxFree.Header = Strings.Get("FreeSessionTitle");
-        ExtendButton.Content = CtxExtend.Header = Strings.Get("ToolbarExtend");
-        StopButton.Content = CtxStop.Header = Strings.Get("ToolbarStop");
-        MoveButton.Content = CtxMove.Header = Strings.Get("ToolbarMove");
-        TurnOnButton.Content = CtxTurnOn.Header = Strings.Get("ToolbarTurnOn");
-        RestartButton.Content = CtxRestart.Header = Strings.Get("ToolbarRestart");
-        ShutDownButton.Content = CtxShutDown.Header = Strings.Get("ToolbarShutDown");
+        MoveButton.Content = "↔ " + Strings.Get("ToolbarMove");
+        ExtendButton.Content = "⏱ " + Strings.Get("ToolbarExtend");
+        TurnOnButton.Content = "⚡ " + Strings.Get("ToolbarTurnOn");
+        RestartButton.Content = "🔁 " + Strings.Get("ToolbarRestart");
+        ShutDownButton.Content = "⏻ " + Strings.Get("ToolbarShutDown");
         AddComputerButton.Content = "🖥 " + Strings.Get("AddComputerTitle");
         AddBilliardButton.Content = "🎱 " + Strings.Get("AddBilliardTitle");
-        SettingsButton.Content = Strings.Get("ToolbarSettings");
-        ReportsButton.Content = Strings.Get("ToolbarReports");
+        SettingsButton.Content = "⚙ " + Strings.Get("ToolbarSettings");
+        ReportsButton.Content = "📊 " + Strings.Get("ToolbarReports");
+
+        CtxStart.Header = Strings.Get("ToolbarStart");
+        CtxFree.Header = Strings.Get("FreeSessionTitle");
+        CtxStop.Header = Strings.Get("ToolbarStop");
+        CtxMove.Header = Strings.Get("ToolbarMove");
+        CtxExtend.Header = Strings.Get("ToolbarExtend");
+        CtxTurnOn.Header = Strings.Get("ToolbarTurnOn");
+        CtxRestart.Header = Strings.Get("ToolbarRestart");
+        CtxShutDown.Header = Strings.Get("ToolbarShutDown");
 
         EventLogHeaderText.Text = Strings.Get("EventLogHeader");
 
