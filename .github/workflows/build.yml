@@ -5,6 +5,9 @@ on:
     branches: [main]
   workflow_dispatch: {}
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: windows-latest
@@ -46,3 +49,22 @@ jobs:
         with:
           name: ClubControl-Client
           path: publish/client
+
+      - name: Zip builds for the release
+        run: |
+          Compress-Archive -Path publish/server/* -DestinationPath ClubControl-Server-win-x64.zip
+          Compress-Archive -Path publish/client/* -DestinationPath ClubControl-Client-win-x64.zip
+
+      # Keeps one rolling "latest" release with the newest .exe builds attached, so there is
+      # always a stable download link in the repo instead of having to dig through Actions runs.
+      - name: Publish "latest" release
+        if: github.event_name == 'push'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest
+          name: Latest build
+          body: Automatically built from the latest commit on main (${{ github.sha }}). Not a stability guarantee - just the newest build.
+          prerelease: true
+          files: |
+            ClubControl-Server-win-x64.zip
+            ClubControl-Client-win-x64.zip
