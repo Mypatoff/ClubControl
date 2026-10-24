@@ -6,10 +6,10 @@
     <SolidColorBrush x:Key="AccentHoverBrush" Color="#2558C4" />
     <SolidColorBrush x:Key="AccentPressedBrush" Color="#1E48A3" />
 
-    <SolidColorBrush x:Key="PageBackgroundBrush" Color="#F4F5F7" />
+    <SolidColorBrush x:Key="PageBackgroundBrush" Color="#E7E9ED" />
     <SolidColorBrush x:Key="SurfaceBrush" Color="#FFFFFF" />
-    <SolidColorBrush x:Key="HeaderBackgroundBrush" Color="#EEF1F5" />
-    <SolidColorBrush x:Key="DividerBrush" Color="#E1E4EA" />
+    <SolidColorBrush x:Key="HeaderBackgroundBrush" Color="#E3E6EB" />
+    <SolidColorBrush x:Key="DividerBrush" Color="#D4D8DF" />
 
     <SolidColorBrush x:Key="TextPrimaryBrush" Color="#1F2430" />
     <SolidColorBrush x:Key="TextSecondaryBrush" Color="#6B7280" />
@@ -182,8 +182,9 @@
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="RowBackground" Value="{StaticResource SurfaceBrush}" />
         <Setter Property="AlternatingRowBackground" Value="{StaticResource SurfaceBrush}" />
+        <Setter Property="GridLinesVisibility" Value="All" />
         <Setter Property="HorizontalGridLinesBrush" Value="{StaticResource DividerBrush}" />
-        <Setter Property="VerticalGridLinesBrush" Value="Transparent" />
+        <Setter Property="VerticalGridLinesBrush" Value="{StaticResource DividerBrush}" />
         <Setter Property="RowHeight" Value="32" />
         <Setter Property="CanUserResizeRows" Value="False" />
         <Setter Property="HeadersVisibility" Value="Column" />

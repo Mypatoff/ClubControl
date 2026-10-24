@@ -26,6 +26,9 @@
                     <TextBlock x:Name="AdminPanelLanguageLabel" Margin="0,0,0,2" />
                     <ComboBox x:Name="AdminPanelLanguageCombo" DisplayMemberPath="Display" Margin="0,0,0,10" />
 
+                    <TextBlock x:Name="UiThemeLabel" Margin="0,0,0,2" />
+                    <ComboBox x:Name="UiThemeCombo" DisplayMemberPath="Display" Margin="0,0,0,10" />
+
                     <TextBlock x:Name="WarningMinutesLabel" Margin="0,0,0,2" />
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
                         <TextBox x:Name="WarningMinutes1Box" Width="60" />

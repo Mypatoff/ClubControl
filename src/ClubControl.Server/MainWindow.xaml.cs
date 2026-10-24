@@ -62,11 +62,28 @@ public partial class MainWindow : Window
         RemainingColumn.Header = Strings.Get("ColumnRemaining");
     }
 
-    // The window only ever hides - the tray's "Exit" (password-protected) is the only way to really quit (SPEC 1).
+    private bool _allowClose;
+
+    // The window only ever hides - the tray's "Exit" (password-protected) is the only way to really
+    // quit (SPEC 1) - except when the App is recreating this window for a live theme switch, which
+    // calls CloseForReal instead of Close.
     protected override void OnClosing(CancelEventArgs e)
     {
+        if (_allowClose)
+        {
+            _refreshTimer.Stop();
+            return;
+        }
+
         e.Cancel = true;
         Hide();
+    }
+
+    /// <summary>Used only when the App is replacing this window outright (e.g. a theme switch); never by the user.</summary>
+    public void CloseForReal()
+    {
+        _allowClose = true;
+        Close();
     }
 
     private async Task RefreshAsync()
@@ -140,13 +157,18 @@ public partial class MainWindow : Window
     private static string FormatEvent(EventLogEntry e) =>
         $"{e.TimestampUtc.ToLocalTime():HH:mm:ss} [{e.Type}] {e.Message}";
 
-    // ---- right-click: select the row under the cursor unless it is already part of a multi-selection ----
+    // ---- right-click: select the row under the cursor unless it is already part of a multi-selection.
+    // Right-clicking anywhere that isn't a row (empty space, the header) suppresses the context
+    // menu entirely instead of opening it with nothing valid to act on. ----
 
     private void PcGrid_PreviewMouseRightButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
     {
         var row = FindAncestor<DataGridRow>((DependencyObject)e.OriginalSource);
         if (row?.Item is not PcRow pcRow)
+        {
+            e.Handled = true;
             return;
+        }
 
         if (!PcGrid.SelectedItems.Contains(pcRow))
         {
@@ -345,7 +367,14 @@ public partial class MainWindow : Window
     private async void OnSettings(object sender, RoutedEventArgs e)
     {
         var window = new SettingsWindow(Services) { Owner = this };
-        if (window.ShowDialog() == true)
+        var saved = window.ShowDialog() == true;
+
+        // The dialog is fully closed by this point, so it is safe to replace this window outright
+        // (see SettingsWindow.NewThemeIfChanged - doing this while the dialog was still open would
+        // risk WPF closing it as a side effect of closing its owner).
+        if (window.NewThemeIfChanged is { } newTheme)
+            ((App)Application.Current).ApplyThemeAndRefreshWindows(newTheme);
+        else if (saved)
             await RefreshAsync();
     }
 

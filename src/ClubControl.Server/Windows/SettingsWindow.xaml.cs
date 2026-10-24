@@ -24,6 +24,15 @@ public partial class SettingsWindow : Window
     private ObservableCollection<Tariff> _tariffs = null!;
     private List<Pc> _pcs = null!;
     private AdminPanelLanguage _openedWithLanguage;
+    private UiTheme _openedWithTheme;
+
+    /// <summary>
+    /// Set after a successful Save if the theme actually changed, so the caller (MainWindow, once
+    /// this dialog has fully closed) can safely swap the theme and recreate itself - doing that
+    /// from inside this dialog would risk WPF closing this owned window as a side effect of
+    /// closing its MainWindow owner mid-save.
+    /// </summary>
+    public UiTheme? NewThemeIfChanged { get; private set; }
 
     private record ComboOption<T>(string Display, T Value);
 
@@ -59,6 +68,7 @@ public partial class SettingsWindow : Window
         LockScreenTextLabel.Text = Strings.Get("LabelLockScreenText");
         LockScreenLanguageLabel.Text = Strings.Get("LabelLockScreenLanguage");
         AdminPanelLanguageLabel.Text = Strings.Get("LabelAdminPanelLanguage");
+        UiThemeLabel.Text = Strings.Get("LabelUiTheme");
         WarningMinutesLabel.Text = Strings.Get("LabelWarningMinutes");
         AfterSessionActionLabel.Text = Strings.Get("LabelAfterSessionAction");
         ProcessListLabel.Text = Strings.Get("LabelProcessList");
@@ -104,6 +114,15 @@ public partial class SettingsWindow : Window
         AdminPanelLanguageCombo.SelectedItem = ((List<ComboOption<AdminPanelLanguage>>)AdminPanelLanguageCombo.ItemsSource)
             .First(o => o.Value == _setting.AdminPanelLanguage);
 
+        _openedWithTheme = _setting.UiTheme;
+        UiThemeCombo.ItemsSource = new[]
+        {
+            new ComboOption<UiTheme>(Strings.Get("ThemeLight"), UiTheme.Light),
+            new ComboOption<UiTheme>(Strings.Get("ThemeDark"), UiTheme.Dark),
+        };
+        UiThemeCombo.SelectedItem = ((ComboOption<UiTheme>[])UiThemeCombo.ItemsSource)
+            .First(o => o.Value == _setting.UiTheme);
+
         WarningMinutes1Box.Text = _setting.WarningMinutes1.ToString();
         WarningMinutes2Box.Text = _setting.WarningMinutes2.ToString();
 
@@ -148,6 +167,7 @@ public partial class SettingsWindow : Window
         _setting.LockScreenText = LockScreenTextBox.Text;
         _setting.LockScreenLanguage = ((ComboOption<LockScreenLanguage>)LockScreenLanguageCombo.SelectedItem!).Value;
         _setting.AdminPanelLanguage = ((ComboOption<AdminPanelLanguage>)AdminPanelLanguageCombo.SelectedItem!).Value;
+        _setting.UiTheme = ((ComboOption<UiTheme>)UiThemeCombo.SelectedItem!).Value;
         _setting.WarningMinutes1 = ParseInt(WarningMinutes1Box.Text, _setting.WarningMinutes1);
         _setting.WarningMinutes2 = ParseInt(WarningMinutes2Box.Text, _setting.WarningMinutes2);
         _setting.AfterSessionAction = ((ComboOption<AfterSessionAction>)AfterSessionActionCombo.SelectedItem!).Value;
@@ -168,6 +188,9 @@ public partial class SettingsWindow : Window
             MessageBox.Show(Strings.Get("LanguageChangedNotice"), Strings.Get("ConfirmTitle"),
                 MessageBoxButton.OK, MessageBoxImage.Information);
         }
+
+        if (_setting.UiTheme != _openedWithTheme)
+            NewThemeIfChanged = _setting.UiTheme;
 
         DialogResult = true;
     }

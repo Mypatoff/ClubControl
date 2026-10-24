@@ -14,6 +14,7 @@ public class Setting
     public string LockScreenText { get; set; } = "";
     public LockScreenLanguage LockScreenLanguage { get; set; } = LockScreenLanguage.English;
     public AdminPanelLanguage AdminPanelLanguage { get; set; } = AdminPanelLanguage.Russian;
+    public UiTheme UiTheme { get; set; } = UiTheme.Light;
 
     public int WarningMinutes1 { get; set; } = 5;
     public int WarningMinutes2 { get; set; } = 1;

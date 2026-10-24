@@ -3,6 +3,7 @@ using System.IO;
 using System.Threading.Tasks;
 using System.Windows;
 using ClubControl.Server.Data;
+using ClubControl.Server.Data.Models;
 using ClubControl.Server.Hubs;
 using ClubControl.Server.Native;
 using ClubControl.Server.Resources;
@@ -26,6 +27,10 @@ public partial class App : Application
 
     public App()
     {
+        // Safe default before Settings has even been read; OnStartup corrects this to the saved
+        // preference once the database is available.
+        ThemeManager.Apply(UiTheme.Light);
+
         // Without this, an unhandled exception on any thread just silently kills the process -
         // no dialog, nothing in the event log the admin can see. Show what happened instead.
         AppDomain.CurrentDomain.UnhandledException += (_, args) => ShowFatalError(args.ExceptionObject as Exception);
@@ -79,6 +84,7 @@ public partial class App : Application
             await TariffsHelper.EnsureDefaultsAsync(db);
 
             Strings.Apply(setting.AdminPanelLanguage);
+            ThemeManager.Apply(setting.UiTheme);
 
             // The server just (re)started, so no client is actually connected yet regardless of
             // what the database says from before the restart.
@@ -158,6 +164,25 @@ public partial class App : Application
             ContextMenuStrip = menu
         };
         _trayIcon.DoubleClick += (_, _) => ShowMainWindow();
+    }
+
+    /// <summary>
+    /// Live theme switch (Settings > General): swaps the resource dictionary and recreates
+    /// MainWindow, since its card borders/backgrounds are set directly in markup (not via an
+    /// implicit style) and would not otherwise pick up the new colours without a restart.
+    /// </summary>
+    public void ApplyThemeAndRefreshWindows(UiTheme theme)
+    {
+        ThemeManager.Apply(theme);
+
+        var old = MainWindow as MainWindow;
+        var wasVisible = old?.IsVisible ?? true;
+
+        MainWindow = new MainWindow();
+        if (wasVisible)
+            MainWindow.Show();
+
+        old?.CloseForReal();
     }
 
     private void ShowMainWindow()
