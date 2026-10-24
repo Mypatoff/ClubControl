@@ -4,7 +4,7 @@
         WindowStyle="None" ResizeMode="NoResize" ShowInTaskbar="False"
         Topmost="True" AllowsTransparency="True" Background="Transparent"
         Width="220" Height="100" WindowStartupLocation="Manual">
-    <Border Background="#E6141414" CornerRadius="10">
+    <Border Background="#E6141414" BorderBrush="#4D2F6FED" BorderThickness="1" CornerRadius="10">
         <Grid Margin="10" Background="Transparent" MouseLeftButtonDown="Grid_MouseLeftButtonDown">
             <StackPanel VerticalAlignment="Center">
                 <TextBlock x:Name="MainText" Foreground="White" FontSize="22" FontWeight="Bold"
