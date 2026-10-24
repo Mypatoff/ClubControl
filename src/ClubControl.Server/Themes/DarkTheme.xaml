@@ -20,6 +20,8 @@
 
     <SolidColorBrush x:Key="DisabledButtonBrush" Color="#2B2E35" />
     <SolidColorBrush x:Key="ErrorBrush" Color="#FF6B6B" />
+    <SolidColorBrush x:Key="SelectionHighlightBrush" Color="#664C8DFF" />
+    <SolidColorBrush x:Key="SelectionBorderBrush" Color="#4C8DFF" />
 
     <!-- Darker-tinted status colours so they stay harmonious on a dark page (SPEC 7 row colours) -->
     <SolidColorBrush x:Key="PrepayRowBrush" Color="#1F3A2A" />
@@ -206,6 +208,12 @@
 
     <Style TargetType="DataGridRow">
         <Setter Property="Background" Value="{StaticResource SurfaceBrush}" />
+        <Style.Triggers>
+            <Trigger Property="IsSelected" Value="True">
+                <Setter Property="BorderBrush" Value="{StaticResource SelectionBorderBrush}" />
+                <Setter Property="BorderThickness" Value="1.5" />
+            </Trigger>
+        </Style.Triggers>
     </Style>
 
     <Style TargetType="DataGridCell">
@@ -214,7 +222,7 @@
         <Setter Property="Background" Value="Transparent" />
         <Style.Triggers>
             <Trigger Property="IsSelected" Value="True">
-                <Setter Property="Background" Value="Transparent" />
+                <Setter Property="Background" Value="{StaticResource SelectionHighlightBrush}" />
                 <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
             </Trigger>
         </Style.Triggers>
