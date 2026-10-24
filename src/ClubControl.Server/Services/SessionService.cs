@@ -34,7 +34,7 @@ public class SessionService
     public async Task StartPrepayByMoneyAsync(Guid machineGuid, int moneyUzs)
     {
         var pc = await GetReadyPcAsync(machineGuid);
-        var tariff = await GetTariffAsync(pc.Class!.Value);
+        var tariff = await GetTariffAsync(pc.TariffId!.Value);
 
         if (!BillingCalculator.IsValidPrepayPayment(moneyUzs, tariff.MinPaymentUzs, tariff.MaxPaymentUzs))
             throw new InvalidOperationException($"Payment must be between {tariff.MinPaymentUzs} and {tariff.MaxPaymentUzs} UZS.");
@@ -46,7 +46,7 @@ public class SessionService
     public async Task StartPrepayByTimeAsync(Guid machineGuid, int minutes)
     {
         var pc = await GetReadyPcAsync(machineGuid);
-        var tariff = await GetTariffAsync(pc.Class!.Value);
+        var tariff = await GetTariffAsync(pc.TariffId!.Value);
 
         var price = BillingCalculator.PriceForMinutes(minutes, tariff.PricePerHourUzs);
         if (!BillingCalculator.IsValidPrepayPayment(price, tariff.MinPaymentUzs, tariff.MaxPaymentUzs))
@@ -121,7 +121,7 @@ public class SessionService
     public async Task StartPostpayAsync(Guid machineGuid)
     {
         var pc = await GetReadyPcAsync(machineGuid);
-        var tariff = await GetTariffAsync(pc.Class!.Value);
+        var tariff = await GetTariffAsync(pc.TariffId!.Value);
         var now = DateTime.UtcNow;
 
         var session = new Session { PcId = pc.Id, Type = SessionType.Postpay, StartUtc = now };
@@ -151,8 +151,8 @@ public class SessionService
         var pc = await GetReadyPcAsync(machineGuid);
         var now = DateTime.UtcNow;
 
-        // Free sessions still belong to a PC class for segment bookkeeping, but are never charged.
-        var pricePerHourUzs = (await GetTariffAsync(pc.Class!.Value)).PricePerHourUzs;
+        // Free sessions still belong to a tariff for segment bookkeeping, but are never charged.
+        var pricePerHourUzs = (await GetTariffAsync(pc.TariffId!.Value)).PricePerHourUzs;
 
         var session = new Session { PcId = pc.Id, Type = SessionType.Free, IsFree = true, StartUtc = now, AmountUzs = 0, Note = note };
         session.Segments.Add(new SessionSegment { PcId = pc.Id, PricePerHourUzs = pricePerHourUzs, StartUtc = now });
@@ -189,7 +189,7 @@ public class SessionService
 
         if (session.Type == SessionType.Postpay)
         {
-            var tariff = await GetTariffAsync(pc.Class!.Value);
+            var tariff = await GetTariffAsync(pc.TariffId!.Value);
             var elapsedPerSegment = session.Segments
                 .Select(seg => (ElapsedSeconds: (int)((seg.EndUtc ?? now) - seg.StartUtc).TotalSeconds, seg.PricePerHourUzs))
                 .ToList();
@@ -227,7 +227,7 @@ public class SessionService
         var oldSegment = session.Segments.First(s => s.EndUtc == null);
         oldSegment.EndUtc = now;
 
-        var toTariff = await GetTariffAsync(toPc.Class!.Value);
+        var toTariff = await GetTariffAsync(toPc.TariffId!.Value);
         session.Segments.Add(new SessionSegment { PcId = toPc.Id, PricePerHourUzs = toTariff.PricePerHourUzs, StartUtc = now });
         session.PcId = toPc.Id;
 
@@ -284,14 +284,14 @@ public class SessionService
         foreach (var session in sessions)
         {
             var pc = session.Pc;
-            if (pc is null || pc.State == PcState.LimitReached || !pc.Class.HasValue)
+            if (pc is null || pc.State == PcState.LimitReached || !pc.TariffId.HasValue)
                 continue;
 
             var openSegment = session.Segments.FirstOrDefault(s => s.EndUtc == null);
             if (openSegment is null)
                 continue;
 
-            var tariff = await GetTariffAsync(pc.Class.Value);
+            var tariff = await GetTariffAsync(pc.TariffId.Value);
             var elapsedPerSegment = session.Segments
                 .Select(seg => (ElapsedSeconds: (int)((seg.EndUtc ?? now) - seg.StartUtc).TotalSeconds, seg.PricePerHourUzs))
                 .ToList();
@@ -430,9 +430,9 @@ public class SessionService
         return pc;
     }
 
-    private async Task<Tariff> GetTariffAsync(PcClass pcClass) =>
-        await TariffsHelper.GetAsync(_db, pcClass)
-            ?? throw new InvalidOperationException($"No tariff configured for {pcClass}.");
+    private async Task<Tariff> GetTariffAsync(int tariffId) =>
+        await TariffsHelper.GetAsync(_db, tariffId)
+            ?? throw new InvalidOperationException("That tariff no longer exists.");
 
     private Task<Session?> GetActiveSessionAsync(int pcId) =>
         _db.Sessions.Include(s => s.Segments)
@@ -451,25 +451,20 @@ public class SessionService
             throw new InvalidOperationException("No active prepay session found.");
 
         var segment = session.Segments.First(s => s.EndUtc == null);
-        var tariff = await GetTariffAsync(pc.Class!.Value);
+        var tariff = await GetTariffAsync(pc.TariffId!.Value);
         return (pc, session, segment, tariff);
     }
 
     private async Task<LockInfo> BuildLockInfoAsync(Pc pc, bool limitReached)
     {
-        var price = 0;
-        if (pc.Class.HasValue)
-        {
-            var tariff = await TariffsHelper.GetAsync(_db, pc.Class.Value);
-            price = tariff?.PricePerHourUzs ?? 0;
-        }
+        Tariff? tariff = pc.TariffId.HasValue ? await TariffsHelper.GetAsync(_db, pc.TariffId.Value) : null;
 
         return new LockInfo
         {
             LimitReached = limitReached,
             PcNumber = pc.Number,
-            Class = pc.Class,
-            PricePerHourUzs = price
+            TariffName = tariff?.Name,
+            PricePerHourUzs = tariff?.PricePerHourUzs ?? 0
         };
     }
 
@@ -490,7 +485,7 @@ public class SessionService
         if (session.Type == SessionType.Free)
             return new SessionInfo { Type = SessionType.Free, ElapsedSeconds = totalElapsed, CurrentCostUzs = 0, MaxPaymentUzs = 0 };
 
-        var tariff = await GetTariffAsync(pc.Class!.Value);
+        var tariff = await GetTariffAsync(pc.TariffId!.Value);
         var cost = Math.Min(
             Math.Max(BillingCalculator.SumPostpaySegments(elapsedPerSegment), tariff.MinPaymentUzs),
             tariff.MaxPaymentUzs);

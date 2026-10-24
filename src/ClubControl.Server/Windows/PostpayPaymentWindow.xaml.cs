@@ -20,7 +20,7 @@ public partial class PostpayPaymentWindow : Window
         _pc = pc;
 
         Title = Strings.Get("PaymentTitle");
-        PcText.Text = Strings.Format("TargetPcFormat", pc.Number!, pc.Class.HasValue ? Strings.ClassName(pc.Class.Value) : "");
+        PcText.Text = Strings.Format("TargetPcFormat", pc.Number!, pc.TariffDisplay);
         AmountDueLabel.Text = Strings.Get("AmountDueLabel");
         CancelButton.Content = Strings.Get("Cancel");
         PaidButton.Content = Strings.Get("ButtonPaid");

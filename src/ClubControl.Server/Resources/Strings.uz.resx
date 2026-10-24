@@ -49,8 +49,17 @@
   <data name="ColumnPcNumber" xml:space="preserve">
     <value>Kompyuter №</value>
   </data>
-  <data name="ColumnClass" xml:space="preserve">
-    <value>Sinf</value>
+  <data name="ColumnKind" xml:space="preserve">
+    <value>Turi</value>
+  </data>
+  <data name="ColumnTariff" xml:space="preserve">
+    <value>Tarif</value>
+  </data>
+  <data name="KindComputer" xml:space="preserve">
+    <value>Kompyuter</value>
+  </data>
+  <data name="KindBilliard" xml:space="preserve">
+    <value>Billiard</value>
   </data>
   <data name="ColumnState" xml:space="preserve">
     <value>Holat</value>
@@ -104,7 +113,7 @@
     <value>Faqat bitta kompyuterni tanlang.</value>
   </data>
   <data name="AssignNumberAndClassFirst" xml:space="preserve">
-    <value>Avval shu kompyuterga raqam va sinf belgilang (Sozlamalar &gt; Kompyuterlar).</value>
+    <value>Avval shu kompyuterga raqam va tarif belgilang (Sozlamalar &gt; Kompyuterlar va billiard).</value>
   </data>
   <data name="PcAlreadyHasSession" xml:space="preserve">
     <value>Bu kompyuterda allaqachon faol sessiya bor.</value>
@@ -133,9 +142,6 @@
   <data name="NoEligiblePcs" xml:space="preserve">
     <value>Mos kompyuter topilmadi.</value>
   </data>
-  <data name="PowerCommandSent" xml:space="preserve">
-    <value>«{0}» {1} kompyuterga yuborildi.</value>
-  </data>
   <data name="SettingsTitle" xml:space="preserve">
     <value>Sozlamalar</value>
   </data>
@@ -145,8 +151,8 @@
   <data name="TabTariffs" xml:space="preserve">
     <value>Tariflar</value>
   </data>
-  <data name="TabComputers" xml:space="preserve">
-    <value>Kompyuterlar</value>
+  <data name="TabResources" xml:space="preserve">
+    <value>Kompyuterlar va billiard</value>
   </data>
   <data name="LabelClubName" xml:space="preserve">
     <value>Klub nomi</value>
@@ -178,11 +184,8 @@
   <data name="AfterSessionRestart" xml:space="preserve">
     <value>Qayta yuklash</value>
   </data>
-  <data name="GroupStandard" xml:space="preserve">
-    <value>Standart</value>
-  </data>
-  <data name="GroupVip" xml:space="preserve">
-    <value>VIP</value>
+  <data name="LabelName" xml:space="preserve">
+    <value>Nomi</value>
   </data>
   <data name="LabelPricePerHour" xml:space="preserve">
     <value>Soatlik narx (UZS)</value>
@@ -193,8 +196,38 @@
   <data name="LabelMaxPayment" xml:space="preserve">
     <value>Eng koʻp toʻlov (UZS)</value>
   </data>
+  <data name="NewTariffDefaultName" xml:space="preserve">
+    <value>Yangi tarif</value>
+  </data>
+  <data name="TariffNamesMustBeUniqueAndNotEmpty" xml:space="preserve">
+    <value>Tarif nomlari takrorlanmasligi va boʻsh boʻlmasligi kerak.</value>
+  </data>
   <data name="ComputersHint" xml:space="preserve">
-    <value>Yangi kompyuterdan foydalanish uchun unga raqam va sinf belgilang. Oʻchirilgan kompyuterlar bloklangan holda qoladi.</value>
+    <value>Yangi kompyuter yoki billiardga raqam va tarif belgilang. Oʻchirilgan qatorlar bloklangan holda qoladi.</value>
+  </data>
+  <data name="LabelNumber" xml:space="preserve">
+    <value>Raqam</value>
+  </data>
+  <data name="LabelTariff" xml:space="preserve">
+    <value>Tarif</value>
+  </data>
+  <data name="NoTariffsForKind" xml:space="preserve">
+    <value>Bu turi uchun hali tarif yoʻq — avval Sozlamalar → Tariflar boʻlimida qoʻshing.</value>
+  </data>
+  <data name="EnterAValidNumber" xml:space="preserve">
+    <value>Toʻgʻri raqam kiriting.</value>
+  </data>
+  <data name="ChooseATariff" xml:space="preserve">
+    <value>Tarifni tanlang.</value>
+  </data>
+  <data name="AddComputerTitle" xml:space="preserve">
+    <value>Kompyuter qoʻshish</value>
+  </data>
+  <data name="AddBilliardTitle" xml:space="preserve">
+    <value>Billiard qoʻshish</value>
+  </data>
+  <data name="ButtonAdd" xml:space="preserve">
+    <value>Qoʻshish</value>
   </data>
   <data name="ColumnEnabled" xml:space="preserve">
     <value>Yoqilgan</value>
@@ -216,12 +249,6 @@
   </data>
   <data name="LanguageChangedNotice" xml:space="preserve">
     <value>Yangi panel tilini toʻliq qoʻllash uchun ClubControl-ni qayta ishga tushiring.</value>
-  </data>
-  <data name="ClassStandard" xml:space="preserve">
-    <value>Standart</value>
-  </data>
-  <data name="ClassVip" xml:space="preserve">
-    <value>VIP</value>
   </data>
   <data name="LangEnglish" xml:space="preserve">
     <value>Inglizcha</value>
@@ -358,8 +385,8 @@
   <data name="ByPc" xml:space="preserve">
     <value>Kompyuter boʻyicha</value>
   </data>
-  <data name="ByClass" xml:space="preserve">
-    <value>Sinf boʻyicha</value>
+  <data name="ByTariff" xml:space="preserve">
+    <value>Tarif boʻyicha</value>
   </data>
   <data name="BySessionType" xml:space="preserve">
     <value>Sessiya turi boʻyicha</value>

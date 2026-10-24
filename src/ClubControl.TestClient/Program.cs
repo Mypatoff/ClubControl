@@ -126,7 +126,7 @@ static void PrintCommandHelp()
         Commands (case-insensitive):
           lock                                    - plain lock screen
           lock limit                               - "limit reached" lock screen
-          lock <pcNumber> <Standard|Vip> <priceUzs> - lock screen with PC info
+          lock <pcNumber> <tariffName> <priceUzs>  - lock screen with PC info
           unlock                                   - unlock, no session
           start prepay <remainingSeconds>
           start postpay <elapsedSeconds> <costUzs> [maxPaymentUzs]
@@ -263,12 +263,11 @@ static ClientCommand? ParseCommand(string line)
 
         case "lock" when tokens.Length == 4
             && int.TryParse(tokens[1], out var pcNumber)
-            && Enum.TryParse<PcClass>(tokens[2], true, out var pcClass)
             && int.TryParse(tokens[3], out var priceUzs):
             return new ClientCommand
             {
                 Type = CommandType.Lock,
-                Lock = new LockInfo { PcNumber = pcNumber, Class = pcClass, PricePerHourUzs = priceUzs }
+                Lock = new LockInfo { PcNumber = pcNumber, TariffName = tokens[2], PricePerHourUzs = priceUzs }
             };
 
         case "unlock" when tokens.Length == 1:

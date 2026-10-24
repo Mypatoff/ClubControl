@@ -64,9 +64,23 @@ keyboard, will not work.
    the keyboard-blocking hook and for shutdown/restart).
 6. Log off and back on (or reboot) to confirm the client starts automatically and finds the
    server. The first time, it appears as "New PC" in the admin panel - assign it a number and
-   class under Settings > Computers.
+   tariff under Settings > Computers & Billiards.
 
-## Manual test checklist (Phase 5)
+## PCs with no LAN connection, and billiard tables
+
+Not everything billable runs `ClubControl.Client`: a PC with no network cable/Wi-Fi, or a
+billiard table, has nothing to install software on. For those, use the **"Add Computer" /
+"Add Billiard"** buttons on the main toolbar instead of waiting for auto-discovery:
+
+- Pick a number, pick a tariff (create one first under Settings > Tariffs if you need a new price
+  tier - tariffs are freely named, not limited to a fixed pair), and Save.
+- These rows never show as online/offline (there is no client to report a heartbeat), and the
+  Turn-on/Restart/Shut-down buttons do nothing for them (nothing to power-cycle) - that is expected,
+  not a bug. Start/Extend/Stop/Move work exactly like any other row.
+- Right-click a row (or a multi-selection) for the same actions as the toolbar, scoped to just
+  that row/selection.
+
+## Manual test checklist (Phase 5 and 6)
 
 - **Wake-on-LAN**: fully shut down a configured client PC, select it in the admin panel, click
   "Turn on" (with nothing selected, it asks to confirm turning on all enabled PCs). The PC should
@@ -74,9 +88,15 @@ keyboard, will not work.
   make sure the admin laptop and the PC are on the same subnet/VLAN.
 - **Shutdown / Restart**: with a client online, select it (or several, or none for "all"), click
   "Shut down" or "Restart". If any target has an active session you are asked to confirm first.
-- **Reports**: open Reports, try Daily/Weekly/Monthly and the manual date pickers after running a
-  few test sessions (prepay, postpay, free). Check totals and the per-PC/per-class/per-type
-  breakdowns match what you started.
+- **Reports**: open Reports, switch between the Computers/Billiards buttons, try Daily/Weekly/
+  Monthly and the manual date pickers after running a few test sessions (prepay, postpay, free) on
+  both kinds. Check totals and the per-PC/per-tariff/per-type breakdowns match what you started,
+  and that a billiard session never shows up in the Computers report or vice versa.
+- **Manual resources**: click "Add Computer" and "Add Billiard", confirm both appear in the main
+  table with the right icon, can Start/Extend/Stop/Move a session, and never go "offline" or
+  respond to Turn on/Restart/Shut down.
+- **Tariffs**: Settings > Tariffs - add a new tariff, rename an existing one, save, and confirm
+  the new/renamed name shows up immediately in the Add dialogs and the main table.
 - **Daily backup**: check `%ProgramData%\ClubControl\Backups` - a `club_YYYY-MM-DD.db` file should
   appear within an hour of the server running on a new day. Older backups beyond the newest 30 are
   deleted automatically.
@@ -94,3 +114,8 @@ keyboard, will not work.
   during the report period contributes 0 until it ends, same as everywhere else in the app.
 - A handful of internal validation error messages (e.g. "Payment must be between X and Y UZS")
   are still English-only; all screen labels, buttons, and the lock screen are translated.
+- The database schema changed in Phase 6 (tariffs became free-form, PCs gained a resource kind).
+  There is no migration system yet - if you have an existing `club.db` from before Phase 6, delete
+  it (`%ProgramData%\ClubControl\club.db`) once; the server recreates it with default tariffs on
+  next start. Fine while testing; worth adding real EF Core migrations before this holds real data
+  you can't afford to lose.

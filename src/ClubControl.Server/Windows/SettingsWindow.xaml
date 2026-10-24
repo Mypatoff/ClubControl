@@ -1,7 +1,7 @@
 <Window x:Class="ClubControl.Server.Windows.SettingsWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Settings" Width="620" Height="520"
+        Title="Settings" Width="680" Height="560"
         WindowStartupLocation="CenterOwner" ShowInTaskbar="False">
     <DockPanel Margin="16">
         <TextBlock x:Name="ErrorText" DockPanel.Dock="Bottom" Foreground="Red" TextWrapping="Wrap" Margin="0,8,0,0" />
@@ -43,29 +43,21 @@
             </TabItem>
 
             <TabItem x:Name="TariffsTab">
-                <StackPanel Margin="12">
-                    <GroupBox x:Name="StandardGroup" Margin="0,0,0,12">
-                        <StackPanel Margin="8">
-                            <TextBlock x:Name="StandardPriceLabel" />
-                            <TextBox x:Name="StandardPriceBox" Margin="0,0,0,8" />
-                            <TextBlock x:Name="StandardMinLabel" />
-                            <TextBox x:Name="StandardMinBox" Margin="0,0,0,8" />
-                            <TextBlock x:Name="StandardMaxLabel" />
-                            <TextBox x:Name="StandardMaxBox" />
-                        </StackPanel>
-                    </GroupBox>
-
-                    <GroupBox x:Name="VipGroup">
-                        <StackPanel Margin="8">
-                            <TextBlock x:Name="VipPriceLabel" />
-                            <TextBox x:Name="VipPriceBox" Margin="0,0,0,8" />
-                            <TextBlock x:Name="VipMinLabel" />
-                            <TextBox x:Name="VipMinBox" Margin="0,0,0,8" />
-                            <TextBlock x:Name="VipMaxLabel" />
-                            <TextBox x:Name="VipMaxBox" />
-                        </StackPanel>
-                    </GroupBox>
-                </StackPanel>
+                <DockPanel Margin="12">
+                    <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Margin="0,8,0,0">
+                        <Button x:Name="AddTariffButton" Padding="10,4" Click="OnAddTariff" />
+                    </StackPanel>
+                    <DataGrid x:Name="TariffGrid" AutoGenerateColumns="False" CanUserAddRows="False">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn x:Name="TariffNameColumn" Binding="{Binding Name}" Width="140" />
+                            <DataGridComboBoxColumn x:Name="TariffKindColumn" SelectedValueBinding="{Binding Kind}"
+                                                     DisplayMemberPath="Display" SelectedValuePath="Value" Width="110" />
+                            <DataGridTextColumn x:Name="TariffPriceColumn" Binding="{Binding PricePerHourUzs}" Width="110" />
+                            <DataGridTextColumn x:Name="TariffMinColumn" Binding="{Binding MinPaymentUzs}" Width="110" />
+                            <DataGridTextColumn x:Name="TariffMaxColumn" Binding="{Binding MaxPaymentUzs}" Width="110" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </DockPanel>
             </TabItem>
 
             <TabItem x:Name="ComputersTab">
@@ -73,13 +65,14 @@
                     <TextBlock x:Name="ComputersHintText" DockPanel.Dock="Top" Margin="0,0,0,8" TextWrapping="Wrap" />
                     <DataGrid x:Name="PcGrid" AutoGenerateColumns="False" CanUserAddRows="False">
                         <DataGrid.Columns>
+                            <DataGridTextColumn x:Name="KindColumn" Binding="{Binding Kind}" Width="90" IsReadOnly="True" />
                             <DataGridTextColumn x:Name="PcNumberColumn" Binding="{Binding Number}" Width="60" />
-                            <DataGridComboBoxColumn x:Name="ClassColumn" SelectedValueBinding="{Binding Class}"
-                                                     DisplayMemberPath="Display" SelectedValuePath="Value" Width="90" />
+                            <DataGridComboBoxColumn x:Name="TariffColumn" SelectedValueBinding="{Binding TariffId}"
+                                                     DisplayMemberPath="Name" SelectedValuePath="Id" Width="120" />
                             <DataGridCheckBoxColumn x:Name="EnabledColumn" Binding="{Binding Enabled}" Width="60" />
-                            <DataGridTextColumn x:Name="HostnameColumn" Binding="{Binding Hostname}" Width="150" IsReadOnly="True" />
-                            <DataGridTextColumn x:Name="IpColumn" Binding="{Binding IpAddress}" Width="110" IsReadOnly="True" />
-                            <DataGridTextColumn x:Name="MacColumn" Binding="{Binding MacAddress}" Width="130" IsReadOnly="True" />
+                            <DataGridTextColumn x:Name="HostnameColumn" Binding="{Binding Hostname}" Width="130" IsReadOnly="True" />
+                            <DataGridTextColumn x:Name="IpColumn" Binding="{Binding IpAddress}" Width="100" IsReadOnly="True" />
+                            <DataGridTextColumn x:Name="MacColumn" Binding="{Binding MacAddress}" Width="120" IsReadOnly="True" />
                             <DataGridCheckBoxColumn x:Name="OnlineColumn" Binding="{Binding IsOnline}" Width="55" IsReadOnly="True" />
                         </DataGrid.Columns>
                     </DataGrid>

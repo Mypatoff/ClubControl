@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
@@ -20,8 +21,7 @@ public partial class SettingsWindow : Window
     private readonly ClubDbContext _db;
 
     private Setting _setting = null!;
-    private Tariff _standardTariff = null!;
-    private Tariff _vipTariff = null!;
+    private ObservableCollection<Tariff> _tariffs = null!;
     private List<Pc> _pcs = null!;
     private AdminPanelLanguage _openedWithLanguage;
 
@@ -35,10 +35,10 @@ public partial class SettingsWindow : Window
 
         ApplyLocalization();
 
-        ClassColumn.ItemsSource = new[]
+        TariffKindColumn.ItemsSource = new[]
         {
-            new ComboOption<PcClass>(Strings.ClassName(PcClass.Standard), PcClass.Standard),
-            new ComboOption<PcClass>(Strings.ClassName(PcClass.Vip), PcClass.Vip),
+            new ComboOption<ResourceKind>(Strings.Get("KindComputer"), ResourceKind.Computer),
+            new ComboOption<ResourceKind>(Strings.Get("KindBilliard"), ResourceKind.Billiard),
         };
 
         Loaded += async (_, _) => await LoadAsync();
@@ -53,7 +53,7 @@ public partial class SettingsWindow : Window
 
         GeneralTab.Header = Strings.Get("TabGeneral");
         TariffsTab.Header = Strings.Get("TabTariffs");
-        ComputersTab.Header = Strings.Get("TabComputers");
+        ComputersTab.Header = Strings.Get("TabResources");
 
         ClubNameLabel.Text = Strings.Get("LabelClubName");
         LockScreenTextLabel.Text = Strings.Get("LabelLockScreenText");
@@ -64,18 +64,17 @@ public partial class SettingsWindow : Window
         ProcessListLabel.Text = Strings.Get("LabelProcessList");
         OfflineWaitLabel.Text = Strings.Get("LabelOfflineWait");
 
-        StandardGroup.Header = Strings.Get("GroupStandard");
-        VipGroup.Header = Strings.Get("GroupVip");
-        StandardPriceLabel.Text = Strings.Get("LabelPricePerHour");
-        StandardMinLabel.Text = Strings.Get("LabelMinPayment");
-        StandardMaxLabel.Text = Strings.Get("LabelMaxPayment");
-        VipPriceLabel.Text = Strings.Get("LabelPricePerHour");
-        VipMinLabel.Text = Strings.Get("LabelMinPayment");
-        VipMaxLabel.Text = Strings.Get("LabelMaxPayment");
+        AddTariffButton.Content = Strings.Get("ButtonAdd");
+        TariffNameColumn.Header = Strings.Get("LabelName");
+        TariffKindColumn.Header = Strings.Get("ColumnKind");
+        TariffPriceColumn.Header = Strings.Get("LabelPricePerHour");
+        TariffMinColumn.Header = Strings.Get("LabelMinPayment");
+        TariffMaxColumn.Header = Strings.Get("LabelMaxPayment");
 
         ComputersHintText.Text = Strings.Get("ComputersHint");
+        KindColumn.Header = Strings.Get("ColumnKind");
         PcNumberColumn.Header = Strings.Get("ColumnPcNumber");
-        ClassColumn.Header = Strings.Get("ColumnClass");
+        TariffColumn.Header = Strings.Get("ColumnTariff");
         EnabledColumn.Header = Strings.Get("ColumnEnabled");
         HostnameColumn.Header = Strings.Get("ColumnHostname");
         IpColumn.Header = Strings.Get("ColumnIp");
@@ -86,8 +85,7 @@ public partial class SettingsWindow : Window
     private async Task LoadAsync()
     {
         _setting = await SettingsHelper.GetOrCreateAsync(_db);
-        _standardTariff = await TariffsHelper.GetAsync(_db, PcClass.Standard) ?? throw new InvalidOperationException("Standard tariff missing.");
-        _vipTariff = await TariffsHelper.GetAsync(_db, PcClass.Vip) ?? throw new InvalidOperationException("VIP tariff missing.");
+        _tariffs = new ObservableCollection<Tariff>(await TariffsHelper.GetAllAsync(_db));
         _pcs = await _db.Pcs.OrderBy(p => p.Number).ToListAsync();
         _openedWithLanguage = _setting.AdminPanelLanguage;
 
@@ -118,14 +116,16 @@ public partial class SettingsWindow : Window
         ProcessListBox.Text = _setting.ProcessListCsv;
         OfflineWaitBox.Text = _setting.OfflineUnlockWaitSeconds.ToString();
 
-        StandardPriceBox.Text = _standardTariff.PricePerHourUzs.ToString();
-        StandardMinBox.Text = _standardTariff.MinPaymentUzs.ToString();
-        StandardMaxBox.Text = _standardTariff.MaxPaymentUzs.ToString();
-        VipPriceBox.Text = _vipTariff.PricePerHourUzs.ToString();
-        VipMinBox.Text = _vipTariff.MinPaymentUzs.ToString();
-        VipMaxBox.Text = _vipTariff.MaxPaymentUzs.ToString();
-
+        TariffGrid.ItemsSource = _tariffs;
+        TariffColumn.ItemsSource = _tariffs;
         PcGrid.ItemsSource = _pcs;
+    }
+
+    private void OnAddTariff(object sender, RoutedEventArgs e)
+    {
+        var tariff = new Tariff { Name = Strings.Get("NewTariffDefaultName"), Kind = ResourceKind.Computer };
+        _db.Tariffs.Add(tariff);
+        _tariffs.Add(tariff);
     }
 
     private async void OnSave(object sender, RoutedEventArgs e)
@@ -134,6 +134,13 @@ public partial class SettingsWindow : Window
         if (numbers.Count != numbers.Distinct().Count())
         {
             ErrorText.Text = Strings.Get("PcNumbersMustBeUnique");
+            return;
+        }
+
+        var names = _tariffs.Select(t => t.Name.Trim()).ToList();
+        if (names.Any(string.IsNullOrWhiteSpace) || names.Count != names.Distinct(StringComparer.OrdinalIgnoreCase).Count())
+        {
+            ErrorText.Text = Strings.Get("TariffNamesMustBeUniqueAndNotEmpty");
             return;
         }
 
@@ -147,12 +154,8 @@ public partial class SettingsWindow : Window
         _setting.ProcessListCsv = ProcessListBox.Text;
         _setting.OfflineUnlockWaitSeconds = ParseInt(OfflineWaitBox.Text, _setting.OfflineUnlockWaitSeconds);
 
-        _standardTariff.PricePerHourUzs = ParseInt(StandardPriceBox.Text, _standardTariff.PricePerHourUzs);
-        _standardTariff.MinPaymentUzs = ParseInt(StandardMinBox.Text, _standardTariff.MinPaymentUzs);
-        _standardTariff.MaxPaymentUzs = ParseInt(StandardMaxBox.Text, _standardTariff.MaxPaymentUzs);
-        _vipTariff.PricePerHourUzs = ParseInt(VipPriceBox.Text, _vipTariff.PricePerHourUzs);
-        _vipTariff.MinPaymentUzs = ParseInt(VipMinBox.Text, _vipTariff.MinPaymentUzs);
-        _vipTariff.MaxPaymentUzs = ParseInt(VipMaxBox.Text, _vipTariff.MaxPaymentUzs);
+        foreach (var tariff in _tariffs)
+            tariff.Name = tariff.Name.Trim();
 
         await _db.SaveChangesAsync();
 

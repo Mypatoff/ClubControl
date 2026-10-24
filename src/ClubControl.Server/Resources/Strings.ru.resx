@@ -49,8 +49,17 @@
   <data name="ColumnPcNumber" xml:space="preserve">
     <value>№ ПК</value>
   </data>
-  <data name="ColumnClass" xml:space="preserve">
-    <value>Класс</value>
+  <data name="ColumnKind" xml:space="preserve">
+    <value>Тип</value>
+  </data>
+  <data name="ColumnTariff" xml:space="preserve">
+    <value>Тариф</value>
+  </data>
+  <data name="KindComputer" xml:space="preserve">
+    <value>Компьютер</value>
+  </data>
+  <data name="KindBilliard" xml:space="preserve">
+    <value>Бильярд</value>
   </data>
   <data name="ColumnState" xml:space="preserve">
     <value>Статус</value>
@@ -104,7 +113,7 @@
     <value>Выберите ровно один ПК.</value>
   </data>
   <data name="AssignNumberAndClassFirst" xml:space="preserve">
-    <value>Сначала назначьте номер и класс этому ПК (Настройки &gt; Компьютеры).</value>
+    <value>Сначала назначьте номер и тариф этому ПК (Настройки &gt; Компьютеры и бильярд).</value>
   </data>
   <data name="PcAlreadyHasSession" xml:space="preserve">
     <value>У этого ПК уже есть активная сессия.</value>
@@ -133,9 +142,6 @@
   <data name="NoEligiblePcs" xml:space="preserve">
     <value>Нет подходящих ПК.</value>
   </data>
-  <data name="PowerCommandSent" xml:space="preserve">
-    <value>«{0}» отправлено на {1} ПК.</value>
-  </data>
   <data name="SettingsTitle" xml:space="preserve">
     <value>Настройки</value>
   </data>
@@ -145,8 +151,8 @@
   <data name="TabTariffs" xml:space="preserve">
     <value>Тарифы</value>
   </data>
-  <data name="TabComputers" xml:space="preserve">
-    <value>Компьютеры</value>
+  <data name="TabResources" xml:space="preserve">
+    <value>Компьютеры и бильярд</value>
   </data>
   <data name="LabelClubName" xml:space="preserve">
     <value>Название клуба</value>
@@ -178,11 +184,8 @@
   <data name="AfterSessionRestart" xml:space="preserve">
     <value>Перезагрузить</value>
   </data>
-  <data name="GroupStandard" xml:space="preserve">
-    <value>Стандарт</value>
-  </data>
-  <data name="GroupVip" xml:space="preserve">
-    <value>VIP</value>
+  <data name="LabelName" xml:space="preserve">
+    <value>Название</value>
   </data>
   <data name="LabelPricePerHour" xml:space="preserve">
     <value>Цена за час (UZS)</value>
@@ -193,8 +196,38 @@
   <data name="LabelMaxPayment" xml:space="preserve">
     <value>Максимальный платёж (UZS)</value>
   </data>
+  <data name="NewTariffDefaultName" xml:space="preserve">
+    <value>Новый тариф</value>
+  </data>
+  <data name="TariffNamesMustBeUniqueAndNotEmpty" xml:space="preserve">
+    <value>Названия тарифов должны быть уникальными и не пустыми.</value>
+  </data>
   <data name="ComputersHint" xml:space="preserve">
-    <value>Назначьте номер и класс новому ПК, чтобы его можно было использовать. Отключённые ПК остаются заблокированными.</value>
+    <value>Назначьте номер и тариф новому ПК или бильярду, чтобы его можно было использовать. Отключённые строки остаются заблокированными.</value>
+  </data>
+  <data name="LabelNumber" xml:space="preserve">
+    <value>Номер</value>
+  </data>
+  <data name="LabelTariff" xml:space="preserve">
+    <value>Тариф</value>
+  </data>
+  <data name="NoTariffsForKind" xml:space="preserve">
+    <value>Для этого типа ещё нет тарифов — сначала добавьте его в Настройки → Тарифы.</value>
+  </data>
+  <data name="EnterAValidNumber" xml:space="preserve">
+    <value>Введите корректный номер.</value>
+  </data>
+  <data name="ChooseATariff" xml:space="preserve">
+    <value>Выберите тариф.</value>
+  </data>
+  <data name="AddComputerTitle" xml:space="preserve">
+    <value>Добавить компьютер</value>
+  </data>
+  <data name="AddBilliardTitle" xml:space="preserve">
+    <value>Добавить бильярд</value>
+  </data>
+  <data name="ButtonAdd" xml:space="preserve">
+    <value>Добавить</value>
   </data>
   <data name="ColumnEnabled" xml:space="preserve">
     <value>Включён</value>
@@ -216,12 +249,6 @@
   </data>
   <data name="LanguageChangedNotice" xml:space="preserve">
     <value>Перезапустите ClubControl, чтобы полностью применить новый язык панели.</value>
-  </data>
-  <data name="ClassStandard" xml:space="preserve">
-    <value>Стандарт</value>
-  </data>
-  <data name="ClassVip" xml:space="preserve">
-    <value>VIP</value>
   </data>
   <data name="LangEnglish" xml:space="preserve">
     <value>Английский</value>
@@ -358,8 +385,8 @@
   <data name="ByPc" xml:space="preserve">
     <value>По ПК</value>
   </data>
-  <data name="ByClass" xml:space="preserve">
-    <value>По классу</value>
+  <data name="ByTariff" xml:space="preserve">
+    <value>По тарифу</value>
   </data>
   <data name="BySessionType" xml:space="preserve">
     <value>По типу сессии</value>

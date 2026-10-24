@@ -23,7 +23,7 @@ public class ClubDbContext : DbContext
             .IsUnique();
 
         modelBuilder.Entity<Tariff>()
-            .HasIndex(t => t.Class)
+            .HasIndex(t => t.Name)
             .IsUnique();
 
         modelBuilder.Entity<Session>()

@@ -42,8 +42,12 @@ public partial class MoveSessionWindow : Window
             .OrderBy(p => p.Number)
             .ToListAsync();
 
+        var tariffNames = await db.Tariffs.AsNoTracking().ToDictionaryAsync(t => t.Id, t => t.Name);
+
         TargetCombo.ItemsSource = candidates
-            .Select(p => new PcOption(Strings.Format("TargetPcFormat", p.Number!, p.Class.HasValue ? Strings.ClassName(p.Class.Value) : ""), p.MachineGuid))
+            .Select(p => new PcOption(
+                Strings.Format("TargetPcFormat", p.Number!, p.TariffId.HasValue ? tariffNames.GetValueOrDefault(p.TariffId.Value, "") : ""),
+                p.MachineGuid))
             .ToList();
 
         if (candidates.Count == 0)

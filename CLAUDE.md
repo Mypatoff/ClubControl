@@ -26,3 +26,4 @@ C# .NET 8. WPF for Server (admin panel + hosted ASP.NET Core/SignalR) and Client
 - [x] Phase 3: settings, tariffs, billing logic
 - [x] Phase 4: admin panel UI
 - [x] Phase 5: power control, reports, backup, languages, install scripts
+- [x] Phase 6: manual/non-networked resources (offline PCs, billiards), free-form tariffs, context menus, split reports

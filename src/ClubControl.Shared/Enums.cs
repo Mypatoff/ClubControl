@@ -1,9 +1,10 @@
 namespace ClubControl.Shared;
 
-public enum PcClass
+/// <summary>What kind of billable thing a Pc row represents (SPEC extension: not every billable thing is a computer).</summary>
+public enum ResourceKind
 {
-    Standard,
-    Vip
+    Computer,
+    Billiard
 }
 
 public enum PcState

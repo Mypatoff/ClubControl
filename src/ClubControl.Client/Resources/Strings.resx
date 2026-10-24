@@ -13,12 +13,6 @@
   <data name="PerHourFormat" xml:space="preserve">
     <value>{0} UZS/hour</value>
   </data>
-  <data name="ClassStandard" xml:space="preserve">
-    <value>Standard</value>
-  </data>
-  <data name="ClassVip" xml:space="preserve">
-    <value>VIP</value>
-  </data>
   <data name="OfflineMode" xml:space="preserve">
     <value>Offline mode</value>
   </data>

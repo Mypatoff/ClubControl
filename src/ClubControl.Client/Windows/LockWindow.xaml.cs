@@ -42,7 +42,7 @@ public partial class LockWindow : Window
 
         PcInfoText.Text = info is { PcNumber: int number }
             ? Strings.Format("PcNumberFormat", number) +
-              (info.Class is { } pcClass ? $" ({Strings.ClassName(pcClass)})" : "") +
+              (!string.IsNullOrEmpty(info.TariffName) ? $" ({info.TariffName})" : "") +
               (info.PricePerHourUzs > 0 ? $" — {Strings.Format("PerHourFormat", info.PricePerHourUzs.ToString("N0"))}" : "")
             : "";
 

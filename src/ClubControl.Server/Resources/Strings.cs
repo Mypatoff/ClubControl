@@ -32,10 +32,10 @@ public static class Strings
     public static string Format(string key, params object[] args) =>
         string.Format(Get(key), args);
 
-    public static string ClassName(PcClass pcClass) => pcClass switch
+    public static string ResourceKindName(ResourceKind kind) => kind switch
     {
-        PcClass.Vip => Get("ClassVip"),
-        _ => Get("ClassStandard")
+        ResourceKind.Billiard => Get("KindBilliard"),
+        _ => Get("KindComputer")
     };
 
     public static string LockScreenLanguageName(LockScreenLanguage language) => language switch

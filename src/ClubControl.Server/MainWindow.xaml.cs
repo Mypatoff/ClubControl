@@ -4,6 +4,8 @@ using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Media;
 using System.Windows.Threading;
 using ClubControl.Server.Data;
 using ClubControl.Server.Data.Models;
@@ -35,20 +37,23 @@ public partial class MainWindow : Window
 
     private void ApplyLocalization()
     {
-        StartButton.Content = Strings.Get("ToolbarStart");
-        ExtendButton.Content = Strings.Get("ToolbarExtend");
-        StopButton.Content = Strings.Get("ToolbarStop");
-        MoveButton.Content = Strings.Get("ToolbarMove");
-        TurnOnButton.Content = Strings.Get("ToolbarTurnOn");
-        RestartButton.Content = Strings.Get("ToolbarRestart");
-        ShutDownButton.Content = Strings.Get("ToolbarShutDown");
+        StartButton.Content = CtxStart.Header = Strings.Get("ToolbarStart");
+        ExtendButton.Content = CtxExtend.Header = Strings.Get("ToolbarExtend");
+        StopButton.Content = CtxStop.Header = Strings.Get("ToolbarStop");
+        MoveButton.Content = CtxMove.Header = Strings.Get("ToolbarMove");
+        TurnOnButton.Content = CtxTurnOn.Header = Strings.Get("ToolbarTurnOn");
+        RestartButton.Content = CtxRestart.Header = Strings.Get("ToolbarRestart");
+        ShutDownButton.Content = CtxShutDown.Header = Strings.Get("ToolbarShutDown");
+        AddComputerButton.Content = "🖥 " + Strings.Get("AddComputerTitle");
+        AddBilliardButton.Content = "🎱 " + Strings.Get("AddBilliardTitle");
         SettingsButton.Content = Strings.Get("ToolbarSettings");
         ReportsButton.Content = Strings.Get("ToolbarReports");
 
         EventLogHeaderText.Text = Strings.Get("EventLogHeader");
 
+        KindIconColumn.Header = "";
         PcNumberColumn.Header = Strings.Get("ColumnPcNumber");
-        ClassColumn.Header = Strings.Get("ColumnClass");
+        TariffColumn.Header = Strings.Get("ColumnTariff");
         StateColumn.Header = Strings.Get("ColumnState");
         SessionColumn.Header = Strings.Get("ColumnSession");
         AmountColumn.Header = Strings.Get("ColumnAmount");
@@ -71,10 +76,11 @@ public partial class MainWindow : Window
         var sessionService = scope.ServiceProvider.GetRequiredService<SessionService>();
 
         var pcs = await db.Pcs.AsNoTracking().OrderBy(p => p.Number).ToListAsync();
+        var tariffNames = await db.Tariffs.AsNoTracking().ToDictionaryAsync(t => t.Id, t => t.Name);
         var snapshots = await sessionService.GetActiveSessionSnapshotsAsync();
 
         var selectedIds = PcGrid.SelectedItems.Cast<PcRow>().Select(p => p.Id).ToHashSet();
-        var rows = pcs.Select(pc => BuildRow(pc, snapshots.GetValueOrDefault(pc.Id))).ToList();
+        var rows = pcs.Select(pc => BuildRow(pc, tariffNames, snapshots.GetValueOrDefault(pc.Id))).ToList();
         PcGrid.ItemsSource = rows;
         foreach (var row in rows.Where(r => selectedIds.Contains(r.Id)))
             PcGrid.SelectedItems.Add(row);
@@ -89,7 +95,7 @@ public partial class MainWindow : Window
             pcs.Count(p => p.IsOnline), pcs.Count);
     }
 
-    private static PcRow BuildRow(Pc pc, SessionService.ActiveSessionSnapshot? snap)
+    private static PcRow BuildRow(Pc pc, Dictionary<int, string> tariffNames, SessionService.ActiveSessionSnapshot? snap)
     {
         var amount = "";
         var start = "";
@@ -116,10 +122,12 @@ public partial class MainWindow : Window
             MachineGuid = pc.MachineGuid,
             IsOnline = pc.IsOnline,
             Enabled = pc.Enabled,
+            IsManual = pc.IsManual,
+            Kind = pc.Kind,
             Number = pc.Number,
-            Class = pc.Class,
             State = pc.State,
-            ClassDisplay = pc.Class.HasValue ? Strings.ClassName(pc.Class.Value) : "",
+            KindIcon = pc.Kind == ResourceKind.Billiard ? "🎱" : "🖥",
+            TariffDisplay = pc.TariffId.HasValue ? tariffNames.GetValueOrDefault(pc.TariffId.Value, "") : "",
             StateDisplay = Strings.PcStateName(pc.State, pc.IsConfigured),
             SessionTypeDisplay = sessionType,
             AmountDisplay = amount,
@@ -131,6 +139,33 @@ public partial class MainWindow : Window
 
     private static string FormatEvent(EventLogEntry e) =>
         $"{e.TimestampUtc.ToLocalTime():HH:mm:ss} [{e.Type}] {e.Message}";
+
+    // ---- right-click: select the row under the cursor unless it is already part of a multi-selection ----
+
+    private void PcGrid_PreviewMouseRightButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+    {
+        var row = FindAncestor<DataGridRow>((DependencyObject)e.OriginalSource);
+        if (row?.Item is not PcRow pcRow)
+            return;
+
+        if (!PcGrid.SelectedItems.Contains(pcRow))
+        {
+            PcGrid.SelectedItems.Clear();
+            PcGrid.SelectedItems.Add(pcRow);
+        }
+    }
+
+    private static T? FindAncestor<T>(DependencyObject? current) where T : DependencyObject
+    {
+        while (current is not null)
+        {
+            if (current is T match)
+                return match;
+            current = VisualTreeHelper.GetParent(current);
+        }
+
+        return null;
+    }
 
     // ---- toolbar ----
 
@@ -150,14 +185,14 @@ public partial class MainWindow : Window
         if (pc is null)
             return;
 
-        if (!pc.Number.HasValue || !pc.Class.HasValue)
+        if (!pc.Number.HasValue || string.IsNullOrEmpty(pc.TariffDisplay))
         {
             MessageBox.Show(Strings.Get("AssignNumberAndClassFirst"), Strings.Get("ConfirmTitle"),
                 MessageBoxButton.OK, MessageBoxImage.Information);
             return;
         }
 
-        if (pc.State is PcState.PrepaySession or PcState.PostpaySession or PcState.LimitReached)
+        if (pc.HasActiveSession)
         {
             MessageBox.Show(Strings.Get("PcAlreadyHasSession"), Strings.Get("ConfirmTitle"),
                 MessageBoxButton.OK, MessageBoxImage.Information);
@@ -211,7 +246,7 @@ public partial class MainWindow : Window
         if (pc is null)
             return;
 
-        if (pc.State is not (PcState.PrepaySession or PcState.PostpaySession or PcState.LimitReached))
+        if (!pc.HasActiveSession)
         {
             MessageBox.Show(Strings.Get("PcHasNoActiveSession"), Strings.Get("ConfirmTitle"),
                 MessageBoxButton.OK, MessageBoxImage.Information);
@@ -273,7 +308,7 @@ public partial class MainWindow : Window
             targets = selected;
         }
 
-        if (checkActiveSessions && targets.Any(p => p.State is PcState.PrepaySession or PcState.PostpaySession or PcState.LimitReached))
+        if (checkActiveSessions && targets.Any(p => p.HasActiveSession))
         {
             if (MessageBox.Show(Strings.Get("SelectedHaveActiveSessionConfirm"), Strings.Get("ConfirmTitle"),
                     MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes)
@@ -292,6 +327,19 @@ public partial class MainWindow : Window
             MessageBox.Show(Strings.Get("NoEligiblePcs"), Strings.Get("ConfirmTitle"), MessageBoxButton.OK, MessageBoxImage.Information);
 
         await RefreshAsync();
+    }
+
+    // ---- manual resources (SPEC extension: offline PCs and non-computer resources like billiard tables) ----
+
+    private async void OnAddComputer(object sender, RoutedEventArgs e) => await AddResourceAsync(ResourceKind.Computer);
+
+    private async void OnAddBilliard(object sender, RoutedEventArgs e) => await AddResourceAsync(ResourceKind.Billiard);
+
+    private async Task AddResourceAsync(ResourceKind kind)
+    {
+        var window = new AddResourceWindow(Services, kind) { Owner = this };
+        if (window.ShowDialog() == true)
+            await RefreshAsync();
     }
 
     private async void OnSettings(object sender, RoutedEventArgs e)

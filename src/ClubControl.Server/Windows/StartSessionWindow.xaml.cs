@@ -18,7 +18,7 @@ public partial class StartSessionWindow : Window
         _pc = pc;
 
         Title = Strings.Get("StartSessionTitle");
-        TargetText.Text = Strings.Format("TargetPcFormat", pc.Number!, pc.Class.HasValue ? Strings.ClassName(pc.Class.Value) : "");
+        TargetText.Text = Strings.Format("TargetPcFormat", pc.Number!, pc.TariffDisplay);
         PrepayMoneyRadio.Content = Strings.Get("PrepayByMoney");
         PrepayTimeRadio.Content = Strings.Get("PrepayByTime");
         PostpayRadio.Content = Strings.Get("Postpay");

@@ -5,6 +5,9 @@
         WindowStartupLocation="CenterOwner">
     <DockPanel Margin="16">
         <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,12">
+            <Button x:Name="ComputersKindButton" Padding="10,4" Margin="0,0,6,0" Click="OnComputersKind" />
+            <Button x:Name="BilliardsKindButton" Padding="10,4" Margin="0,0,16,0" Click="OnBilliardsKind" />
+
             <Button x:Name="DailyButton" Padding="10,4" Margin="0,0,6,0" Click="OnDaily" />
             <Button x:Name="WeeklyButton" Padding="10,4" Margin="0,0,6,0" Click="OnWeekly" />
             <Button x:Name="MonthlyButton" Padding="10,4" Margin="0,0,16,0" Click="OnMonthly" />
@@ -58,13 +61,13 @@
                     </DataGrid.Columns>
                 </DataGrid>
             </TabItem>
-            <TabItem x:Name="ByClassTab">
-                <DataGrid x:Name="ByClassGrid" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False">
+            <TabItem x:Name="ByTariffTab">
+                <DataGrid x:Name="ByTariffGrid" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False">
                     <DataGrid.Columns>
-                        <DataGridTextColumn x:Name="ByClassNameColumn" Binding="{Binding ClassLabel}" Width="120" />
-                        <DataGridTextColumn x:Name="ByClassIncomeColumn" Binding="{Binding IncomeDisplay}" Width="140" />
-                        <DataGridTextColumn x:Name="ByClassSessionsColumn" Binding="{Binding SessionCount}" Width="100" />
-                        <DataGridTextColumn x:Name="ByClassHoursColumn" Binding="{Binding HoursDisplay}" Width="100" />
+                        <DataGridTextColumn x:Name="ByTariffNameColumn" Binding="{Binding TariffLabel}" Width="120" />
+                        <DataGridTextColumn x:Name="ByTariffIncomeColumn" Binding="{Binding IncomeDisplay}" Width="140" />
+                        <DataGridTextColumn x:Name="ByTariffSessionsColumn" Binding="{Binding SessionCount}" Width="100" />
+                        <DataGridTextColumn x:Name="ByTariffHoursColumn" Binding="{Binding HoursDisplay}" Width="100" />
                     </DataGrid.Columns>
                 </DataGrid>
             </TabItem>

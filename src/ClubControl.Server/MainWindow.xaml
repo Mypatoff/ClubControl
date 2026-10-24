@@ -15,6 +15,9 @@
             <Button x:Name="RestartButton" Padding="10,4" Click="OnRestart" />
             <Button x:Name="ShutDownButton" Padding="10,4" Click="OnShutDown" />
             <Separator />
+            <Button x:Name="AddComputerButton" Padding="10,4" Click="OnAddComputer" />
+            <Button x:Name="AddBilliardButton" Padding="10,4" Click="OnAddBilliard" />
+            <Separator />
             <Button x:Name="SettingsButton" Padding="10,4" Click="OnSettings" />
             <Button x:Name="ReportsButton" Padding="10,4" Click="OnReports" />
         </ToolBar>
@@ -29,25 +32,39 @@
         </Grid>
 
         <DataGrid x:Name="PcGrid" Margin="8" AutoGenerateColumns="False" IsReadOnly="True"
-                  SelectionMode="Extended" SelectionUnit="FullRow" CanUserAddRows="False">
+                  SelectionMode="Extended" SelectionUnit="FullRow" CanUserAddRows="False"
+                  PreviewMouseRightButtonDown="PcGrid_PreviewMouseRightButtonDown">
             <DataGrid.RowStyle>
                 <Style TargetType="DataGridRow">
                     <Setter Property="Background" Value="{Binding RowBrush}" />
                 </Style>
             </DataGrid.RowStyle>
+            <DataGrid.ContextMenu>
+                <ContextMenu>
+                    <MenuItem x:Name="CtxStart" Click="OnStart" />
+                    <MenuItem x:Name="CtxExtend" Click="OnExtend" />
+                    <MenuItem x:Name="CtxStop" Click="OnStop" />
+                    <MenuItem x:Name="CtxMove" Click="OnMove" />
+                    <Separator />
+                    <MenuItem x:Name="CtxTurnOn" Click="OnTurnOn" />
+                    <MenuItem x:Name="CtxRestart" Click="OnRestart" />
+                    <MenuItem x:Name="CtxShutDown" Click="OnShutDown" />
+                </ContextMenu>
+            </DataGrid.ContextMenu>
             <DataGrid.Columns>
-                <DataGridTemplateColumn Header="●" Width="30">
+                <DataGridTemplateColumn Header="●" Width="26">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <Ellipse Width="10" Height="10" Fill="{Binding DotBrush}" />
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
+                <DataGridTextColumn x:Name="KindIconColumn" Binding="{Binding KindIcon}" Width="34" />
                 <DataGridTextColumn x:Name="PcNumberColumn" Binding="{Binding Number}" Width="50" />
-                <DataGridTextColumn x:Name="ClassColumn" Binding="{Binding ClassDisplay}" Width="80" />
-                <DataGridTextColumn x:Name="StateColumn" Binding="{Binding StateDisplay}" Width="120" />
+                <DataGridTextColumn x:Name="TariffColumn" Binding="{Binding TariffDisplay}" Width="100" />
+                <DataGridTextColumn x:Name="StateColumn" Binding="{Binding StateDisplay}" Width="110" />
                 <DataGridTextColumn x:Name="SessionColumn" Binding="{Binding SessionTypeDisplay}" Width="80" />
-                <DataGridTextColumn x:Name="AmountColumn" Binding="{Binding AmountDisplay}" Width="120" />
+                <DataGridTextColumn x:Name="AmountColumn" Binding="{Binding AmountDisplay}" Width="110" />
                 <DataGridTextColumn x:Name="StartColumn" Binding="{Binding StartDisplay}" Width="80" />
                 <DataGridTextColumn x:Name="EndColumn" Binding="{Binding EndDisplay}" Width="80" />
                 <DataGridTextColumn x:Name="RemainingColumn" Binding="{Binding RemainingDisplay}" Width="90" />

@@ -9,10 +9,11 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace ClubControl.Server.Windows;
 
-/// <summary>Daily/weekly/monthly reports (SPEC section 9).</summary>
+/// <summary>Daily/weekly/monthly reports (SPEC section 9), scoped to one resource kind at a time.</summary>
 public partial class ReportsWindow : Window
 {
     private readonly IServiceProvider _services;
+    private ResourceKind _kind = ResourceKind.Computer;
 
     public ReportsWindow(IServiceProvider services)
     {
@@ -27,6 +28,8 @@ public partial class ReportsWindow : Window
     private void ApplyLocalization()
     {
         Title = Strings.Get("ReportsTitle");
+        ComputersKindButton.Content = "🖥 " + Strings.ResourceKindName(ResourceKind.Computer);
+        BilliardsKindButton.Content = "🎱 " + Strings.ResourceKindName(ResourceKind.Billiard);
         DailyButton.Content = Strings.Get("PeriodDaily");
         WeeklyButton.Content = Strings.Get("PeriodWeekly");
         MonthlyButton.Content = Strings.Get("PeriodMonthly");
@@ -41,16 +44,16 @@ public partial class ReportsWindow : Window
         FreeMinutesLabel.Text = Strings.Get("FreeMinutes");
 
         ByPcTab.Header = Strings.Get("ByPc");
-        ByClassTab.Header = Strings.Get("ByClass");
+        ByTariffTab.Header = Strings.Get("ByTariff");
         ByTypeTab.Header = Strings.Get("BySessionType");
 
         ByPcNumberColumn.Header = Strings.Get("ColumnPcNumber");
-        ByClassNameColumn.Header = Strings.Get("ColumnClass");
+        ByTariffNameColumn.Header = Strings.Get("ColumnTariff");
         ByTypeNameColumn.Header = Strings.Get("ColumnType");
         foreach (var (income, sessions, hours) in new[]
                  {
                      (ByPcIncomeColumn, ByPcSessionsColumn, ByPcHoursColumn),
-                     (ByClassIncomeColumn, ByClassSessionsColumn, ByClassHoursColumn),
+                     (ByTariffIncomeColumn, ByTariffSessionsColumn, ByTariffHoursColumn),
                      (ByTypeIncomeColumn, ByTypeSessionsColumn, ByTypeHoursColumn)
                  })
         {
@@ -64,6 +67,18 @@ public partial class ReportsWindow : Window
     {
         FromDatePicker.SelectedDate = fromLocal;
         ToDatePicker.SelectedDate = toLocalExclusive.AddDays(-1);
+    }
+
+    private async void OnComputersKind(object sender, RoutedEventArgs e)
+    {
+        _kind = ResourceKind.Computer;
+        await RefreshAsync();
+    }
+
+    private async void OnBilliardsKind(object sender, RoutedEventArgs e)
+    {
+        _kind = ResourceKind.Billiard;
+        await RefreshAsync();
     }
 
     private async void OnDaily(object sender, RoutedEventArgs e)
@@ -95,7 +110,7 @@ public partial class ReportsWindow : Window
 
         using var scope = _services.CreateScope();
         var reports = scope.ServiceProvider.GetRequiredService<ReportsService>();
-        var report = await reports.BuildReportAsync(fromLocal.ToUniversalTime(), toLocalExclusive.ToUniversalTime());
+        var report = await reports.BuildReportAsync(fromLocal.ToUniversalTime(), toLocalExclusive.ToUniversalTime(), _kind);
 
         TotalIncomeValue.Text = $"{report.Totals.TotalIncomeUzs:N0} UZS";
         TotalSessionsValue.Text = report.Totals.SessionCount.ToString();
@@ -110,9 +125,9 @@ public partial class ReportsWindow : Window
             HoursDisplay = r.Hours.ToString("N1")
         }).ToList();
 
-        ByClassGrid.ItemsSource = report.ByClass.Select(r => new
+        ByTariffGrid.ItemsSource = report.ByTariff.Select(r => new
         {
-            ClassLabel = r.Class.HasValue ? Strings.ClassName(r.Class.Value) : "—",
+            TariffLabel = string.IsNullOrEmpty(r.TariffName) ? "—" : r.TariffName,
             IncomeDisplay = $"{r.IncomeUzs:N0} UZS",
             r.SessionCount,
             HoursDisplay = r.Hours.ToString("N1")

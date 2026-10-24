@@ -49,8 +49,17 @@
   <data name="ColumnPcNumber" xml:space="preserve">
     <value>PC #</value>
   </data>
-  <data name="ColumnClass" xml:space="preserve">
-    <value>Class</value>
+  <data name="ColumnKind" xml:space="preserve">
+    <value>Kind</value>
+  </data>
+  <data name="ColumnTariff" xml:space="preserve">
+    <value>Tariff</value>
+  </data>
+  <data name="KindComputer" xml:space="preserve">
+    <value>Computer</value>
+  </data>
+  <data name="KindBilliard" xml:space="preserve">
+    <value>Billiard</value>
   </data>
   <data name="ColumnState" xml:space="preserve">
     <value>State</value>
@@ -104,7 +113,7 @@
     <value>Select exactly one PC.</value>
   </data>
   <data name="AssignNumberAndClassFirst" xml:space="preserve">
-    <value>Assign a number and class to this PC first (Settings &gt; Computers).</value>
+    <value>Assign a number and tariff to this PC first (Settings &gt; Computers &amp; Billiards).</value>
   </data>
   <data name="PcAlreadyHasSession" xml:space="preserve">
     <value>That PC already has an active session.</value>
@@ -133,9 +142,6 @@
   <data name="NoEligiblePcs" xml:space="preserve">
     <value>No eligible PCs.</value>
   </data>
-  <data name="PowerCommandSent" xml:space="preserve">
-    <value>“{0}” sent to {1} PC(s).</value>
-  </data>
   <data name="SettingsTitle" xml:space="preserve">
     <value>Settings</value>
   </data>
@@ -145,8 +151,8 @@
   <data name="TabTariffs" xml:space="preserve">
     <value>Tariffs</value>
   </data>
-  <data name="TabComputers" xml:space="preserve">
-    <value>Computers</value>
+  <data name="TabResources" xml:space="preserve">
+    <value>Computers &amp; Billiards</value>
   </data>
   <data name="LabelClubName" xml:space="preserve">
     <value>Club name</value>
@@ -178,11 +184,8 @@
   <data name="AfterSessionRestart" xml:space="preserve">
     <value>Restart</value>
   </data>
-  <data name="GroupStandard" xml:space="preserve">
-    <value>Standard</value>
-  </data>
-  <data name="GroupVip" xml:space="preserve">
-    <value>VIP</value>
+  <data name="LabelName" xml:space="preserve">
+    <value>Name</value>
   </data>
   <data name="LabelPricePerHour" xml:space="preserve">
     <value>Price per hour (UZS)</value>
@@ -193,8 +196,38 @@
   <data name="LabelMaxPayment" xml:space="preserve">
     <value>Maximum payment (UZS)</value>
   </data>
+  <data name="NewTariffDefaultName" xml:space="preserve">
+    <value>New tariff</value>
+  </data>
+  <data name="TariffNamesMustBeUniqueAndNotEmpty" xml:space="preserve">
+    <value>Tariff names must be unique and not empty.</value>
+  </data>
   <data name="ComputersHint" xml:space="preserve">
-    <value>Assign a number and class to a new PC so it can be used. Disabled PCs stay locked.</value>
+    <value>Assign a number and tariff to a new PC or billiard so it can be used. Disabled rows stay locked.</value>
+  </data>
+  <data name="LabelNumber" xml:space="preserve">
+    <value>Number</value>
+  </data>
+  <data name="LabelTariff" xml:space="preserve">
+    <value>Tariff</value>
+  </data>
+  <data name="NoTariffsForKind" xml:space="preserve">
+    <value>No tariffs exist for this kind yet - add one in Settings → Tariffs first.</value>
+  </data>
+  <data name="EnterAValidNumber" xml:space="preserve">
+    <value>Enter a valid number.</value>
+  </data>
+  <data name="ChooseATariff" xml:space="preserve">
+    <value>Choose a tariff.</value>
+  </data>
+  <data name="AddComputerTitle" xml:space="preserve">
+    <value>Add Computer</value>
+  </data>
+  <data name="AddBilliardTitle" xml:space="preserve">
+    <value>Add Billiard</value>
+  </data>
+  <data name="ButtonAdd" xml:space="preserve">
+    <value>Add</value>
   </data>
   <data name="ColumnEnabled" xml:space="preserve">
     <value>Enabled</value>
@@ -216,12 +249,6 @@
   </data>
   <data name="LanguageChangedNotice" xml:space="preserve">
     <value>Restart ClubControl to fully apply the new admin panel language.</value>
-  </data>
-  <data name="ClassStandard" xml:space="preserve">
-    <value>Standard</value>
-  </data>
-  <data name="ClassVip" xml:space="preserve">
-    <value>VIP</value>
   </data>
   <data name="LangEnglish" xml:space="preserve">
     <value>English</value>
@@ -358,8 +385,8 @@
   <data name="ByPc" xml:space="preserve">
     <value>By PC</value>
   </data>
-  <data name="ByClass" xml:space="preserve">
-    <value>By class</value>
+  <data name="ByTariff" xml:space="preserve">
+    <value>By tariff</value>
   </data>
   <data name="BySessionType" xml:space="preserve">
     <value>By session type</value>
