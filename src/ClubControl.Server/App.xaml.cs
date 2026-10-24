@@ -10,6 +10,7 @@ using ClubControl.Server.Services;
 using ClubControl.Server.Windows;
 using ClubControl.Shared;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;

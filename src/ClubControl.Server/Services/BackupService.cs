@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using ClubControl.Server.Data;
 using ClubControl.Shared;
 using Microsoft.Data.Sqlite;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
