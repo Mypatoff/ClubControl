@@ -6,7 +6,10 @@
         <Border DockPanel.Dock="Top" Background="{StaticResource SurfaceBrush}" BorderBrush="{StaticResource DividerBrush}"
                 BorderThickness="1" CornerRadius="8" Margin="0,0,0,10" Padding="12,10">
             <StackPanel>
-                <TextBlock x:Name="StatusText" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,10" Text="Starting..." />
+                <DockPanel Margin="0,0,0,10">
+                    <TextBlock x:Name="SelectionCountText" DockPanel.Dock="Right" Foreground="{StaticResource TextSecondaryBrush}" />
+                    <TextBlock x:Name="StatusText" Foreground="{StaticResource TextSecondaryBrush}" Text="Starting..." />
+                </DockPanel>
                 <StackPanel Orientation="Horizontal">
                     <Button x:Name="StartButton" Margin="0,0,6,0" Click="OnStart" />
                     <Button x:Name="ExtendButton" Margin="0,0,6,0" Click="OnExtend" />
@@ -38,7 +41,8 @@
                 BorderThickness="1" CornerRadius="8">
             <DataGrid x:Name="PcGrid" Margin="1" AutoGenerateColumns="False" IsReadOnly="True" BorderThickness="0"
                       SelectionMode="Extended" SelectionUnit="FullRow" CanUserAddRows="False"
-                      PreviewMouseRightButtonDown="PcGrid_PreviewMouseRightButtonDown">
+                      PreviewMouseRightButtonDown="PcGrid_PreviewMouseRightButtonDown"
+                      SelectionChanged="PcGrid_SelectionChanged" KeyDown="PcGrid_KeyDown">
                 <DataGrid.RowStyle>
                     <Style TargetType="DataGridRow" BasedOn="{StaticResource {x:Type DataGridRow}}">
                         <Setter Property="Background" Value="{Binding RowBrush}" />
@@ -46,10 +50,10 @@
                 </DataGrid.RowStyle>
                 <DataGrid.ContextMenu>
                     <ContextMenu>
-                        <MenuItem x:Name="CtxStart" Click="OnStart" />
+                        <MenuItem x:Name="CtxStart" InputGestureText="Enter" Click="OnStart" />
                         <MenuItem x:Name="CtxFree" Click="OnFree" />
                         <MenuItem x:Name="CtxExtend" Click="OnExtend" />
-                        <MenuItem x:Name="CtxStop" Click="OnStop" />
+                        <MenuItem x:Name="CtxStop" InputGestureText="Delete" Click="OnStop" />
                         <MenuItem x:Name="CtxMove" Click="OnMove" />
                         <Separator />
                         <MenuItem x:Name="CtxTurnOn" Click="OnTurnOn" />

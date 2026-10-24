@@ -46,6 +46,15 @@
   <data name="ToolbarReports" xml:space="preserve">
     <value>Отчёты</value>
   </data>
+  <data name="TooltipStart" xml:space="preserve">
+    <value>Старт (Enter)</value>
+  </data>
+  <data name="TooltipStop" xml:space="preserve">
+    <value>Стоп (Delete)</value>
+  </data>
+  <data name="SelectionCountFormat" xml:space="preserve">
+    <value>Выбрано: {0}</value>
+  </data>
   <data name="ColumnPcNumber" xml:space="preserve">
     <value>№ ПК</value>
   </data>

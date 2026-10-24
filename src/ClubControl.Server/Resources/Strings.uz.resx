@@ -46,6 +46,15 @@
   <data name="ToolbarReports" xml:space="preserve">
     <value>Hisobotlar</value>
   </data>
+  <data name="TooltipStart" xml:space="preserve">
+    <value>Boshlash (Enter)</value>
+  </data>
+  <data name="TooltipStop" xml:space="preserve">
+    <value>Toʻxtatish (Delete)</value>
+  </data>
+  <data name="SelectionCountFormat" xml:space="preserve">
+    <value>{0} tanlandi</value>
+  </data>
   <data name="ColumnPcNumber" xml:space="preserve">
     <value>Kompyuter №</value>
   </data>

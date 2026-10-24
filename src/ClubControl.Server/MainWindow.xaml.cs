@@ -38,6 +38,8 @@ public partial class MainWindow : Window
     private void ApplyLocalization()
     {
         StartButton.Content = CtxStart.Header = Strings.Get("ToolbarStart");
+        StartButton.ToolTip = Strings.Get("TooltipStart");
+        StopButton.ToolTip = Strings.Get("TooltipStop");
         CtxFree.Header = Strings.Get("FreeSessionTitle");
         ExtendButton.Content = CtxExtend.Header = Strings.Get("ToolbarExtend");
         StopButton.Content = CtxStop.Header = Strings.Get("ToolbarStop");
@@ -191,6 +193,29 @@ public partial class MainWindow : Window
         }
 
         return null;
+    }
+
+    // ---- keyboard shortcuts (Enter = Start, Delete = Stop) and the selection-count hint ----
+
+    private void PcGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        var count = PcGrid.SelectedItems.Count;
+        SelectionCountText.Text = count > 0 ? Strings.Format("SelectionCountFormat", count) : "";
+    }
+
+    private void PcGrid_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+    {
+        switch (e.Key)
+        {
+            case System.Windows.Input.Key.Enter:
+                OnStart(sender, e);
+                e.Handled = true;
+                break;
+            case System.Windows.Input.Key.Delete:
+                OnStop(sender, e);
+                e.Handled = true;
+                break;
+        }
     }
 
     // ---- toolbar ----

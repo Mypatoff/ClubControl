@@ -46,6 +46,15 @@
   <data name="ToolbarReports" xml:space="preserve">
     <value>Reports</value>
   </data>
+  <data name="TooltipStart" xml:space="preserve">
+    <value>Start (Enter)</value>
+  </data>
+  <data name="TooltipStop" xml:space="preserve">
+    <value>Stop (Delete)</value>
+  </data>
+  <data name="SelectionCountFormat" xml:space="preserve">
+    <value>{0} selected</value>
+  </data>
   <data name="ColumnPcNumber" xml:space="preserve">
     <value>PC #</value>
   </data>
