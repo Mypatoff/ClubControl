@@ -1,0 +1,34 @@
+using System.Windows;
+using ClubControl.Client.Native;
+
+namespace ClubControl.Client;
+
+public partial class App : Application
+{
+#if DEBUG
+    // Test-only escape hatch: the lock screen blocks Alt+F4 and friends, so without this a tester
+    // can get stuck behind it. Ctrl+Shift+F12 just closes the client; it is never built into Release.
+    private const int VkF12 = 0x7B;
+    private NativeKeyboardHook? _debugExitHook;
+
+    protected override void OnStartup(StartupEventArgs e)
+    {
+        base.OnStartup(e);
+
+        _debugExitHook = new NativeKeyboardHook(vkCode =>
+        {
+            if (vkCode == VkF12 && NativeKeyboardHook.IsControlDown && NativeKeyboardHook.IsShiftDown)
+                Dispatcher.Invoke(Shutdown);
+
+            return false; // never swallow the key - this hook only watches
+        });
+        _debugExitHook.Install();
+    }
+
+    protected override void OnExit(ExitEventArgs e)
+    {
+        _debugExitHook?.Dispose();
+        base.OnExit(e);
+    }
+#endif
+}

@@ -1,0 +1,379 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="Save" xml:space="preserve">
+    <value>Save</value>
+  </data>
+  <data name="Ok" xml:space="preserve">
+    <value>OK</value>
+  </data>
+  <data name="Close" xml:space="preserve">
+    <value>Close</value>
+  </data>
+  <data name="ConfirmTitle" xml:space="preserve">
+    <value>Confirm</value>
+  </data>
+  <data name="ToolbarStart" xml:space="preserve">
+    <value>Start</value>
+  </data>
+  <data name="ToolbarExtend" xml:space="preserve">
+    <value>Extend</value>
+  </data>
+  <data name="ToolbarStop" xml:space="preserve">
+    <value>Stop</value>
+  </data>
+  <data name="ToolbarMove" xml:space="preserve">
+    <value>Move</value>
+  </data>
+  <data name="ToolbarTurnOn" xml:space="preserve">
+    <value>Turn on</value>
+  </data>
+  <data name="ToolbarRestart" xml:space="preserve">
+    <value>Restart</value>
+  </data>
+  <data name="ToolbarShutDown" xml:space="preserve">
+    <value>Shut down</value>
+  </data>
+  <data name="ToolbarSettings" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="ToolbarReports" xml:space="preserve">
+    <value>Reports</value>
+  </data>
+  <data name="ColumnPcNumber" xml:space="preserve">
+    <value>PC #</value>
+  </data>
+  <data name="ColumnClass" xml:space="preserve">
+    <value>Class</value>
+  </data>
+  <data name="ColumnState" xml:space="preserve">
+    <value>State</value>
+  </data>
+  <data name="ColumnSession" xml:space="preserve">
+    <value>Session</value>
+  </data>
+  <data name="ColumnAmount" xml:space="preserve">
+    <value>Amount</value>
+  </data>
+  <data name="ColumnStart" xml:space="preserve">
+    <value>Start</value>
+  </data>
+  <data name="ColumnEnd" xml:space="preserve">
+    <value>End</value>
+  </data>
+  <data name="ColumnRemaining" xml:space="preserve">
+    <value>Remaining</value>
+  </data>
+  <data name="EventLogHeader" xml:space="preserve">
+    <value>Event log</value>
+  </data>
+  <data name="StatusListening" xml:space="preserve">
+    <value>Listening on TCP {0} / UDP {1}. {2}/{3} PCs online.</value>
+  </data>
+  <data name="StateFree" xml:space="preserve">
+    <value>Free</value>
+  </data>
+  <data name="StateLocked" xml:space="preserve">
+    <value>Locked</value>
+  </data>
+  <data name="StatePrepay" xml:space="preserve">
+    <value>Prepay</value>
+  </data>
+  <data name="StatePostpay" xml:space="preserve">
+    <value>Postpay</value>
+  </data>
+  <data name="StateLimitReached" xml:space="preserve">
+    <value>Limit reached</value>
+  </data>
+  <data name="StateOfflineUnlocked" xml:space="preserve">
+    <value>Offline-unlocked</value>
+  </data>
+  <data name="StateNewPc" xml:space="preserve">
+    <value>New PC</value>
+  </data>
+  <data name="SessionFree" xml:space="preserve">
+    <value>Free</value>
+  </data>
+  <data name="SelectExactlyOnePc" xml:space="preserve">
+    <value>Select exactly one PC.</value>
+  </data>
+  <data name="AssignNumberAndClassFirst" xml:space="preserve">
+    <value>Assign a number and class to this PC first (Settings &gt; Computers).</value>
+  </data>
+  <data name="PcAlreadyHasSession" xml:space="preserve">
+    <value>That PC already has an active session.</value>
+  </data>
+  <data name="ExtendOnlyActivePrepay" xml:space="preserve">
+    <value>Extend only works on an active prepay session.</value>
+  </data>
+  <data name="MoveOnlyActiveSession" xml:space="preserve">
+    <value>Move only works on an active session.</value>
+  </data>
+  <data name="PcHasNoActiveSession" xml:space="preserve">
+    <value>That PC has no active session.</value>
+  </data>
+  <data name="StopPrepayConfirm" xml:space="preserve">
+    <value>Stop this prepay session now? There is no refund.</value>
+  </data>
+  <data name="CannotStopSessionTitle" xml:space="preserve">
+    <value>Cannot stop session</value>
+  </data>
+  <data name="NoPcsSelectedConfirmAll" xml:space="preserve">
+    <value>No PC is selected. Apply to ALL enabled PCs?</value>
+  </data>
+  <data name="SelectedHaveActiveSessionConfirm" xml:space="preserve">
+    <value>One or more selected PCs have an active session. Continue anyway?</value>
+  </data>
+  <data name="NoEligiblePcs" xml:space="preserve">
+    <value>No eligible PCs.</value>
+  </data>
+  <data name="PowerCommandSent" xml:space="preserve">
+    <value>“{0}” sent to {1} PC(s).</value>
+  </data>
+  <data name="SettingsTitle" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="TabGeneral" xml:space="preserve">
+    <value>General</value>
+  </data>
+  <data name="TabTariffs" xml:space="preserve">
+    <value>Tariffs</value>
+  </data>
+  <data name="TabComputers" xml:space="preserve">
+    <value>Computers</value>
+  </data>
+  <data name="LabelClubName" xml:space="preserve">
+    <value>Club name</value>
+  </data>
+  <data name="LabelLockScreenText" xml:space="preserve">
+    <value>Lock-screen text</value>
+  </data>
+  <data name="LabelLockScreenLanguage" xml:space="preserve">
+    <value>Lock-screen language</value>
+  </data>
+  <data name="LabelAdminPanelLanguage" xml:space="preserve">
+    <value>Admin panel language</value>
+  </data>
+  <data name="LabelWarningMinutes" xml:space="preserve">
+    <value>Warning minutes (first, second)</value>
+  </data>
+  <data name="LabelAfterSessionAction" xml:space="preserve">
+    <value>After session ends</value>
+  </data>
+  <data name="LabelProcessList" xml:space="preserve">
+    <value>Process list (comma-separated, e.g. steam.exe)</value>
+  </data>
+  <data name="LabelOfflineWait" xml:space="preserve">
+    <value>Offline-unlock wait (seconds)</value>
+  </data>
+  <data name="AfterSessionClose" xml:space="preserve">
+    <value>Close processes</value>
+  </data>
+  <data name="AfterSessionRestart" xml:space="preserve">
+    <value>Restart</value>
+  </data>
+  <data name="GroupStandard" xml:space="preserve">
+    <value>Standard</value>
+  </data>
+  <data name="GroupVip" xml:space="preserve">
+    <value>VIP</value>
+  </data>
+  <data name="LabelPricePerHour" xml:space="preserve">
+    <value>Price per hour (UZS)</value>
+  </data>
+  <data name="LabelMinPayment" xml:space="preserve">
+    <value>Minimum payment (UZS)</value>
+  </data>
+  <data name="LabelMaxPayment" xml:space="preserve">
+    <value>Maximum payment (UZS)</value>
+  </data>
+  <data name="ComputersHint" xml:space="preserve">
+    <value>Assign a number and class to a new PC so it can be used. Disabled PCs stay locked.</value>
+  </data>
+  <data name="ColumnEnabled" xml:space="preserve">
+    <value>Enabled</value>
+  </data>
+  <data name="ColumnHostname" xml:space="preserve">
+    <value>Hostname</value>
+  </data>
+  <data name="ColumnIp" xml:space="preserve">
+    <value>IP</value>
+  </data>
+  <data name="ColumnMac" xml:space="preserve">
+    <value>MAC</value>
+  </data>
+  <data name="ColumnOnline" xml:space="preserve">
+    <value>Online</value>
+  </data>
+  <data name="PcNumbersMustBeUnique" xml:space="preserve">
+    <value>PC numbers must be unique.</value>
+  </data>
+  <data name="LanguageChangedNotice" xml:space="preserve">
+    <value>Restart ClubControl to fully apply the new admin panel language.</value>
+  </data>
+  <data name="ClassStandard" xml:space="preserve">
+    <value>Standard</value>
+  </data>
+  <data name="ClassVip" xml:space="preserve">
+    <value>VIP</value>
+  </data>
+  <data name="LangEnglish" xml:space="preserve">
+    <value>English</value>
+  </data>
+  <data name="LangRussian" xml:space="preserve">
+    <value>Russian</value>
+  </data>
+  <data name="LangUzbek" xml:space="preserve">
+    <value>Uzbek</value>
+  </data>
+  <data name="StartSessionTitle" xml:space="preserve">
+    <value>Start session</value>
+  </data>
+  <data name="PcNumberFormat" xml:space="preserve">
+    <value>PC #{0}</value>
+  </data>
+  <data name="TargetPcFormat" xml:space="preserve">
+    <value>PC #{0} ({1})</value>
+  </data>
+  <data name="PrepayByMoney" xml:space="preserve">
+    <value>Prepay — by money (UZS)</value>
+  </data>
+  <data name="PrepayByTime" xml:space="preserve">
+    <value>Prepay — by time (minutes)</value>
+  </data>
+  <data name="Postpay" xml:space="preserve">
+    <value>Postpay (counts up, pay at the end)</value>
+  </data>
+  <data name="FreeSession" xml:space="preserve">
+    <value>Free (no charge)</value>
+  </data>
+  <data name="ButtonStart" xml:space="preserve">
+    <value>Start</value>
+  </data>
+  <data name="ExtendSessionTitle" xml:space="preserve">
+    <value>Extend session</value>
+  </data>
+  <data name="AddMoney" xml:space="preserve">
+    <value>Add money (UZS)</value>
+  </data>
+  <data name="AddTime" xml:space="preserve">
+    <value>Add time (minutes)</value>
+  </data>
+  <data name="ButtonExtend" xml:space="preserve">
+    <value>Extend</value>
+  </data>
+  <data name="MoveSessionTitle" xml:space="preserve">
+    <value>Move session</value>
+  </data>
+  <data name="MoveSessionHeaderFormat" xml:space="preserve">
+    <value>Move PC #{0}'s session</value>
+  </data>
+  <data name="MoveToLabel" xml:space="preserve">
+    <value>Move to:</value>
+  </data>
+  <data name="NoFreePc" xml:space="preserve">
+    <value>No free PC available to move to.</value>
+  </data>
+  <data name="ChooseTargetPc" xml:space="preserve">
+    <value>Choose a target PC.</value>
+  </data>
+  <data name="ButtonMove" xml:space="preserve">
+    <value>Move</value>
+  </data>
+  <data name="PaymentTitle" xml:space="preserve">
+    <value>Payment</value>
+  </data>
+  <data name="AmountDueLabel" xml:space="preserve">
+    <value>Amount due:</value>
+  </data>
+  <data name="NoActiveSessionFound" xml:space="preserve">
+    <value>No active session found.</value>
+  </data>
+  <data name="ButtonPaid" xml:space="preserve">
+    <value>Paid</value>
+  </data>
+  <data name="PasswordLabel" xml:space="preserve">
+    <value>Password:</value>
+  </data>
+  <data name="ConfirmPasswordLabel" xml:space="preserve">
+    <value>Confirm password:</value>
+  </data>
+  <data name="TitleCreatePassword" xml:space="preserve">
+    <value>Create an admin password</value>
+  </data>
+  <data name="TitleResetPassword" xml:space="preserve">
+    <value>The reset-password file was found — set a new admin password</value>
+  </data>
+  <data name="TitleVerifyForExit" xml:space="preserve">
+    <value>Enter the admin password to exit ClubControl</value>
+  </data>
+  <data name="TitleLogin" xml:space="preserve">
+    <value>Enter the admin password</value>
+  </data>
+  <data name="PasswordEmpty" xml:space="preserve">
+    <value>Password cannot be empty.</value>
+  </data>
+  <data name="PasswordsDontMatch" xml:space="preserve">
+    <value>Passwords do not match.</value>
+  </data>
+  <data name="WrongPassword" xml:space="preserve">
+    <value>Wrong password.</value>
+  </data>
+  <data name="ReportsTitle" xml:space="preserve">
+    <value>Reports</value>
+  </data>
+  <data name="PeriodDaily" xml:space="preserve">
+    <value>Daily</value>
+  </data>
+  <data name="PeriodWeekly" xml:space="preserve">
+    <value>Weekly</value>
+  </data>
+  <data name="PeriodMonthly" xml:space="preserve">
+    <value>Monthly</value>
+  </data>
+  <data name="FromLabel" xml:space="preserve">
+    <value>From</value>
+  </data>
+  <data name="ToLabel" xml:space="preserve">
+    <value>To</value>
+  </data>
+  <data name="TotalIncome" xml:space="preserve">
+    <value>Total income</value>
+  </data>
+  <data name="TotalSessions" xml:space="preserve">
+    <value>Sessions</value>
+  </data>
+  <data name="TotalHours" xml:space="preserve">
+    <value>Total hours</value>
+  </data>
+  <data name="FreeMinutes" xml:space="preserve">
+    <value>Free minutes</value>
+  </data>
+  <data name="ByPc" xml:space="preserve">
+    <value>By PC</value>
+  </data>
+  <data name="ByClass" xml:space="preserve">
+    <value>By class</value>
+  </data>
+  <data name="BySessionType" xml:space="preserve">
+    <value>By session type</value>
+  </data>
+  <data name="ColumnIncome" xml:space="preserve">
+    <value>Income</value>
+  </data>
+  <data name="ColumnHours" xml:space="preserve">
+    <value>Hours</value>
+  </data>
+  <data name="ColumnType" xml:space="preserve">
+    <value>Type</value>
+  </data>
+  <data name="Refresh" xml:space="preserve">
+    <value>Refresh</value>
+  </data>
+</root>

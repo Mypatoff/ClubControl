@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="PleaseGoToAdmin" xml:space="preserve">
+    <value>Обратитесь к администратору</value>
+  </data>
+  <data name="PcNumberFormat" xml:space="preserve">
+    <value>ПК №{0}</value>
+  </data>
+  <data name="PerHourFormat" xml:space="preserve">
+    <value>{0} UZS/час</value>
+  </data>
+  <data name="ClassStandard" xml:space="preserve">
+    <value>Стандарт</value>
+  </data>
+  <data name="ClassVip" xml:space="preserve">
+    <value>VIP</value>
+  </data>
+  <data name="OfflineMode" xml:space="preserve">
+    <value>Офлайн-режим</value>
+  </data>
+  <data name="Remaining" xml:space="preserve">
+    <value>осталось</value>
+  </data>
+  <data name="CurrencyUzs" xml:space="preserve">
+    <value>UZS</value>
+  </data>
+  <data name="WarningMinutesLeft" xml:space="preserve">
+    <value>Осталось {0} мин.</value>
+  </data>
+  <data name="WarningCostApproaching" xml:space="preserve">
+    <value>Стоимость приближается к максимуму.</value>
+  </data>
+</root>

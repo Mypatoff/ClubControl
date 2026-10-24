@@ -1,0 +1,379 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Cancel" xml:space="preserve">
+    <value>Bekor qilish</value>
+  </data>
+  <data name="Save" xml:space="preserve">
+    <value>Saqlash</value>
+  </data>
+  <data name="Ok" xml:space="preserve">
+    <value>OK</value>
+  </data>
+  <data name="Close" xml:space="preserve">
+    <value>Yopish</value>
+  </data>
+  <data name="ConfirmTitle" xml:space="preserve">
+    <value>Tasdiqlash</value>
+  </data>
+  <data name="ToolbarStart" xml:space="preserve">
+    <value>Boshlash</value>
+  </data>
+  <data name="ToolbarExtend" xml:space="preserve">
+    <value>Uzaytirish</value>
+  </data>
+  <data name="ToolbarStop" xml:space="preserve">
+    <value>Toʻxtatish</value>
+  </data>
+  <data name="ToolbarMove" xml:space="preserve">
+    <value>Koʻchirish</value>
+  </data>
+  <data name="ToolbarTurnOn" xml:space="preserve">
+    <value>Yoqish</value>
+  </data>
+  <data name="ToolbarRestart" xml:space="preserve">
+    <value>Qayta yuklash</value>
+  </data>
+  <data name="ToolbarShutDown" xml:space="preserve">
+    <value>Oʻchirish</value>
+  </data>
+  <data name="ToolbarSettings" xml:space="preserve">
+    <value>Sozlamalar</value>
+  </data>
+  <data name="ToolbarReports" xml:space="preserve">
+    <value>Hisobotlar</value>
+  </data>
+  <data name="ColumnPcNumber" xml:space="preserve">
+    <value>Kompyuter №</value>
+  </data>
+  <data name="ColumnClass" xml:space="preserve">
+    <value>Sinf</value>
+  </data>
+  <data name="ColumnState" xml:space="preserve">
+    <value>Holat</value>
+  </data>
+  <data name="ColumnSession" xml:space="preserve">
+    <value>Sessiya</value>
+  </data>
+  <data name="ColumnAmount" xml:space="preserve">
+    <value>Summa</value>
+  </data>
+  <data name="ColumnStart" xml:space="preserve">
+    <value>Boshlanish</value>
+  </data>
+  <data name="ColumnEnd" xml:space="preserve">
+    <value>Tugash</value>
+  </data>
+  <data name="ColumnRemaining" xml:space="preserve">
+    <value>Qoldi</value>
+  </data>
+  <data name="EventLogHeader" xml:space="preserve">
+    <value>Voqealar jurnali</value>
+  </data>
+  <data name="StatusListening" xml:space="preserve">
+    <value>TCP {0} / UDP {1} tinglanadi. {2}/{3} kompyuter onlayn.</value>
+  </data>
+  <data name="StateFree" xml:space="preserve">
+    <value>Boʻsh</value>
+  </data>
+  <data name="StateLocked" xml:space="preserve">
+    <value>Bloklangan</value>
+  </data>
+  <data name="StatePrepay" xml:space="preserve">
+    <value>Oldindan toʻlov</value>
+  </data>
+  <data name="StatePostpay" xml:space="preserve">
+    <value>Keyin toʻlov</value>
+  </data>
+  <data name="StateLimitReached" xml:space="preserve">
+    <value>Limitga yetdi</value>
+  </data>
+  <data name="StateOfflineUnlocked" xml:space="preserve">
+    <value>Oflayn ochildi</value>
+  </data>
+  <data name="StateNewPc" xml:space="preserve">
+    <value>Yangi kompyuter</value>
+  </data>
+  <data name="SessionFree" xml:space="preserve">
+    <value>Bepul</value>
+  </data>
+  <data name="SelectExactlyOnePc" xml:space="preserve">
+    <value>Faqat bitta kompyuterni tanlang.</value>
+  </data>
+  <data name="AssignNumberAndClassFirst" xml:space="preserve">
+    <value>Avval shu kompyuterga raqam va sinf belgilang (Sozlamalar &gt; Kompyuterlar).</value>
+  </data>
+  <data name="PcAlreadyHasSession" xml:space="preserve">
+    <value>Bu kompyuterda allaqachon faol sessiya bor.</value>
+  </data>
+  <data name="ExtendOnlyActivePrepay" xml:space="preserve">
+    <value>Uzaytirish faqat faol oldindan toʻlov sessiyasi uchun ishlaydi.</value>
+  </data>
+  <data name="MoveOnlyActiveSession" xml:space="preserve">
+    <value>Koʻchirish faqat faol sessiya uchun ishlaydi.</value>
+  </data>
+  <data name="PcHasNoActiveSession" xml:space="preserve">
+    <value>Bu kompyuterda faol sessiya yoʻq.</value>
+  </data>
+  <data name="StopPrepayConfirm" xml:space="preserve">
+    <value>Oldindan toʻlov sessiyasini hozir toʻxtatasizmi? Pul qaytarilmaydi.</value>
+  </data>
+  <data name="CannotStopSessionTitle" xml:space="preserve">
+    <value>Sessiyani toʻxtatib boʻlmadi</value>
+  </data>
+  <data name="NoPcsSelectedConfirmAll" xml:space="preserve">
+    <value>Hech qaysi kompyuter tanlanmagan. BARCHA yoqilgan kompyuterlarga qoʻllansinmi?</value>
+  </data>
+  <data name="SelectedHaveActiveSessionConfirm" xml:space="preserve">
+    <value>Tanlangan kompyuterlardan birida yoki bir nechtasida faol sessiya bor. Davom etasizmi?</value>
+  </data>
+  <data name="NoEligiblePcs" xml:space="preserve">
+    <value>Mos kompyuter topilmadi.</value>
+  </data>
+  <data name="PowerCommandSent" xml:space="preserve">
+    <value>«{0}» {1} kompyuterga yuborildi.</value>
+  </data>
+  <data name="SettingsTitle" xml:space="preserve">
+    <value>Sozlamalar</value>
+  </data>
+  <data name="TabGeneral" xml:space="preserve">
+    <value>Umumiy</value>
+  </data>
+  <data name="TabTariffs" xml:space="preserve">
+    <value>Tariflar</value>
+  </data>
+  <data name="TabComputers" xml:space="preserve">
+    <value>Kompyuterlar</value>
+  </data>
+  <data name="LabelClubName" xml:space="preserve">
+    <value>Klub nomi</value>
+  </data>
+  <data name="LabelLockScreenText" xml:space="preserve">
+    <value>Bloklash ekrani matni</value>
+  </data>
+  <data name="LabelLockScreenLanguage" xml:space="preserve">
+    <value>Bloklash ekrani tili</value>
+  </data>
+  <data name="LabelAdminPanelLanguage" xml:space="preserve">
+    <value>Boshqaruv paneli tili</value>
+  </data>
+  <data name="LabelWarningMinutes" xml:space="preserve">
+    <value>Ogohlantirish daqiqalari (birinchi, ikkinchi)</value>
+  </data>
+  <data name="LabelAfterSessionAction" xml:space="preserve">
+    <value>Sessiya tugagandan keyin</value>
+  </data>
+  <data name="LabelProcessList" xml:space="preserve">
+    <value>Jarayonlar roʻyxati (vergul bilan, masalan steam.exe)</value>
+  </data>
+  <data name="LabelOfflineWait" xml:space="preserve">
+    <value>Oflayn ochilish kutish vaqti (soniya)</value>
+  </data>
+  <data name="AfterSessionClose" xml:space="preserve">
+    <value>Jarayonlarni yopish</value>
+  </data>
+  <data name="AfterSessionRestart" xml:space="preserve">
+    <value>Qayta yuklash</value>
+  </data>
+  <data name="GroupStandard" xml:space="preserve">
+    <value>Standart</value>
+  </data>
+  <data name="GroupVip" xml:space="preserve">
+    <value>VIP</value>
+  </data>
+  <data name="LabelPricePerHour" xml:space="preserve">
+    <value>Soatlik narx (UZS)</value>
+  </data>
+  <data name="LabelMinPayment" xml:space="preserve">
+    <value>Eng kam toʻlov (UZS)</value>
+  </data>
+  <data name="LabelMaxPayment" xml:space="preserve">
+    <value>Eng koʻp toʻlov (UZS)</value>
+  </data>
+  <data name="ComputersHint" xml:space="preserve">
+    <value>Yangi kompyuterdan foydalanish uchun unga raqam va sinf belgilang. Oʻchirilgan kompyuterlar bloklangan holda qoladi.</value>
+  </data>
+  <data name="ColumnEnabled" xml:space="preserve">
+    <value>Yoqilgan</value>
+  </data>
+  <data name="ColumnHostname" xml:space="preserve">
+    <value>Kompyuter nomi</value>
+  </data>
+  <data name="ColumnIp" xml:space="preserve">
+    <value>IP</value>
+  </data>
+  <data name="ColumnMac" xml:space="preserve">
+    <value>MAC</value>
+  </data>
+  <data name="ColumnOnline" xml:space="preserve">
+    <value>Onlayn</value>
+  </data>
+  <data name="PcNumbersMustBeUnique" xml:space="preserve">
+    <value>Kompyuter raqamlari takrorlanmasligi kerak.</value>
+  </data>
+  <data name="LanguageChangedNotice" xml:space="preserve">
+    <value>Yangi panel tilini toʻliq qoʻllash uchun ClubControl-ni qayta ishga tushiring.</value>
+  </data>
+  <data name="ClassStandard" xml:space="preserve">
+    <value>Standart</value>
+  </data>
+  <data name="ClassVip" xml:space="preserve">
+    <value>VIP</value>
+  </data>
+  <data name="LangEnglish" xml:space="preserve">
+    <value>Inglizcha</value>
+  </data>
+  <data name="LangRussian" xml:space="preserve">
+    <value>Ruscha</value>
+  </data>
+  <data name="LangUzbek" xml:space="preserve">
+    <value>Oʻzbekcha</value>
+  </data>
+  <data name="StartSessionTitle" xml:space="preserve">
+    <value>Sessiyani boshlash</value>
+  </data>
+  <data name="PcNumberFormat" xml:space="preserve">
+    <value>Kompyuter №{0}</value>
+  </data>
+  <data name="TargetPcFormat" xml:space="preserve">
+    <value>Kompyuter №{0} ({1})</value>
+  </data>
+  <data name="PrepayByMoney" xml:space="preserve">
+    <value>Oldindan toʻlov — summa boʻyicha (UZS)</value>
+  </data>
+  <data name="PrepayByTime" xml:space="preserve">
+    <value>Oldindan toʻlov — vaqt boʻyicha (daqiqa)</value>
+  </data>
+  <data name="Postpay" xml:space="preserve">
+    <value>Keyin toʻlov (vaqt ortib boradi, oxirida toʻlanadi)</value>
+  </data>
+  <data name="FreeSession" xml:space="preserve">
+    <value>Bepul (toʻlovsiz)</value>
+  </data>
+  <data name="ButtonStart" xml:space="preserve">
+    <value>Boshlash</value>
+  </data>
+  <data name="ExtendSessionTitle" xml:space="preserve">
+    <value>Sessiyani uzaytirish</value>
+  </data>
+  <data name="AddMoney" xml:space="preserve">
+    <value>Summa qoʻshish (UZS)</value>
+  </data>
+  <data name="AddTime" xml:space="preserve">
+    <value>Vaqt qoʻshish (daqiqa)</value>
+  </data>
+  <data name="ButtonExtend" xml:space="preserve">
+    <value>Uzaytirish</value>
+  </data>
+  <data name="MoveSessionTitle" xml:space="preserve">
+    <value>Sessiyani koʻchirish</value>
+  </data>
+  <data name="MoveSessionHeaderFormat" xml:space="preserve">
+    <value>№{0} kompyuter sessiyasini koʻchirish</value>
+  </data>
+  <data name="MoveToLabel" xml:space="preserve">
+    <value>Koʻchirish:</value>
+  </data>
+  <data name="NoFreePc" xml:space="preserve">
+    <value>Koʻchirish uchun boʻsh kompyuter yoʻq.</value>
+  </data>
+  <data name="ChooseTargetPc" xml:space="preserve">
+    <value>Maqsadli kompyuterni tanlang.</value>
+  </data>
+  <data name="ButtonMove" xml:space="preserve">
+    <value>Koʻchirish</value>
+  </data>
+  <data name="PaymentTitle" xml:space="preserve">
+    <value>Toʻlov</value>
+  </data>
+  <data name="AmountDueLabel" xml:space="preserve">
+    <value>Toʻlanadigan summa:</value>
+  </data>
+  <data name="NoActiveSessionFound" xml:space="preserve">
+    <value>Faol sessiya topilmadi.</value>
+  </data>
+  <data name="ButtonPaid" xml:space="preserve">
+    <value>Toʻlandi</value>
+  </data>
+  <data name="PasswordLabel" xml:space="preserve">
+    <value>Parol:</value>
+  </data>
+  <data name="ConfirmPasswordLabel" xml:space="preserve">
+    <value>Parolni tasdiqlang:</value>
+  </data>
+  <data name="TitleCreatePassword" xml:space="preserve">
+    <value>Administrator paroli yarating</value>
+  </data>
+  <data name="TitleResetPassword" xml:space="preserve">
+    <value>Parolni tiklash fayli topildi — yangi administrator parolini oʻrnating</value>
+  </data>
+  <data name="TitleVerifyForExit" xml:space="preserve">
+    <value>ClubControl dan chiqish uchun administrator parolini kiriting</value>
+  </data>
+  <data name="TitleLogin" xml:space="preserve">
+    <value>Administrator parolini kiriting</value>
+  </data>
+  <data name="PasswordEmpty" xml:space="preserve">
+    <value>Parol boʻsh boʻlishi mumkin emas.</value>
+  </data>
+  <data name="PasswordsDontMatch" xml:space="preserve">
+    <value>Parollar mos kelmadi.</value>
+  </data>
+  <data name="WrongPassword" xml:space="preserve">
+    <value>Parol xato.</value>
+  </data>
+  <data name="ReportsTitle" xml:space="preserve">
+    <value>Hisobotlar</value>
+  </data>
+  <data name="PeriodDaily" xml:space="preserve">
+    <value>Kunlik</value>
+  </data>
+  <data name="PeriodWeekly" xml:space="preserve">
+    <value>Haftalik</value>
+  </data>
+  <data name="PeriodMonthly" xml:space="preserve">
+    <value>Oylik</value>
+  </data>
+  <data name="FromLabel" xml:space="preserve">
+    <value>Dan</value>
+  </data>
+  <data name="ToLabel" xml:space="preserve">
+    <value>Gacha</value>
+  </data>
+  <data name="TotalIncome" xml:space="preserve">
+    <value>Umumiy daromad</value>
+  </data>
+  <data name="TotalSessions" xml:space="preserve">
+    <value>Sessiyalar</value>
+  </data>
+  <data name="TotalHours" xml:space="preserve">
+    <value>Jami soat</value>
+  </data>
+  <data name="FreeMinutes" xml:space="preserve">
+    <value>Bepul daqiqalar</value>
+  </data>
+  <data name="ByPc" xml:space="preserve">
+    <value>Kompyuter boʻyicha</value>
+  </data>
+  <data name="ByClass" xml:space="preserve">
+    <value>Sinf boʻyicha</value>
+  </data>
+  <data name="BySessionType" xml:space="preserve">
+    <value>Sessiya turi boʻyicha</value>
+  </data>
+  <data name="ColumnIncome" xml:space="preserve">
+    <value>Daromad</value>
+  </data>
+  <data name="ColumnHours" xml:space="preserve">
+    <value>Soat</value>
+  </data>
+  <data name="ColumnType" xml:space="preserve">
+    <value>Turi</value>
+  </data>
+  <data name="Refresh" xml:space="preserve">
+    <value>Yangilash</value>
+  </data>
+</root>

@@ -1,0 +1,37 @@
+using System.Text.RegularExpressions;
+
+namespace ClubControl.Shared;
+
+/// <summary>Builds the Wake-on-LAN magic packet (SPEC section 6). Sending it over UDP is the server's job.</summary>
+public static class WakeOnLan
+{
+    public const int Port = 9;
+
+    /// <summary>6 bytes of 0xFF followed by the 6-byte MAC address repeated 16 times (102 bytes total).</summary>
+    public static byte[] BuildMagicPacket(string macAddress)
+    {
+        var mac = ParseMacAddress(macAddress);
+
+        var packet = new byte[6 + 16 * 6];
+        for (var i = 0; i < 6; i++)
+            packet[i] = 0xFF;
+
+        for (var repeat = 0; repeat < 16; repeat++)
+            mac.CopyTo(packet, 6 + repeat * 6);
+
+        return packet;
+    }
+
+    private static byte[] ParseMacAddress(string macAddress)
+    {
+        var hex = Regex.Replace(macAddress, "[^0-9A-Fa-f]", "");
+        if (hex.Length != 12)
+            throw new FormatException($"'{macAddress}' is not a valid MAC address.");
+
+        var bytes = new byte[6];
+        for (var i = 0; i < 6; i++)
+            bytes[i] = Convert.ToByte(hex.Substring(i * 2, 2), 16);
+
+        return bytes;
+    }
+}

@@ -1,0 +1,90 @@
+<Window x:Class="ClubControl.Server.Windows.SettingsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Settings" Width="620" Height="520"
+        WindowStartupLocation="CenterOwner" ShowInTaskbar="False">
+    <DockPanel Margin="16">
+        <TextBlock x:Name="ErrorText" DockPanel.Dock="Bottom" Foreground="Red" TextWrapping="Wrap" Margin="0,8,0,0" />
+        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,8,0,0">
+            <Button x:Name="CancelButton" Width="90" Margin="0,0,8,0" Click="OnCancel" />
+            <Button x:Name="SaveButton" Width="90" IsDefault="True" Click="OnSave" />
+        </StackPanel>
+
+        <TabControl>
+            <TabItem x:Name="GeneralTab">
+                <StackPanel Margin="12">
+                    <TextBlock x:Name="ClubNameLabel" Margin="0,0,0,2" />
+                    <TextBox x:Name="ClubNameBox" Margin="0,0,0,10" />
+
+                    <TextBlock x:Name="LockScreenTextLabel" Margin="0,0,0,2" />
+                    <TextBox x:Name="LockScreenTextBox" Margin="0,0,0,10" />
+
+                    <TextBlock x:Name="LockScreenLanguageLabel" Margin="0,0,0,2" />
+                    <ComboBox x:Name="LockScreenLanguageCombo" DisplayMemberPath="Display" Margin="0,0,0,10" />
+
+                    <TextBlock x:Name="AdminPanelLanguageLabel" Margin="0,0,0,2" />
+                    <ComboBox x:Name="AdminPanelLanguageCombo" DisplayMemberPath="Display" Margin="0,0,0,10" />
+
+                    <TextBlock x:Name="WarningMinutesLabel" Margin="0,0,0,2" />
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                        <TextBox x:Name="WarningMinutes1Box" Width="60" />
+                        <TextBox x:Name="WarningMinutes2Box" Width="60" Margin="8,0,0,0" />
+                    </StackPanel>
+
+                    <TextBlock x:Name="AfterSessionActionLabel" Margin="0,0,0,2" />
+                    <ComboBox x:Name="AfterSessionActionCombo" DisplayMemberPath="Display" Margin="0,0,0,10" />
+
+                    <TextBlock x:Name="ProcessListLabel" Margin="0,0,0,2" />
+                    <TextBox x:Name="ProcessListBox" Margin="0,0,0,10" />
+
+                    <TextBlock x:Name="OfflineWaitLabel" Margin="0,0,0,2" />
+                    <TextBox x:Name="OfflineWaitBox" Width="80" HorizontalAlignment="Left" />
+                </StackPanel>
+            </TabItem>
+
+            <TabItem x:Name="TariffsTab">
+                <StackPanel Margin="12">
+                    <GroupBox x:Name="StandardGroup" Margin="0,0,0,12">
+                        <StackPanel Margin="8">
+                            <TextBlock x:Name="StandardPriceLabel" />
+                            <TextBox x:Name="StandardPriceBox" Margin="0,0,0,8" />
+                            <TextBlock x:Name="StandardMinLabel" />
+                            <TextBox x:Name="StandardMinBox" Margin="0,0,0,8" />
+                            <TextBlock x:Name="StandardMaxLabel" />
+                            <TextBox x:Name="StandardMaxBox" />
+                        </StackPanel>
+                    </GroupBox>
+
+                    <GroupBox x:Name="VipGroup">
+                        <StackPanel Margin="8">
+                            <TextBlock x:Name="VipPriceLabel" />
+                            <TextBox x:Name="VipPriceBox" Margin="0,0,0,8" />
+                            <TextBlock x:Name="VipMinLabel" />
+                            <TextBox x:Name="VipMinBox" Margin="0,0,0,8" />
+                            <TextBlock x:Name="VipMaxLabel" />
+                            <TextBox x:Name="VipMaxBox" />
+                        </StackPanel>
+                    </GroupBox>
+                </StackPanel>
+            </TabItem>
+
+            <TabItem x:Name="ComputersTab">
+                <DockPanel Margin="12">
+                    <TextBlock x:Name="ComputersHintText" DockPanel.Dock="Top" Margin="0,0,0,8" TextWrapping="Wrap" />
+                    <DataGrid x:Name="PcGrid" AutoGenerateColumns="False" CanUserAddRows="False">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn x:Name="PcNumberColumn" Binding="{Binding Number}" Width="60" />
+                            <DataGridComboBoxColumn x:Name="ClassColumn" SelectedValueBinding="{Binding Class}"
+                                                     DisplayMemberPath="Display" SelectedValuePath="Value" Width="90" />
+                            <DataGridCheckBoxColumn x:Name="EnabledColumn" Binding="{Binding Enabled}" Width="60" />
+                            <DataGridTextColumn x:Name="HostnameColumn" Binding="{Binding Hostname}" Width="150" IsReadOnly="True" />
+                            <DataGridTextColumn x:Name="IpColumn" Binding="{Binding IpAddress}" Width="110" IsReadOnly="True" />
+                            <DataGridTextColumn x:Name="MacColumn" Binding="{Binding MacAddress}" Width="130" IsReadOnly="True" />
+                            <DataGridCheckBoxColumn x:Name="OnlineColumn" Binding="{Binding IsOnline}" Width="55" IsReadOnly="True" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </DockPanel>
+            </TabItem>
+        </TabControl>
+    </DockPanel>
+</Window>

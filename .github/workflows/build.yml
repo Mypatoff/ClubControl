@@ -1,0 +1,48 @@
+name: Build
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Restore
+        run: dotnet restore ClubControl.sln
+        working-directory: .
+
+      - name: Run tests
+        run: dotnet test src/ClubControl.Tests/ClubControl.Tests.csproj -c Release --no-restore
+
+      - name: Publish server
+        run: dotnet publish src/ClubControl.Server/ClubControl.Server.csproj -c Release -r win-x64 --self-contained false -o publish/server
+
+      - name: Publish client
+        run: dotnet publish src/ClubControl.Client/ClubControl.Client.csproj -c Release -r win-x64 --self-contained false -o publish/client
+
+      - name: Copy install scripts
+        run: |
+          Copy-Item scripts/install-server.ps1 publish/server/
+          Copy-Item scripts/install-client.ps1 publish/client/
+
+      - name: Upload server build
+        uses: actions/upload-artifact@v4
+        with:
+          name: ClubControl-Server
+          path: publish/server
+
+      - name: Upload client build
+        uses: actions/upload-artifact@v4
+        with:
+          name: ClubControl-Client
+          path: publish/client
