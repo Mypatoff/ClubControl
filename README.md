@@ -108,14 +108,23 @@ billiard table, has nothing to install software on. For those, use the **"Add Co
   `ClubControl.Server.exe` as Administrator once, or run `install-server.ps1` - check
   `netsh advfirewall firewall show rule name="ClubControl Server (TCP 5050)"` reports the rule.
 
+## Database upgrades
+
+The server now uses real EF Core migrations (`src/ClubControl.Server/Data/Migrations`). On every
+start it applies any migration it hasn't applied yet - **your data survives future updates**;
+you never need to delete `club.db` again after this point.
+
+**One-time exception:** if your `club.db` was created before this change (anything up through the
+Phase 6 build that still used `EnsureCreatedAsync`), delete it once more
+(`%ProgramData%\ClubControl\club.db`) before running this build - after that, upgrades are safe.
+
+When a future change needs a schema update, it is done via the "Add EF Migration" GitHub Actions
+workflow (Actions tab → run it with a migration name) rather than by hand, since generating a
+migration requires actually building the WPF project.
+
 ## Notes and known limitations
 
 - Reports' "income" reflects each session's stored amount - a postpay/free session still running
   during the report period contributes 0 until it ends, same as everywhere else in the app.
 - A handful of internal validation error messages (e.g. "Payment must be between X and Y UZS")
   are still English-only; all screen labels, buttons, and the lock screen are translated.
-- The database schema changed in Phase 6 (tariffs became free-form, PCs gained a resource kind).
-  There is no migration system yet - if you have an existing `club.db` from before Phase 6, delete
-  it (`%ProgramData%\ClubControl\club.db`) once; the server recreates it with default tariffs on
-  next start. Fine while testing; worth adding real EF Core migrations before this holds real data
-  you can't afford to lose.

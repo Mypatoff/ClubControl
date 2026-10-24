@@ -71,7 +71,10 @@ public partial class App : Application
         using (var scope = _host.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<ClubDbContext>();
-            await db.Database.EnsureCreatedAsync();
+            // Creates the database if it doesn't exist, or upgrades an existing one by applying
+            // any migrations it is missing - this is what keeps schema changes from requiring a
+            // wipe (see Data/Migrations; add a new migration via the "Add EF Migration" workflow).
+            await db.Database.MigrateAsync();
             var setting = await SettingsHelper.GetOrCreateAsync(db);
             await TariffsHelper.EnsureDefaultsAsync(db);
 
