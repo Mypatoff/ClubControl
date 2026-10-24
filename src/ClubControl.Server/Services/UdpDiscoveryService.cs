@@ -47,9 +47,16 @@ public class UdpDiscoveryService : BackgroundService
             if (text != NetworkConstants.DiscoveryRequestText)
                 continue;
 
-            var response = await BuildResponseAsync();
-            var bytes = Encoding.UTF8.GetBytes(response.ToString());
-            await udpClient.SendAsync(bytes, bytes.Length, result.RemoteEndPoint);
+            try
+            {
+                var response = await BuildResponseAsync();
+                var bytes = Encoding.UTF8.GetBytes(response.ToString());
+                await udpClient.SendAsync(bytes, bytes.Length, result.RemoteEndPoint);
+            }
+            catch (Exception) when (!stoppingToken.IsCancellationRequested)
+            {
+                // A failed reply should never take discovery down for every other client; keep listening.
+            }
         }
     }
 

@@ -26,7 +26,15 @@ public class SessionMonitorService : BackgroundService
     {
         while (!stoppingToken.IsCancellationRequested)
         {
-            await TickOnceAsync();
+            try
+            {
+                await TickOnceAsync();
+            }
+            catch (Exception) when (!stoppingToken.IsCancellationRequested)
+            {
+                // A missed tick should never take the whole server down; the next tick tries again.
+            }
+
             await Task.Delay(TickInterval, stoppingToken);
         }
     }

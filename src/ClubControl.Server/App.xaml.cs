@@ -24,6 +24,23 @@ public partial class App : Application
 
     public IServiceProvider? Services => _host?.Services;
 
+    public App()
+    {
+        // Without this, an unhandled exception on any thread just silently kills the process -
+        // no dialog, nothing in the event log the admin can see. Show what happened instead.
+        AppDomain.CurrentDomain.UnhandledException += (_, args) => ShowFatalError(args.ExceptionObject as Exception);
+        DispatcherUnhandledException += (_, args) =>
+        {
+            ShowFatalError(args.Exception);
+            args.Handled = true;
+            Shutdown();
+        };
+    }
+
+    private static void ShowFatalError(Exception? ex) =>
+        MessageBox.Show(ex?.ToString() ?? "Unknown error.", "ClubControl - unexpected error",
+            MessageBoxButton.OK, MessageBoxImage.Error);
+
     protected override async void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);

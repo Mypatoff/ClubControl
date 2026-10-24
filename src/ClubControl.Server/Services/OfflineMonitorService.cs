@@ -30,7 +30,15 @@ public class OfflineMonitorService : BackgroundService
     {
         while (!stoppingToken.IsCancellationRequested)
         {
-            await CheckOnceAsync();
+            try
+            {
+                await CheckOnceAsync();
+            }
+            catch (Exception) when (!stoppingToken.IsCancellationRequested)
+            {
+                // A missed check should never take the whole server down; the next tick tries again.
+            }
+
             await Task.Delay(PollInterval, stoppingToken);
         }
     }
