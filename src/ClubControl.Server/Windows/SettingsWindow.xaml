@@ -6,11 +6,12 @@
     <DockPanel Margin="16">
         <TextBlock x:Name="ErrorText" DockPanel.Dock="Bottom" Foreground="Red" TextWrapping="Wrap" Margin="0,8,0,0" />
         <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,8,0,0">
-            <Button x:Name="CancelButton" Width="90" Margin="0,0,8,0" Click="OnCancel" />
+            <Button x:Name="CancelButton" Width="90" Margin="0,0,8,0" Style="{StaticResource SecondaryButtonStyle}" Click="OnCancel" />
             <Button x:Name="SaveButton" Width="90" IsDefault="True" Click="OnSave" />
         </StackPanel>
 
-        <TabControl>
+        <Border Background="{StaticResource SurfaceBrush}" BorderBrush="{StaticResource DividerBrush}" BorderThickness="1" CornerRadius="8">
+        <TabControl Margin="4">
             <TabItem x:Name="GeneralTab">
                 <StackPanel Margin="12">
                     <TextBlock x:Name="ClubNameLabel" Margin="0,0,0,2" />
@@ -45,9 +46,9 @@
             <TabItem x:Name="TariffsTab">
                 <DockPanel Margin="12">
                     <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Margin="0,8,0,0">
-                        <Button x:Name="AddTariffButton" Padding="10,4" Click="OnAddTariff" />
+                        <Button x:Name="AddTariffButton" Style="{StaticResource SecondaryButtonStyle}" Click="OnAddTariff" />
                     </StackPanel>
-                    <DataGrid x:Name="TariffGrid" AutoGenerateColumns="False" CanUserAddRows="False">
+                    <DataGrid x:Name="TariffGrid" AutoGenerateColumns="False" CanUserAddRows="False" BorderThickness="0">
                         <DataGrid.Columns>
                             <DataGridTextColumn x:Name="TariffNameColumn" Binding="{Binding Name}" Width="140" />
                             <DataGridComboBoxColumn x:Name="TariffKindColumn" SelectedValueBinding="{Binding Kind}"
@@ -63,7 +64,7 @@
             <TabItem x:Name="ComputersTab">
                 <DockPanel Margin="12">
                     <TextBlock x:Name="ComputersHintText" DockPanel.Dock="Top" Margin="0,0,0,8" TextWrapping="Wrap" />
-                    <DataGrid x:Name="PcGrid" AutoGenerateColumns="False" CanUserAddRows="False">
+                    <DataGrid x:Name="PcGrid" AutoGenerateColumns="False" CanUserAddRows="False" BorderThickness="0">
                         <DataGrid.Columns>
                             <DataGridTextColumn x:Name="KindColumn" Binding="{Binding Kind}" Width="90" IsReadOnly="True" />
                             <DataGridTextColumn x:Name="PcNumberColumn" Binding="{Binding Number}" Width="60" />
@@ -79,5 +80,6 @@
                 </DockPanel>
             </TabItem>
         </TabControl>
+        </Border>
     </DockPanel>
 </Window>

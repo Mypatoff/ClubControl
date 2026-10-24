@@ -1,27 +1,32 @@
 <Window x:Class="ClubControl.Server.Windows.ReportsWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Reports" Width="820" Height="600"
+        Title="Reports" Width="820" Height="620"
         WindowStartupLocation="CenterOwner">
     <DockPanel Margin="16">
-        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,12">
-            <Button x:Name="ComputersKindButton" Padding="10,4" Margin="0,0,6,0" Click="OnComputersKind" />
-            <Button x:Name="BilliardsKindButton" Padding="10,4" Margin="0,0,16,0" Click="OnBilliardsKind" />
+        <Border DockPanel.Dock="Top" Background="{StaticResource SurfaceBrush}" BorderBrush="{StaticResource DividerBrush}"
+                BorderThickness="1" CornerRadius="8" Padding="12,10" Margin="0,0,0,12">
+            <StackPanel Orientation="Horizontal">
+                <Button x:Name="ComputersKindButton" Margin="0,0,6,0" Style="{StaticResource SecondaryButtonStyle}" Click="OnComputersKind" />
+                <Button x:Name="BilliardsKindButton" Margin="0,0,16,0" Style="{StaticResource SecondaryButtonStyle}" Click="OnBilliardsKind" />
 
-            <Button x:Name="DailyButton" Padding="10,4" Margin="0,0,6,0" Click="OnDaily" />
-            <Button x:Name="WeeklyButton" Padding="10,4" Margin="0,0,6,0" Click="OnWeekly" />
-            <Button x:Name="MonthlyButton" Padding="10,4" Margin="0,0,16,0" Click="OnMonthly" />
+                <Border Width="1" Background="{StaticResource DividerBrush}" Margin="0,2,16,2" />
 
-            <TextBlock x:Name="FromLabelText" VerticalAlignment="Center" Margin="0,0,6,0" />
-            <DatePicker x:Name="FromDatePicker" Width="120" Margin="0,0,16,0" />
-            <TextBlock x:Name="ToLabelText" VerticalAlignment="Center" Margin="0,0,6,0" />
-            <DatePicker x:Name="ToDatePicker" Width="120" Margin="0,0,16,0" />
+                <Button x:Name="DailyButton" Margin="0,0,6,0" Style="{StaticResource SecondaryButtonStyle}" Click="OnDaily" />
+                <Button x:Name="WeeklyButton" Margin="0,0,6,0" Style="{StaticResource SecondaryButtonStyle}" Click="OnWeekly" />
+                <Button x:Name="MonthlyButton" Margin="0,0,16,0" Style="{StaticResource SecondaryButtonStyle}" Click="OnMonthly" />
 
-            <Button x:Name="RefreshButton" Padding="10,4" Click="OnRefresh" />
-        </StackPanel>
+                <TextBlock x:Name="FromLabelText" VerticalAlignment="Center" Margin="0,0,6,0" />
+                <DatePicker x:Name="FromDatePicker" Width="120" Margin="0,0,16,0" />
+                <TextBlock x:Name="ToLabelText" VerticalAlignment="Center" Margin="0,0,6,0" />
+                <DatePicker x:Name="ToDatePicker" Width="120" Margin="0,0,16,0" />
+
+                <Button x:Name="RefreshButton" Click="OnRefresh" />
+            </StackPanel>
+        </Border>
 
         <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0">
-            <Button x:Name="CloseButton" Width="90" Click="OnClose" />
+            <Button x:Name="CloseButton" Width="90" Style="{StaticResource SecondaryButtonStyle}" Click="OnClose" />
         </StackPanel>
 
         <Grid DockPanel.Dock="Top" Margin="0,0,0,12">
@@ -32,55 +37,69 @@
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
 
-            <StackPanel Grid.Column="0">
-                <TextBlock x:Name="TotalIncomeLabel" FontWeight="Bold" />
-                <TextBlock x:Name="TotalIncomeValue" FontSize="18" />
-            </StackPanel>
-            <StackPanel Grid.Column="1">
-                <TextBlock x:Name="TotalSessionsLabel" FontWeight="Bold" />
-                <TextBlock x:Name="TotalSessionsValue" FontSize="18" />
-            </StackPanel>
-            <StackPanel Grid.Column="2">
-                <TextBlock x:Name="TotalHoursLabel" FontWeight="Bold" />
-                <TextBlock x:Name="TotalHoursValue" FontSize="18" />
-            </StackPanel>
-            <StackPanel Grid.Column="3">
-                <TextBlock x:Name="FreeMinutesLabel" FontWeight="Bold" />
-                <TextBlock x:Name="FreeMinutesValue" FontSize="18" />
-            </StackPanel>
+            <Border Grid.Column="0" Background="{StaticResource SurfaceBrush}" BorderBrush="{StaticResource DividerBrush}"
+                    BorderThickness="1" CornerRadius="8" Margin="0,0,6,0" Padding="14,10">
+                <StackPanel>
+                    <TextBlock x:Name="TotalIncomeLabel" Foreground="{StaticResource TextSecondaryBrush}" FontWeight="SemiBold" />
+                    <TextBlock x:Name="TotalIncomeValue" FontSize="20" FontWeight="SemiBold" Foreground="{StaticResource AccentBrush}" />
+                </StackPanel>
+            </Border>
+            <Border Grid.Column="1" Background="{StaticResource SurfaceBrush}" BorderBrush="{StaticResource DividerBrush}"
+                    BorderThickness="1" CornerRadius="8" Margin="6,0,6,0" Padding="14,10">
+                <StackPanel>
+                    <TextBlock x:Name="TotalSessionsLabel" Foreground="{StaticResource TextSecondaryBrush}" FontWeight="SemiBold" />
+                    <TextBlock x:Name="TotalSessionsValue" FontSize="20" FontWeight="SemiBold" />
+                </StackPanel>
+            </Border>
+            <Border Grid.Column="2" Background="{StaticResource SurfaceBrush}" BorderBrush="{StaticResource DividerBrush}"
+                    BorderThickness="1" CornerRadius="8" Margin="6,0,6,0" Padding="14,10">
+                <StackPanel>
+                    <TextBlock x:Name="TotalHoursLabel" Foreground="{StaticResource TextSecondaryBrush}" FontWeight="SemiBold" />
+                    <TextBlock x:Name="TotalHoursValue" FontSize="20" FontWeight="SemiBold" />
+                </StackPanel>
+            </Border>
+            <Border Grid.Column="3" Background="{StaticResource SurfaceBrush}" BorderBrush="{StaticResource DividerBrush}"
+                    BorderThickness="1" CornerRadius="8" Margin="6,0,0,0" Padding="14,10">
+                <StackPanel>
+                    <TextBlock x:Name="FreeMinutesLabel" Foreground="{StaticResource TextSecondaryBrush}" FontWeight="SemiBold" />
+                    <TextBlock x:Name="FreeMinutesValue" FontSize="20" FontWeight="SemiBold" />
+                </StackPanel>
+            </Border>
         </Grid>
 
-        <TabControl>
-            <TabItem x:Name="ByPcTab">
-                <DataGrid x:Name="ByPcGrid" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False">
-                    <DataGrid.Columns>
-                        <DataGridTextColumn x:Name="ByPcNumberColumn" Binding="{Binding PcLabel}" Width="120" />
-                        <DataGridTextColumn x:Name="ByPcIncomeColumn" Binding="{Binding IncomeDisplay}" Width="140" />
-                        <DataGridTextColumn x:Name="ByPcSessionsColumn" Binding="{Binding SessionCount}" Width="100" />
-                        <DataGridTextColumn x:Name="ByPcHoursColumn" Binding="{Binding HoursDisplay}" Width="100" />
-                    </DataGrid.Columns>
-                </DataGrid>
-            </TabItem>
-            <TabItem x:Name="ByTariffTab">
-                <DataGrid x:Name="ByTariffGrid" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False">
-                    <DataGrid.Columns>
-                        <DataGridTextColumn x:Name="ByTariffNameColumn" Binding="{Binding TariffLabel}" Width="120" />
-                        <DataGridTextColumn x:Name="ByTariffIncomeColumn" Binding="{Binding IncomeDisplay}" Width="140" />
-                        <DataGridTextColumn x:Name="ByTariffSessionsColumn" Binding="{Binding SessionCount}" Width="100" />
-                        <DataGridTextColumn x:Name="ByTariffHoursColumn" Binding="{Binding HoursDisplay}" Width="100" />
-                    </DataGrid.Columns>
-                </DataGrid>
-            </TabItem>
-            <TabItem x:Name="ByTypeTab">
-                <DataGrid x:Name="ByTypeGrid" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False">
-                    <DataGrid.Columns>
-                        <DataGridTextColumn x:Name="ByTypeNameColumn" Binding="{Binding TypeLabel}" Width="120" />
-                        <DataGridTextColumn x:Name="ByTypeIncomeColumn" Binding="{Binding IncomeDisplay}" Width="140" />
-                        <DataGridTextColumn x:Name="ByTypeSessionsColumn" Binding="{Binding SessionCount}" Width="100" />
-                        <DataGridTextColumn x:Name="ByTypeHoursColumn" Binding="{Binding HoursDisplay}" Width="100" />
-                    </DataGrid.Columns>
-                </DataGrid>
-            </TabItem>
-        </TabControl>
+        <Border Background="{StaticResource SurfaceBrush}" BorderBrush="{StaticResource DividerBrush}" BorderThickness="1" CornerRadius="8">
+            <TabControl Margin="4">
+                <TabItem x:Name="ByPcTab">
+                    <DataGrid x:Name="ByPcGrid" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False" BorderThickness="0">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn x:Name="ByPcNumberColumn" Binding="{Binding PcLabel}" Width="120" />
+                            <DataGridTextColumn x:Name="ByPcIncomeColumn" Binding="{Binding IncomeDisplay}" Width="140" />
+                            <DataGridTextColumn x:Name="ByPcSessionsColumn" Binding="{Binding SessionCount}" Width="100" />
+                            <DataGridTextColumn x:Name="ByPcHoursColumn" Binding="{Binding HoursDisplay}" Width="100" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </TabItem>
+                <TabItem x:Name="ByTariffTab">
+                    <DataGrid x:Name="ByTariffGrid" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False" BorderThickness="0">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn x:Name="ByTariffNameColumn" Binding="{Binding TariffLabel}" Width="120" />
+                            <DataGridTextColumn x:Name="ByTariffIncomeColumn" Binding="{Binding IncomeDisplay}" Width="140" />
+                            <DataGridTextColumn x:Name="ByTariffSessionsColumn" Binding="{Binding SessionCount}" Width="100" />
+                            <DataGridTextColumn x:Name="ByTariffHoursColumn" Binding="{Binding HoursDisplay}" Width="100" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </TabItem>
+                <TabItem x:Name="ByTypeTab">
+                    <DataGrid x:Name="ByTypeGrid" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False" BorderThickness="0">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn x:Name="ByTypeNameColumn" Binding="{Binding TypeLabel}" Width="120" />
+                            <DataGridTextColumn x:Name="ByTypeIncomeColumn" Binding="{Binding IncomeDisplay}" Width="140" />
+                            <DataGridTextColumn x:Name="ByTypeSessionsColumn" Binding="{Binding SessionCount}" Width="100" />
+                            <DataGridTextColumn x:Name="ByTypeHoursColumn" Binding="{Binding HoursDisplay}" Width="100" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </TabItem>
+            </TabControl>
+        </Border>
     </DockPanel>
 </Window>
