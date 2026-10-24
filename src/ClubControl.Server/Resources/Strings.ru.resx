@@ -127,6 +127,9 @@
   <data name="SelectedNotReadyToStart" xml:space="preserve">
     <value>Один или несколько выбранных элементов не готовы к запуску (не настроены или уже имеют сессию).</value>
   </data>
+  <data name="SelectedMustShareSessionType" xml:space="preserve">
+    <value>Все выбранные сессии должны быть одного типа (предоплата или постоплата), чтобы остановить их вместе.</value>
+  </data>
   <data name="SelectedMustShareTariff" xml:space="preserve">
     <value>Все выбранные элементы должны использовать один и тот же тариф.</value>
   </data>
@@ -354,9 +357,6 @@
   </data>
   <data name="AmountDueLabel" xml:space="preserve">
     <value>Сумма к оплате:</value>
-  </data>
-  <data name="NoActiveSessionFound" xml:space="preserve">
-    <value>Активная сессия не найдена.</value>
   </data>
   <data name="ButtonPaid" xml:space="preserve">
     <value>Оплачено</value>

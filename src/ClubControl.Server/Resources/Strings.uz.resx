@@ -127,6 +127,9 @@
   <data name="SelectedNotReadyToStart" xml:space="preserve">
     <value>Tanlangan elementlardan biri yoki bir nechtasi boshlashga tayyor emas (sozlanmagan yoki allaqachon sessiyasi bor).</value>
   </data>
+  <data name="SelectedMustShareSessionType" xml:space="preserve">
+    <value>Birgalikda toʻxtatish uchun tanlangan sessiyalar bir xil turda boʻlishi kerak (oldindan toʻlov yoki keyin toʻlov).</value>
+  </data>
   <data name="SelectedMustShareTariff" xml:space="preserve">
     <value>Tanlangan barcha elementlar bitta tarifdan foydalanishi kerak.</value>
   </data>
@@ -354,9 +357,6 @@
   </data>
   <data name="AmountDueLabel" xml:space="preserve">
     <value>Toʻlanadigan summa:</value>
-  </data>
-  <data name="NoActiveSessionFound" xml:space="preserve">
-    <value>Faol sessiya topilmadi.</value>
   </data>
   <data name="ButtonPaid" xml:space="preserve">
     <value>Toʻlandi</value>

@@ -127,6 +127,9 @@
   <data name="SelectedNotReadyToStart" xml:space="preserve">
     <value>One or more selected items are not ready to start (not configured yet, or already have a session).</value>
   </data>
+  <data name="SelectedMustShareSessionType" xml:space="preserve">
+    <value>Selected sessions must all be the same type (prepay or postpay) to stop together.</value>
+  </data>
   <data name="SelectedMustShareTariff" xml:space="preserve">
     <value>Selected items must all use the same tariff.</value>
   </data>
@@ -354,9 +357,6 @@
   </data>
   <data name="AmountDueLabel" xml:space="preserve">
     <value>Amount due:</value>
-  </data>
-  <data name="NoActiveSessionFound" xml:space="preserve">
-    <value>No active session found.</value>
   </data>
   <data name="ButtonPaid" xml:space="preserve">
     <value>Paid</value>

@@ -20,9 +20,6 @@
                     <Button x:Name="RestartButton" Margin="0,0,6,0" Click="OnRestart" />
                     <Button x:Name="ShutDownButton" Margin="0,0,14,0" Click="OnShutDown" />
                     <Border Width="1" Background="{StaticResource DividerBrush}" Margin="0,2,14,2" />
-                    <Button x:Name="AddComputerButton" Margin="0,0,6,0" Style="{StaticResource SecondaryButtonStyle}" Click="OnAddComputer" />
-                    <Button x:Name="AddBilliardButton" Margin="0,0,14,0" Style="{StaticResource SecondaryButtonStyle}" Click="OnAddBilliard" />
-                    <Border Width="1" Background="{StaticResource DividerBrush}" Margin="0,2,14,2" />
                     <Button x:Name="SettingsButton" Margin="0,0,6,0" Style="{StaticResource SecondaryButtonStyle}" Click="OnSettings" />
                     <Button x:Name="ReportsButton" Style="{StaticResource SecondaryButtonStyle}" Click="OnReports" />
                 </StackPanel>

@@ -46,8 +46,6 @@ public partial class MainWindow : Window
         TurnOnButton.Content = "⚡ " + Strings.Get("ToolbarTurnOn");
         RestartButton.Content = "🔁 " + Strings.Get("ToolbarRestart");
         ShutDownButton.Content = "⏻ " + Strings.Get("ToolbarShutDown");
-        AddComputerButton.Content = "🖥 " + Strings.Get("AddComputerTitle");
-        AddBilliardButton.Content = "🎱 " + Strings.Get("AddBilliardTitle");
         SettingsButton.Content = "⚙ " + Strings.Get("ToolbarSettings");
         ReportsButton.Content = "📊 " + Strings.Get("ToolbarReports");
 
@@ -329,20 +327,48 @@ public partial class MainWindow : Window
             await RefreshAsync();
     }
 
-    private async void OnStop(object sender, RoutedEventArgs e)
+    /// <summary>
+    /// Validates the current selection for Stop (SPEC extension: stop several PCs/billiards at
+    /// once, e.g. a group finishing together). All selected must have an active session, and all
+    /// must be the same kind of session - prepay (simple confirm, no refund) and postpay/limit-
+    /// reached (payment collection) use different flows, so mixing them in one action isn't
+    /// well-defined.
+    /// </summary>
+    private List<PcRow>? GetReadySelectionForStop()
     {
-        var pc = GetSingleSelectedPc();
-        if (pc is null)
-            return;
+        var selected = PcGrid.SelectedItems.Cast<PcRow>().ToList();
+        if (selected.Count == 0)
+        {
+            MessageBox.Show(Strings.Get("SelectAtLeastOnePc"), Strings.Get("ConfirmTitle"),
+                MessageBoxButton.OK, MessageBoxImage.Information);
+            return null;
+        }
 
-        if (!pc.HasActiveSession)
+        if (selected.Any(p => !p.HasActiveSession))
         {
             MessageBox.Show(Strings.Get("PcHasNoActiveSession"), Strings.Get("ConfirmTitle"),
                 MessageBoxButton.OK, MessageBoxImage.Information);
-            return;
+            return null;
         }
 
-        if (pc.State == PcState.PrepaySession)
+        var isPrepayGroup = selected[0].State == PcState.PrepaySession;
+        if (selected.Any(p => (p.State == PcState.PrepaySession) != isPrepayGroup))
+        {
+            MessageBox.Show(Strings.Get("SelectedMustShareSessionType"), Strings.Get("ConfirmTitle"),
+                MessageBoxButton.OK, MessageBoxImage.Information);
+            return null;
+        }
+
+        return selected;
+    }
+
+    private async void OnStop(object sender, RoutedEventArgs e)
+    {
+        var targets = GetReadySelectionForStop();
+        if (targets is null)
+            return;
+
+        if (targets[0].State == PcState.PrepaySession)
         {
             if (MessageBox.Show(Strings.Get("StopPrepayConfirm"), Strings.Get("ConfirmTitle"),
                     MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes)
@@ -350,18 +376,26 @@ public partial class MainWindow : Window
 
             using var scope = Services.CreateScope();
             var sessionService = scope.ServiceProvider.GetRequiredService<SessionService>();
-            try
+            var failures = new List<string>();
+
+            foreach (var target in targets)
             {
-                await sessionService.EndSessionEarlyAsync(pc.MachineGuid);
+                try
+                {
+                    await sessionService.EndSessionEarlyAsync(target.MachineGuid);
+                }
+                catch (Exception ex)
+                {
+                    failures.Add($"#{target.Number}: {ex.Message}");
+                }
             }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message, Strings.Get("CannotStopSessionTitle"), MessageBoxButton.OK, MessageBoxImage.Warning);
-            }
+
+            if (failures.Count > 0)
+                MessageBox.Show(string.Join("\n", failures), Strings.Get("CannotStopSessionTitle"), MessageBoxButton.OK, MessageBoxImage.Warning);
         }
         else
         {
-            var window = new PostpayPaymentWindow(Services, pc) { Owner = this };
+            var window = new PostpayPaymentWindow(Services, targets) { Owner = this };
             window.ShowDialog();
         }
 
@@ -416,19 +450,6 @@ public partial class MainWindow : Window
             MessageBox.Show(Strings.Get("NoEligiblePcs"), Strings.Get("ConfirmTitle"), MessageBoxButton.OK, MessageBoxImage.Information);
 
         await RefreshAsync();
-    }
-
-    // ---- manual resources (SPEC extension: offline PCs and non-computer resources like billiard tables) ----
-
-    private async void OnAddComputer(object sender, RoutedEventArgs e) => await AddResourceAsync(ResourceKind.Computer);
-
-    private async void OnAddBilliard(object sender, RoutedEventArgs e) => await AddResourceAsync(ResourceKind.Billiard);
-
-    private async Task AddResourceAsync(ResourceKind kind)
-    {
-        var window = new AddResourceWindow(Services, kind) { Owner = this };
-        if (window.ShowDialog() == true)
-            await RefreshAsync();
     }
 
     private async void OnSettings(object sender, RoutedEventArgs e)

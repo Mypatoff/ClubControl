@@ -17,6 +17,7 @@ namespace ClubControl.Server.Windows;
 /// <summary>Settings (SPEC section 8): General, Tariffs, Computers. One DbContext for the whole window, saved on "Save".</summary>
 public partial class SettingsWindow : Window
 {
+    private readonly IServiceProvider _services;
     private readonly IServiceScope _scope;
     private readonly ClubDbContext _db;
 
@@ -39,6 +40,7 @@ public partial class SettingsWindow : Window
     public SettingsWindow(IServiceProvider services)
     {
         InitializeComponent();
+        _services = services;
         _scope = services.CreateScope();
         _db = _scope.ServiceProvider.GetRequiredService<ClubDbContext>();
 
@@ -82,6 +84,8 @@ public partial class SettingsWindow : Window
         TariffMaxColumn.Header = Strings.Get("LabelMaxPayment");
 
         ComputersHintText.Text = Strings.Get("ComputersHint");
+        AddComputerButton.Content = "🖥 " + Strings.Get("AddComputerTitle");
+        AddBilliardButton.Content = "🎱 " + Strings.Get("AddBilliardTitle");
         KindColumn.Header = Strings.Get("ColumnKind");
         PcNumberColumn.Header = Strings.Get("ColumnPcNumber");
         TariffColumn.Header = Strings.Get("ColumnTariff");
@@ -145,6 +149,22 @@ public partial class SettingsWindow : Window
         var tariff = new Tariff { Name = Strings.Get("NewTariffDefaultName"), Kind = ResourceKind.Computer };
         _db.Tariffs.Add(tariff);
         _tariffs.Add(tariff);
+    }
+
+    private async void OnAddComputer(object sender, RoutedEventArgs e) => await AddResourceAsync(ResourceKind.Computer);
+
+    private async void OnAddBilliard(object sender, RoutedEventArgs e) => await AddResourceAsync(ResourceKind.Billiard);
+
+    private async Task AddResourceAsync(ResourceKind kind)
+    {
+        // AddResourceWindow persists immediately via its own scope (same as when it was opened
+        // straight from MainWindow) - just re-query so the new row shows up in this grid too.
+        var window = new AddResourceWindow(_services, kind) { Owner = this };
+        if (window.ShowDialog() == true)
+        {
+            _pcs = await _db.Pcs.OrderBy(p => p.Number).ToListAsync();
+            PcGrid.ItemsSource = _pcs;
+        }
     }
 
     private async void OnSave(object sender, RoutedEventArgs e)
