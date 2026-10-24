@@ -8,14 +8,14 @@ public partial class App : Application
 {
     public App()
     {
-        // Without this, an unhandled exception on any thread just silently kills the process -
-        // no dialog, nothing to go on. Show what happened instead.
         AppDomain.CurrentDomain.UnhandledException += (_, args) => ShowFatalError(args.ExceptionObject as Exception);
         DispatcherUnhandledException += (_, args) =>
         {
+            // Keep running after an unexpected UI-thread error instead of exiting - this runs
+            // unattended on a kiosk PC, so staying alive (even degraded) beats dropping the lock
+            // screen and keyboard block with nobody there to notice or restart it.
             ShowFatalError(args.Exception);
             args.Handled = true;
-            Shutdown();
         };
     }
 
@@ -23,16 +23,21 @@ public partial class App : Application
         MessageBox.Show(ex?.ToString() ?? "Unknown error.", "ClubControl Client - unexpected error",
             MessageBoxButton.OK, MessageBoxImage.Error);
 
-#if DEBUG
-    // Test-only escape hatch: the lock screen blocks Alt+F4 and friends, so without this a tester
-    // can get stuck behind it. Ctrl+Shift+F12 just closes the client; it is never built into Release.
-    private const int VkF12 = 0x7B;
-    private NativeKeyboardHook? _debugExitHook;
-
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
 
+        // There is no visible UI by design (SPEC: the lock screen is the only UI) - closing or
+        // losing the bootstrap window must never end the process. Without this, WPF's default
+        // ShutdownMode (OnLastWindowClose) would exit the whole app the moment that window closed
+        // for any reason, taking the lock screen and keyboard block down with it.
+        ShutdownMode = ShutdownMode.OnExplicitShutdown;
+
+        MainWindow = new MainWindow();
+
+#if DEBUG
+        // Test-only escape hatch: the lock screen blocks Alt+F4 and friends, so without this a
+        // tester can get stuck behind it. Ctrl+Shift+F12 just exits the client; never built into Release.
         _debugExitHook = new NativeKeyboardHook(vkCode =>
         {
             if (vkCode == VkF12 && NativeKeyboardHook.IsControlDown && NativeKeyboardHook.IsShiftDown)
@@ -41,7 +46,12 @@ public partial class App : Application
             return false; // never swallow the key - this hook only watches
         });
         _debugExitHook.Install();
+#endif
     }
+
+#if DEBUG
+    private const int VkF12 = 0x7B;
+    private NativeKeyboardHook? _debugExitHook;
 
     protected override void OnExit(ExitEventArgs e)
     {

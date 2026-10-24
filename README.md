@@ -59,9 +59,13 @@ keyboard, will not work.
    username/password for that PC, click Enable. Use a dedicated low-privilege Windows account per
    PC, not an admin account.
 5. Copy the published client files and `install-client.ps1` into one folder on the PC, then run
-   `install-client.ps1`. It asks for Administrator rights once and creates a Task Scheduler task
-   that starts `ClubControl.Client.exe` at logon with the highest available privileges (needed for
-   the keyboard-blocking hook and for shutdown/restart).
+   `install-client.ps1 -UserId <the auto-logon account from step 4>`. It asks for Administrator
+   rights once and creates a Task Scheduler task that starts `ClubControl.Client.exe` at logon for
+   that user, with the highest available privileges (needed for the keyboard-blocking hook and
+   shutdown/restart), set to restart itself automatically if it ever exits unexpectedly, with no
+   time limit on how long it can keep running. **`-UserId` matters** - if you had to use a
+   temporary admin account just to run this elevated, the task still needs to target the actual
+   kiosk account from step 4, not whichever account happened to run this script.
 6. Log off and back on (or reboot) to confirm the client starts automatically and finds the
    server. The first time, it appears as "New PC" in the admin panel - assign it a number and
    tariff under Settings > Computers & Billiards.
@@ -70,7 +74,8 @@ keyboard, will not work.
 
 Not everything billable runs `ClubControl.Client`: a PC with no network cable/Wi-Fi, or a
 billiard table, has nothing to install software on. For those, use the **"Add Computer" /
-"Add Billiard"** buttons on the main toolbar instead of waiting for auto-discovery:
+"Add Billiard"** buttons under Settings > Computers & Billiards instead of waiting for
+auto-discovery:
 
 - Pick a number, pick a tariff (create one first under Settings > Tariffs if you need a new price
   tier - tariffs are freely named, not limited to a fixed pair), and Save.
@@ -82,6 +87,12 @@ billiard table, has nothing to install software on. For those, use the **"Add Co
 
 ## Manual test checklist (Phase 5 and 6)
 
+- **Client stays running**: start the client, confirm no window ever appears (not even in the
+  taskbar), and that nothing you do on that PC can close/exit it (the lock screen itself blocks
+  most of that anyway, but there's no window to accidentally close now either). Open Task Manager
+  (via Ctrl+Alt+Del) and end `ClubControl.Client.exe` - the scheduled task should relaunch it
+  within about a minute, and it should pick up exactly where it left off (re-discover the server,
+  show the correct lock/session state).
 - **Wake-on-LAN**: fully shut down a configured client PC, select it in the admin panel, click
   "Turn on" (with nothing selected, it asks to confirm turning on all enabled PCs). The PC should
   power on within a few seconds. If it does not, re-check BIOS/NIC/Fast Startup settings above and

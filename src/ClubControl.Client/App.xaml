@@ -1,5 +1,5 @@
 <Application x:Class="ClubControl.Client.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             StartupUri="MainWindow.xaml">
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!-- No StartupUri: the bootstrap window is deliberately never shown - see App.xaml.cs. -->
 </Application>
