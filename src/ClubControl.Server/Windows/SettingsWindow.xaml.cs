@@ -75,6 +75,7 @@ public partial class SettingsWindow : Window
         AfterSessionActionLabel.Text = Strings.Get("LabelAfterSessionAction");
         ProcessListLabel.Text = Strings.Get("LabelProcessList");
         OfflineWaitLabel.Text = Strings.Get("LabelOfflineWait");
+        AutoShutdownLabel.Text = Strings.Get("LabelAutoShutdown");
 
         AddTariffButton.Content = Strings.Get("ButtonAdd");
         TariffNameColumn.Header = Strings.Get("LabelName");
@@ -138,6 +139,7 @@ public partial class SettingsWindow : Window
 
         ProcessListBox.Text = _setting.ProcessListCsv;
         OfflineWaitBox.Text = _setting.OfflineUnlockWaitSeconds.ToString();
+        AutoShutdownBox.Text = _setting.AutoShutdownAfterMinutes.ToString();
 
         TariffGrid.ItemsSource = _tariffs;
         TariffColumn.ItemsSource = _tariffs;
@@ -193,6 +195,7 @@ public partial class SettingsWindow : Window
         _setting.AfterSessionAction = ((ComboOption<AfterSessionAction>)AfterSessionActionCombo.SelectedItem!).Value;
         _setting.ProcessListCsv = ProcessListBox.Text;
         _setting.OfflineUnlockWaitSeconds = ParseInt(OfflineWaitBox.Text, _setting.OfflineUnlockWaitSeconds);
+        _setting.AutoShutdownAfterMinutes = ParseInt(AutoShutdownBox.Text, _setting.AutoShutdownAfterMinutes);
 
         foreach (var tariff in _tariffs)
             tariff.Name = tariff.Name.Trim();

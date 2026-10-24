@@ -24,5 +24,8 @@ public class Setting
 
     public int OfflineUnlockWaitSeconds { get; set; } = 60;
 
+    /// <summary>Idle-locked PCs (not limit-reached, not mid-session) shut themselves down after this many minutes. 0 = disabled.</summary>
+    public int AutoShutdownAfterMinutes { get; set; } = 1;
+
     public string? AdminPasswordHash { get; set; }
 }

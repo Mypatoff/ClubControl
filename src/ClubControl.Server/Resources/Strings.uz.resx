@@ -214,6 +214,9 @@
   <data name="LabelOfflineWait" xml:space="preserve">
     <value>Oflayn ochilish kutish vaqti (soniya)</value>
   </data>
+  <data name="LabelAutoShutdown" xml:space="preserve">
+    <value>Band boʻlmagan bloklangan kompyuterlarni oʻchirish (daqiqa, 0 = oʻchirilgan)</value>
+  </data>
   <data name="AfterSessionClose" xml:space="preserve">
     <value>Jarayonlarni yopish</value>
   </data>

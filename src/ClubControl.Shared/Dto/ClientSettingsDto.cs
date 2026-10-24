@@ -14,4 +14,9 @@ public class ClientSettingsDto
     public string ProcessListCsv { get; set; } = "";
 
     public int OfflineUnlockWaitSeconds { get; set; } = 60;
+
+    // Safe default is 0 (disabled) rather than mirroring the server's default: a client that
+    // hasn't synced real settings yet (e.g. still searching for the server at boot) must never
+    // shut itself down on a stale/default value. 0 means disabled.
+    public int AutoShutdownAfterMinutes { get; set; } = 0;
 }

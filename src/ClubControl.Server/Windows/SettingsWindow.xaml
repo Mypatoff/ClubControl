@@ -42,7 +42,10 @@
                     <TextBox x:Name="ProcessListBox" Margin="0,0,0,10" />
 
                     <TextBlock x:Name="OfflineWaitLabel" Margin="0,0,0,2" />
-                    <TextBox x:Name="OfflineWaitBox" Width="80" HorizontalAlignment="Left" />
+                    <TextBox x:Name="OfflineWaitBox" Width="80" HorizontalAlignment="Left" Margin="0,0,0,10" />
+
+                    <TextBlock x:Name="AutoShutdownLabel" Margin="0,0,0,2" />
+                    <TextBox x:Name="AutoShutdownBox" Width="80" HorizontalAlignment="Left" />
                 </StackPanel>
             </TabItem>
 

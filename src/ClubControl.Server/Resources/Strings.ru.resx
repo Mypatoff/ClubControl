@@ -214,6 +214,9 @@
   <data name="LabelOfflineWait" xml:space="preserve">
     <value>Ожидание офлайн-разблокировки (секунды)</value>
   </data>
+  <data name="LabelAutoShutdown" xml:space="preserve">
+    <value>Выключать простаивающие заблокированные ПК через (минуты, 0 = отключено)</value>
+  </data>
   <data name="AfterSessionClose" xml:space="preserve">
     <value>Закрыть процессы</value>
   </data>

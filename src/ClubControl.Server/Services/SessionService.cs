@@ -437,7 +437,8 @@ public class SessionService
             WarningMinutes2 = setting.WarningMinutes2,
             AfterSessionAction = setting.AfterSessionAction,
             ProcessListCsv = setting.ProcessListCsv,
-            OfflineUnlockWaitSeconds = setting.OfflineUnlockWaitSeconds
+            OfflineUnlockWaitSeconds = setting.OfflineUnlockWaitSeconds,
+            AutoShutdownAfterMinutes = setting.AutoShutdownAfterMinutes
         };
 
         var onlinePcs = await _db.Pcs.Where(p => p.IsOnline && p.Number != null).ToListAsync();

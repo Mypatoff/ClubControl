@@ -44,6 +44,11 @@ public class AppController
     private readonly DispatcherTimer _offlineWaitTimer;
     private bool _offlineUnlocked;
 
+    // Saves electricity: an idle PC - locked, waiting for the next customer, nobody mid-payment -
+    // shuts itself down after this long. Never runs for LimitReached (someone is still there about
+    // to pay) or while in a session. See Setting.AutoShutdownAfterMinutes on the server.
+    private readonly DispatcherTimer _autoShutdownTimer;
+
     public AppController()
     {
         Strings.Apply(_settings.LockScreenLanguage);
@@ -53,6 +58,9 @@ public class AppController
 
         _offlineWaitTimer = new DispatcherTimer();
         _offlineWaitTimer.Tick += (_, _) => OnOfflineWaitElapsed();
+
+        _autoShutdownTimer = new DispatcherTimer();
+        _autoShutdownTimer.Tick += (_, _) => OnAutoShutdownElapsed();
     }
 
     /// <summary>Locks the PC immediately and starts the offline-wait clock, with or without a server.</summary>
@@ -61,6 +69,7 @@ public class AppController
         EnterLocked(null);
         _tickTimer.Start();
         RestartOfflineWaitTimer();
+        UpdateAutoShutdownTimer();
     }
 
     public void AttachConnection(ServerConnection connection)
@@ -112,6 +121,8 @@ public class AppController
                 RefreshLockWindows();
                 break;
         }
+
+        UpdateAutoShutdownTimer();
     }
 
     private void EnterLocked(LockInfo? info)
@@ -275,6 +286,38 @@ public class AppController
 
         ShowTimerWindow();
         _timerWindow!.SetOfflineBadgeVisible(true);
+        UpdateAutoShutdownTimer();
+    }
+
+    // ---- auto-shutdown for idle locked PCs (not LimitReached, not mid-session) ----
+
+    private void UpdateAutoShutdownTimer()
+    {
+        if (_state == PcState.Locked && _settings.AutoShutdownAfterMinutes > 0)
+        {
+            var interval = TimeSpan.FromMinutes(_settings.AutoShutdownAfterMinutes);
+
+            // Only (re)start on a genuinely new lock or a changed interval - an incidental re-entry
+            // into the same Locked state (e.g. a resent command) must not keep resetting the clock.
+            if (!_autoShutdownTimer.IsEnabled || _autoShutdownTimer.Interval != interval)
+            {
+                _autoShutdownTimer.Stop();
+                _autoShutdownTimer.Interval = interval;
+                _autoShutdownTimer.Start();
+            }
+        }
+        else
+        {
+            _autoShutdownTimer.Stop();
+        }
+    }
+
+    private void OnAutoShutdownElapsed()
+    {
+        _autoShutdownTimer.Stop();
+
+        if (_state == PcState.Locked)
+            PowerControl.Shutdown();
     }
 
     // ---- windows ----

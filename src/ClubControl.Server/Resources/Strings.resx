@@ -214,6 +214,9 @@
   <data name="LabelOfflineWait" xml:space="preserve">
     <value>Offline-unlock wait (seconds)</value>
   </data>
+  <data name="LabelAutoShutdown" xml:space="preserve">
+    <value>Shut down idle locked PCs after (minutes, 0 = disabled)</value>
+  </data>
   <data name="AfterSessionClose" xml:space="preserve">
     <value>Close processes</value>
   </data>
