@@ -1,0 +1,45 @@
+name: Add EF Migration
+
+on:
+  workflow_dispatch:
+    inputs:
+      name:
+        description: "Migration name (e.g. AddBilliardSupport)"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  add-migration:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Install dotnet-ef
+        run: dotnet tool install --global dotnet-ef --version 8.*
+
+      - name: Add dotnet tools to PATH
+        run: echo "$env:USERPROFILE\.dotnet\tools" >> $env:GITHUB_PATH
+        shell: pwsh
+
+      - name: Restore
+        run: dotnet restore ClubControl.sln
+
+      - name: Add migration
+        run: dotnet ef migrations add "${{ inputs.name }}" --project src/ClubControl.Server/ClubControl.Server.csproj --output-dir Data/Migrations
+
+      - name: Commit migration
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add src/ClubControl.Server/Data/Migrations
+          git commit -m "Add EF migration: ${{ inputs.name }}"
+          git push
