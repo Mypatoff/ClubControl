@@ -9,6 +9,7 @@ using ClubControl.Shared;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 namespace ClubControl.Server.Services;
 
@@ -20,11 +21,21 @@ public class OfflineMonitorService : BackgroundService
 {
     private static readonly TimeSpan PollInterval = TimeSpan.FromSeconds(2);
 
-    private readonly IServiceScopeFactory _scopeFactory;
+    // A check runs every 2s; logging every single failure while something stays broken would
+    // flood the log forever. Log the first occurrence right away, then at most this often while
+    // it keeps failing, plus one more line when it eventually recovers.
+    private static readonly TimeSpan FailureLogInterval = TimeSpan.FromMinutes(1);
 
-    public OfflineMonitorService(IServiceScopeFactory scopeFactory)
+    private readonly IServiceScopeFactory _scopeFactory;
+    private readonly ILogger<OfflineMonitorService> _logger;
+
+    private int _consecutiveFailures;
+    private DateTime _lastLoggedFailureUtc = DateTime.MinValue;
+
+    public OfflineMonitorService(IServiceScopeFactory scopeFactory, ILogger<OfflineMonitorService> logger)
     {
         _scopeFactory = scopeFactory;
+        _logger = logger;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -34,9 +45,27 @@ public class OfflineMonitorService : BackgroundService
             try
             {
                 await CheckOnceAsync();
+
+                if (_consecutiveFailures > 0)
+                {
+                    _logger.LogInformation(
+                        "Offline monitor recovered after {FailureCount} consecutive failed checks.", _consecutiveFailures);
+                    _consecutiveFailures = 0;
+                }
             }
-            catch (Exception) when (!stoppingToken.IsCancellationRequested)
+            catch (Exception ex) when (!stoppingToken.IsCancellationRequested)
             {
+                _consecutiveFailures++;
+                var now = DateTime.UtcNow;
+
+                if (_consecutiveFailures == 1 || now - _lastLoggedFailureUtc >= FailureLogInterval)
+                {
+                    _logger.LogError(ex,
+                        "Offline monitor check failed ({FailureCount} consecutive failures so far); will keep retrying.",
+                        _consecutiveFailures);
+                    _lastLoggedFailureUtc = now;
+                }
+
                 // A missed check should never take the whole server down; the next tick tries again.
             }
 
