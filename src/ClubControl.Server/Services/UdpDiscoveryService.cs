@@ -1,5 +1,7 @@
 using System;
+using System.Linq;
 using System.Net;
+using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
@@ -74,10 +76,37 @@ public class UdpDiscoveryService : BackgroundService
         };
     }
 
+    // Used only when no real LAN interface can be found (should not happen on a machine with any
+    // network adapter at all) - matches the previous behavior's own final fallback value.
+    private const string FallbackIpAddress = "127.0.0.1";
+
+    /// <summary>
+    /// Picks the address to advertise in discovery responses. Deliberately does not rely on
+    /// successfully routing to an external address (the previous implementation opened a UDP
+    /// socket "connected" to 8.8.8.8 purely to let the OS pick a local-route address) - a club LAN
+    /// with no internet uplink, or one that's temporarily down, would make every discovery
+    /// response fail even though the LAN itself works fine. Enumerates actual local interfaces
+    /// instead, same approach as ClubControl.Client.Services.MachineIdentity.GetMacAddress.
+    /// </summary>
     private static string GetLocalIpAddress()
     {
-        using var socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-        socket.Connect("8.8.8.8", 65530);
-        return (socket.LocalEndPoint as IPEndPoint)?.Address.ToString() ?? "127.0.0.1";
+        try
+        {
+            var address = NetworkInterface.GetAllNetworkInterfaces()
+                .Where(nic => nic.OperationalStatus == OperationalStatus.Up &&
+                              nic.NetworkInterfaceType != NetworkInterfaceType.Loopback &&
+                              nic.NetworkInterfaceType != NetworkInterfaceType.Tunnel)
+                .SelectMany(nic => nic.GetIPProperties().UnicastAddresses)
+                .Select(addr => addr.Address)
+                .FirstOrDefault(addr => addr.AddressFamily == AddressFamily.InterNetwork && !IPAddress.IsLoopback(addr));
+
+            return address?.ToString() ?? FallbackIpAddress;
+        }
+        catch (NetworkInformationException)
+        {
+            // Enumerating interfaces can itself fail on some systems/permissions - never let that
+            // take discovery down (BuildResponseAsync's caller already guards the rest).
+            return FallbackIpAddress;
+        }
     }
 }
