@@ -206,6 +206,53 @@ public class BillingCalculatorTests
         Assert.Equal(0, BillingCalculator.MinutesForMoney(moneyUzs, priceUzs));
     }
 
+    // ---- zero-minute prepay start (a payment can be within [min, max] and still round down to
+    // 0 minutes if the tariff's minimum is set below the cost of one minute at that price) ----
+
+    [Fact]
+    public void IsValidPrepayStart_MinPaymentBelowOneMinuteCost_RejectsEvenThoughInRange()
+    {
+        // 100,000 UZS/hour costs 1,666.67 UZS/min. A minimum payment of 1,000 UZS is "in range"
+        // for IsValidPrepayPayment but MinutesForMoney(1000, 100000) rounds down to 0.
+        const int priceUzs = 100_000;
+        const int minPaymentUzs = 1_000;
+        const int maxPaymentUzs = 50_000;
+
+        Assert.True(BillingCalculator.IsValidPrepayPayment(minPaymentUzs, minPaymentUzs, maxPaymentUzs));
+        Assert.Equal(0, BillingCalculator.MinutesForMoney(minPaymentUzs, priceUzs));
+        Assert.False(BillingCalculator.IsValidPrepayStart(minPaymentUzs, priceUzs, minPaymentUzs, maxPaymentUzs));
+    }
+
+    [Fact]
+    public void IsValidPrepayStart_SmallestPaymentThatBuysOneMinute_IsAccepted()
+    {
+        // 100,000 UZS/hour: exactly 1,667 UZS buys floor(1667*60/100000) = 1 minute.
+        const int priceUzs = 100_000;
+        const int moneyUzs = 1_667;
+
+        Assert.Equal(1, BillingCalculator.MinutesForMoney(moneyUzs, priceUzs));
+        Assert.True(BillingCalculator.IsValidPrepayStart(moneyUzs, priceUzs, minPaymentUzs: 0, maxPaymentUzs: 50_000));
+    }
+
+    [Fact]
+    public void IsValidPrepayStart_NormalPayment_IsAccepted()
+    {
+        const int priceUzs = 10_000;
+        const int moneyUzs = 20_000;
+
+        Assert.Equal(120, BillingCalculator.MinutesForMoney(moneyUzs, priceUzs));
+        Assert.True(BillingCalculator.IsValidPrepayStart(moneyUzs, priceUzs, minPaymentUzs: 2_000, maxPaymentUzs: 50_000));
+    }
+
+    [Fact]
+    public void IsValidPrepayStart_OutOfRangePayment_IsRejectedRegardlessOfMinutes()
+    {
+        const int priceUzs = 10_000;
+
+        Assert.False(BillingCalculator.IsValidPrepayStart(1_000, priceUzs, minPaymentUzs: 2_000, maxPaymentUzs: 50_000));
+        Assert.False(BillingCalculator.IsValidPrepayStart(60_000, priceUzs, minPaymentUzs: 2_000, maxPaymentUzs: 50_000));
+    }
+
     // ---- power-cut restore (SPEC 5: "Power cuts / restarts") ----
 
     [Fact]

@@ -57,6 +57,17 @@ public static class BillingCalculator
         amountUzs >= minPaymentUzs && amountUzs <= maxPaymentUzs;
 
     /// <summary>
+    /// A prepay *start* by money must both stay within the tariff's min/max AND buy at least one
+    /// whole minute. These are not the same check: MinutesForMoney rounds down, so a tariff whose
+    /// minimum payment is set below the cost of one minute at that price (e.g. MinPaymentUzs lower
+    /// than PricePerHourUzs/60) lets a payment pass the min/max range check while still computing
+    /// to 0 minutes - charging real money for a session that is already over before it starts.
+    /// </summary>
+    public static bool IsValidPrepayStart(int amountUzs, int pricePerHourUzs, int minPaymentUzs, int maxPaymentUzs) =>
+        IsValidPrepayPayment(amountUzs, minPaymentUzs, maxPaymentUzs) &&
+        MinutesForMoney(amountUzs, pricePerHourUzs) > 0;
+
+    /// <summary>
     /// A tariff must have a positive price and a sane min/max before it can be used to bill
     /// anything. Without this, a tariff with price 0 (e.g. freshly added via "Add Tariff" and not
     /// yet edited) would let <see cref="MinutesForMoney"/> silently return 0 minutes while the

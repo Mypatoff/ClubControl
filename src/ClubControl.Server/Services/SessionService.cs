@@ -36,8 +36,12 @@ public class SessionService
         var pc = await GetReadyPcAsync(machineGuid);
         var tariff = await GetTariffAsync(pc.TariffId!.Value);
 
-        if (!BillingCalculator.IsValidPrepayPayment(moneyUzs, tariff.MinPaymentUzs, tariff.MaxPaymentUzs))
-            throw new InvalidOperationException($"Payment must be between {tariff.MinPaymentUzs} and {tariff.MaxPaymentUzs} UZS.");
+        // Range-valid is not enough on its own - see IsValidPrepayStart: a payment at or just above
+        // MinPaymentUzs can still round down to 0 minutes if the tariff's minimum is below the cost
+        // of a single minute. Reject before any session/event is persisted.
+        if (!BillingCalculator.IsValidPrepayStart(moneyUzs, tariff.PricePerHourUzs, tariff.MinPaymentUzs, tariff.MaxPaymentUzs))
+            throw new InvalidOperationException(
+                $"Payment must be between {tariff.MinPaymentUzs} and {tariff.MaxPaymentUzs} UZS, and buy at least one minute.");
 
         var minutes = BillingCalculator.MinutesForMoney(moneyUzs, tariff.PricePerHourUzs);
         await StartPrepayAsync(pc, tariff, minutes, moneyUzs);
