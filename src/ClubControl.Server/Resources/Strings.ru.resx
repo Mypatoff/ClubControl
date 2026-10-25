@@ -241,6 +241,9 @@
   <data name="TariffNamesMustBeUniqueAndNotEmpty" xml:space="preserve">
     <value>Названия тарифов должны быть уникальными и не пустыми.</value>
   </data>
+  <data name="TariffPriceAndLimitsMustBeValid" xml:space="preserve">
+    <value>У каждого тарифа цена должна быть больше 0, а минимальная оплата не может быть больше максимальной.</value>
+  </data>
   <data name="ComputersHint" xml:space="preserve">
     <value>Назначьте номер и тариф новому ПК или бильярду, чтобы его можно было использовать. Отключённые строки остаются заблокированными.</value>
   </data>

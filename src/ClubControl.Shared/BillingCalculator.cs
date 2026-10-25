@@ -57,6 +57,15 @@ public static class BillingCalculator
         amountUzs >= minPaymentUzs && amountUzs <= maxPaymentUzs;
 
     /// <summary>
+    /// A tariff must have a positive price and a sane min/max before it can be used to bill
+    /// anything. Without this, a tariff with price 0 (e.g. freshly added via "Add Tariff" and not
+    /// yet edited) would let <see cref="MinutesForMoney"/> silently return 0 minutes while the
+    /// full payment is still recorded as paid - charging real money for no time at all.
+    /// </summary>
+    public static bool IsValidTariff(int pricePerHourUzs, int minPaymentUzs, int maxPaymentUzs) =>
+        pricePerHourUzs > 0 && minPaymentUzs >= 0 && maxPaymentUzs > 0 && minPaymentUzs <= maxPaymentUzs;
+
+    /// <summary>
     /// An extend (Доплата) must itself add a positive amount of both money and time: a top-up too
     /// small to buy even one extra minute at the current price must be rejected rather than
     /// silently charging money for zero added time, and a non-positive minute count must never be

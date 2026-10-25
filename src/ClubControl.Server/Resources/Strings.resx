@@ -241,6 +241,9 @@
   <data name="TariffNamesMustBeUniqueAndNotEmpty" xml:space="preserve">
     <value>Tariff names must be unique and not empty.</value>
   </data>
+  <data name="TariffPriceAndLimitsMustBeValid" xml:space="preserve">
+    <value>Every tariff needs a price above 0, and the minimum payment cannot be greater than the maximum.</value>
+  </data>
   <data name="ComputersHint" xml:space="preserve">
     <value>Assign a number and tariff to a new PC or billiard so it can be used. Disabled rows stay locked.</value>
   </data>

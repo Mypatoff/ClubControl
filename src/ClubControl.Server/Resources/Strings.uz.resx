@@ -241,6 +241,9 @@
   <data name="TariffNamesMustBeUniqueAndNotEmpty" xml:space="preserve">
     <value>Tarif nomlari takrorlanmasligi va boʻsh boʻlmasligi kerak.</value>
   </data>
+  <data name="TariffPriceAndLimitsMustBeValid" xml:space="preserve">
+    <value>Har bir tarifning narxi 0 dan katta boʻlishi, minimal toʻlov esa maksimal toʻlovdan katta boʻlmasligi kerak.</value>
+  </data>
   <data name="ComputersHint" xml:space="preserve">
     <value>Yangi kompyuter yoki billiardga raqam va tarif belgilang. Oʻchirilgan qatorlar bloklangan holda qoladi.</value>
   </data>

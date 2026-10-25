@@ -185,6 +185,16 @@ public partial class SettingsWindow : Window
             return;
         }
 
+        // Catch a misconfigured tariff here, at save time, rather than letting it reach
+        // SessionService later - a price of 0 (the default for a freshly added tariff nobody has
+        // edited yet) would otherwise let a prepay session be created that charges full money for
+        // zero minutes (see BillingCalculator.IsValidTariff).
+        if (_tariffs.Any(t => !BillingCalculator.IsValidTariff(t.PricePerHourUzs, t.MinPaymentUzs, t.MaxPaymentUzs)))
+        {
+            ErrorText.Text = Strings.Get("TariffPriceAndLimitsMustBeValid");
+            return;
+        }
+
         _setting.ClubName = ClubNameBox.Text;
         _setting.LockScreenText = LockScreenTextBox.Text;
         _setting.LockScreenLanguage = ((ComboOption<LockScreenLanguage>)LockScreenLanguageCombo.SelectedItem!).Value;

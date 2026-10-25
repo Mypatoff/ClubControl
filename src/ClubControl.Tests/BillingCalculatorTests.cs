@@ -178,6 +178,34 @@ public class BillingCalculatorTests
         Assert.Equal(0, BillingCalculator.SumPostpaySegments(Array.Empty<(int, int)>()));
     }
 
+    // ---- tariff integrity (the exact bug this guards against: a price of 0 lets MinutesForMoney
+    // silently buy zero minutes while still recording the full payment as paid) ----
+
+    [Theory]
+    [InlineData(10000, 2000, 50000, true)]   // ordinary valid tariff
+    [InlineData(0, 2000, 50000, false)]      // price 0 - the freshly-added-tariff bug
+    [InlineData(-5000, 2000, 50000, false)]  // negative price
+    [InlineData(10000, 2000, 0, false)]      // no maximum configured - unusable, not "unlimited"
+    [InlineData(10000, -1, 50000, false)]    // negative minimum
+    [InlineData(10000, 50000, 2000, false)]  // min above max
+    [InlineData(10000, 2000, 2000, true)]    // min == max is still a valid (if narrow) range
+    public void IsValidTariff_RequiresPositivePriceAndSaneRange(int priceUzs, int minUzs, int maxUzs, bool expected)
+    {
+        Assert.Equal(expected, BillingCalculator.IsValidTariff(priceUzs, minUzs, maxUzs));
+    }
+
+    [Fact]
+    public void IsValidTariff_ZeroPrice_WouldOtherwiseBuyZeroMinutesWhileChargingFullMoney()
+    {
+        // Documents exactly why IsValidTariff must reject price 0: without this guard,
+        // MinutesForMoney silently returns 0 minutes for a real, positive payment.
+        const int priceUzs = 0;
+        const int moneyUzs = 5000;
+
+        Assert.False(BillingCalculator.IsValidTariff(priceUzs, 2000, 50000));
+        Assert.Equal(0, BillingCalculator.MinutesForMoney(moneyUzs, priceUzs));
+    }
+
     // ---- power-cut restore (SPEC 5: "Power cuts / restarts") ----
 
     [Fact]

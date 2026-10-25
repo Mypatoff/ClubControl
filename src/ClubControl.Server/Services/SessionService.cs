@@ -299,7 +299,10 @@ public class SessionService
             if (openSegment is null)
                 continue;
 
-            var tariff = await GetTariffAsync(pc.TariffId.Value);
+            var tariff = await TariffsHelper.GetAsync(_db, pc.TariffId.Value);
+            if (tariff is null || !BillingCalculator.IsValidTariff(tariff.PricePerHourUzs, tariff.MinPaymentUzs, tariff.MaxPaymentUzs))
+                continue; // misconfigured tariff: freeze this one session's cost rather than mis-bill it or crash the tick for every other PC
+
             var elapsedPerSegment = session.Segments
                 .Select(seg => (ElapsedSeconds: (int)((seg.EndUtc ?? now) - seg.StartUtc).TotalSeconds, seg.PricePerHourUzs))
                 .ToList();
@@ -472,9 +475,17 @@ public class SessionService
         return pc;
     }
 
-    private async Task<Tariff> GetTariffAsync(int tariffId) =>
-        await TariffsHelper.GetAsync(_db, tariffId)
+    private async Task<Tariff> GetTariffAsync(int tariffId)
+    {
+        var tariff = await TariffsHelper.GetAsync(_db, tariffId)
             ?? throw new InvalidOperationException("That tariff no longer exists.");
+
+        if (!BillingCalculator.IsValidTariff(tariff.PricePerHourUzs, tariff.MinPaymentUzs, tariff.MaxPaymentUzs))
+            throw new InvalidOperationException(
+                $"Tariff \"{tariff.Name}\" has no valid price/min/max configured and cannot be used to bill a session yet.");
+
+        return tariff;
+    }
 
     private Task<Session?> GetActiveSessionAsync(int pcId) =>
         _db.Sessions.Include(s => s.Segments)
