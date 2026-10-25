@@ -173,10 +173,18 @@ public class AppController
 
     private void EndSession()
     {
-        if (_settings.AfterSessionAction == AfterSessionAction.Restart)
-            PowerControl.Restart();
-        else
-            ProcessCloser.CloseAll(_settings.ProcessListCsv);
+        switch (_settings.AfterSessionAction)
+        {
+            case AfterSessionAction.Restart:
+                PowerControl.Restart();
+                break;
+            case AfterSessionAction.Shutdown:
+                PowerControl.Shutdown();
+                break;
+            default:
+                ProcessCloser.CloseAll(_settings.ProcessListCsv);
+                break;
+        }
 
         EnterLocked(null);
     }

@@ -61,7 +61,8 @@ public enum AdminPanelLanguage
 public enum AfterSessionAction
 {
     CloseProcesses,
-    Restart
+    Restart,
+    Shutdown
 }
 
 public enum CommandType

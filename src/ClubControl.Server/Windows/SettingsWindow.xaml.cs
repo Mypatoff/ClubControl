@@ -88,6 +88,7 @@ public partial class SettingsWindow : Window
         ComputersHintText.Text = Strings.Get("ComputersHint");
         AddComputerButton.Content = "🖥 " + Strings.Get("AddComputerTitle");
         AddBilliardButton.Content = "🎱 " + Strings.Get("AddBilliardTitle");
+        DeleteResourceButton.Content = "🗑 " + Strings.Get("ButtonDelete");
         KindColumn.Header = Strings.Get("ColumnKind");
         PcNumberColumn.Header = Strings.Get("ColumnPcNumber");
         TariffColumn.Header = Strings.Get("ColumnTariff");
@@ -169,6 +170,36 @@ public partial class SettingsWindow : Window
             _pcs = await _db.Pcs.OrderBy(p => p.Number).ToListAsync();
             PcGrid.ItemsSource = _pcs;
         }
+    }
+
+    private async void OnDeleteResource(object sender, RoutedEventArgs e)
+    {
+        if (PcGrid.SelectedItem is not Pc pc)
+        {
+            MessageBox.Show(Strings.Get("SelectAResourceToDelete"), Strings.Get("ConfirmTitle"),
+                MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        // Deleting a PC/billiard with any billing history would cascade-delete its Sessions and
+        // SessionSegments too (required FK), silently erasing past reports - block that and point
+        // the admin at "Enabled" instead, which hides it without touching history.
+        if (await _db.Sessions.AnyAsync(s => s.PcId == pc.Id))
+        {
+            MessageBox.Show(Strings.Get("CannotDeleteResourceWithHistory"), Strings.Get("ConfirmTitle"),
+                MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+
+        if (MessageBox.Show(Strings.Get("DeleteResourceConfirm"), Strings.Get("ConfirmTitle"),
+                MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes)
+            return;
+
+        _db.Pcs.Remove(pc);
+        await _db.SaveChangesAsync();
+
+        _pcs = await _db.Pcs.OrderBy(p => p.Number).ToListAsync();
+        PcGrid.ItemsSource = _pcs;
     }
 
     private async void OnSave(object sender, RoutedEventArgs e)

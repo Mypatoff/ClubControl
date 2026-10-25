@@ -223,6 +223,9 @@
   <data name="AfterSessionRestart" xml:space="preserve">
     <value>Restart</value>
   </data>
+  <data name="AfterSessionShutdown" xml:space="preserve">
+    <value>Shut down</value>
+  </data>
   <data name="LabelName" xml:space="preserve">
     <value>Name</value>
   </data>
@@ -270,6 +273,18 @@
   </data>
   <data name="ButtonAdd" xml:space="preserve">
     <value>Add</value>
+  </data>
+  <data name="ButtonDelete" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+  <data name="SelectAResourceToDelete" xml:space="preserve">
+    <value>Select a computer or billiard to delete.</value>
+  </data>
+  <data name="DeleteResourceConfirm" xml:space="preserve">
+    <value>Delete this computer/billiard? This cannot be undone.</value>
+  </data>
+  <data name="CannotDeleteResourceWithHistory" xml:space="preserve">
+    <value>This computer/billiard has session history and can't be deleted, since that would also erase it from past reports. Uncheck "Enabled" instead to hide it.</value>
   </data>
   <data name="ColumnEnabled" xml:space="preserve">
     <value>Enabled</value>

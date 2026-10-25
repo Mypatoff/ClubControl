@@ -54,6 +54,7 @@ public static class Strings
     public static string AfterSessionActionName(AfterSessionAction action) => action switch
     {
         AfterSessionAction.Restart => Get("AfterSessionRestart"),
+        AfterSessionAction.Shutdown => Get("AfterSessionShutdown"),
         _ => Get("AfterSessionClose")
     };
 

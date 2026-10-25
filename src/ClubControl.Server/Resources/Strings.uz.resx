@@ -223,6 +223,9 @@
   <data name="AfterSessionRestart" xml:space="preserve">
     <value>Qayta yuklash</value>
   </data>
+  <data name="AfterSessionShutdown" xml:space="preserve">
+    <value>Oʻchirish</value>
+  </data>
   <data name="LabelName" xml:space="preserve">
     <value>Nomi</value>
   </data>
@@ -270,6 +273,18 @@
   </data>
   <data name="ButtonAdd" xml:space="preserve">
     <value>Qoʻshish</value>
+  </data>
+  <data name="ButtonDelete" xml:space="preserve">
+    <value>Oʻchirish</value>
+  </data>
+  <data name="SelectAResourceToDelete" xml:space="preserve">
+    <value>Oʻchirish uchun kompyuter yoki billiardni tanlang.</value>
+  </data>
+  <data name="DeleteResourceConfirm" xml:space="preserve">
+    <value>Bu kompyuter/billiard oʻchirilsinmi? Bu amalni ortga qaytarib boʻlmaydi.</value>
+  </data>
+  <data name="CannotDeleteResourceWithHistory" xml:space="preserve">
+    <value>Bu kompyuter/billiardda sessiyalar tarixi bor, shuning uchun uni oʻchirib boʻlmaydi - bu uni oldingi hisobotlardan ham oʻchirib yuboradi. Oʻchirish oʻrniga "Yoqilgan" belgisini olib tashlang.</value>
   </data>
   <data name="ColumnEnabled" xml:space="preserve">
     <value>Yoqilgan</value>
