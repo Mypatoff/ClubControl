@@ -22,22 +22,30 @@ public static class FirewallSetup
         await EnsureRuleAsync(UdpRuleName, "UDP", NetworkConstants.DiscoveryPort);
     }
 
+    /// <summary>
+    /// Makes exactly one matching rule exist, regardless of what was there before. Deliberately
+    /// does not try to detect "does the rule already exist" by parsing netsh's human-readable
+    /// output first - that text is localized (e.g. "No rules match the specified criteria." only
+    /// appears in English Windows), so a locale check like `Contains("No rules match")` silently
+    /// never adds the rule on a non-English Windows install and the firewall stays closed. Delete
+    /// (matching by name only, so it removes any number of stale/duplicate rules with this exact
+    /// name) then add is locale-independent and idempotent either way.
+    /// </summary>
     private static async Task EnsureRuleAsync(string name, string protocol, int port)
     {
-        if (await RuleExistsAsync(name))
-            return;
+        await RunNetshAsync(FirewallRuleCommands.DeleteRuleArguments(name));
 
-        await RunNetshAsync(
-            $"advfirewall firewall add rule name=\"{name}\" dir=in action=allow protocol={protocol} localport={port} profile=private");
+        var addResult = await RunNetshAsync(FirewallRuleCommands.AddAllowRuleArguments(name, protocol, port));
+
+        if (addResult.ExitCode != 0)
+        {
+            throw new InvalidOperationException(
+                $"netsh failed to add firewall rule \"{name}\" (exit code {addResult.ExitCode}). " +
+                "The process is likely not running elevated.");
+        }
     }
 
-    private static async Task<bool> RuleExistsAsync(string name)
-    {
-        var output = await RunNetshAsync($"advfirewall firewall show rule name=\"{name}\"");
-        return !output.Contains("No rules match", StringComparison.OrdinalIgnoreCase);
-    }
-
-    private static async Task<string> RunNetshAsync(string arguments)
+    private static async Task<(int ExitCode, string Output)> RunNetshAsync(string arguments)
     {
         using var process = Process.Start(new ProcessStartInfo("netsh", arguments)
         {
@@ -49,6 +57,6 @@ public static class FirewallSetup
 
         var output = await process.StandardOutput.ReadToEndAsync();
         await process.WaitForExitAsync();
-        return output;
+        return (process.ExitCode, output);
     }
 }

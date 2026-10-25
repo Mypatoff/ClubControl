@@ -551,6 +551,11 @@ public class SessionService
 
     private async Task SendCommandAsync(Pc pc, ClientCommand command)
     {
+        // Never address a command to a PC the server itself believes is offline, even if a
+        // (possibly stale) connection mapping still exists - see ClubHub's connection lifecycle.
+        if (!pc.IsOnline)
+            return;
+
         if (ClubHub.TryGetConnectionId(pc.MachineGuid, out var connectionId))
             await _hub.Clients.Client(connectionId).SendAsync(HubMethodNames.ReceiveCommand, command);
     }

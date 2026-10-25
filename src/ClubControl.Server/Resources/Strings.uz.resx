@@ -391,6 +391,15 @@
   <data name="WrongPassword" xml:space="preserve">
     <value>Parol xato.</value>
   </data>
+  <data name="PasswordTooShort" xml:space="preserve">
+    <value>Parol kamida {0} ta belgidan iborat boʻlishi kerak.</value>
+  </data>
+  <data name="PasswordNeedsLetterAndDigit" xml:space="preserve">
+    <value>Parolda kamida bitta harf va bitta raqam boʻlishi kerak.</value>
+  </data>
+  <data name="LoginLockedOut" xml:space="preserve">
+    <value>Juda koʻp xato urinish. {0} soniyadan keyin qayta urining.</value>
+  </data>
   <data name="ReportsTitle" xml:space="preserve">
     <value>Hisobotlar</value>
   </data>

@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using ClubControl.Server.Data;
 using ClubControl.Server.Data.Models;
+using ClubControl.Server.Hubs;
 using ClubControl.Shared;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -63,6 +64,11 @@ public class OfflineMonitorService : BackgroundService
                 PcId = pc.Id,
                 Message = $"PC #{pc.Number?.ToString() ?? "?"} stopped sending heartbeats",
             });
+
+            // The socket may still look "connected" at the transport level even though the PC
+            // stopped heartbeating (crash, cable pull, hung OS). Evict it now so no command is ever
+            // addressed to this dead connection - see ClubHub.ForgetMachine.
+            ClubHub.ForgetMachine(pc.MachineGuid);
         }
 
         if (onlinePcs.Count > 0)

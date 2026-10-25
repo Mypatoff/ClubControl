@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Concurrent;
 using System.Threading.Tasks;
 using ClubControl.Server.Data;
 using ClubControl.Server.Data.Models;
@@ -13,12 +12,9 @@ namespace ClubControl.Server.Hubs;
 
 public class ClubHub : Hub
 {
-    // Maps a live SignalR connection to the PC it belongs to, so OnDisconnectedAsync
-    // knows which PC went offline without needing another round trip to the client.
-    private static readonly ConcurrentDictionary<string, Guid> ConnectionToMachine = new();
-
-    // Reverse of the map above, so a command can be addressed to a machine by its Guid.
-    private static readonly ConcurrentDictionary<Guid, string> MachineToConnection = new();
+    // Single live connection per PC, with reconnect/disconnect kept consistent even when a fast
+    // reconnect races ahead of the old connection's disconnect event - see ConnectionRegistry.
+    private static readonly ConnectionRegistry<Guid> Connections = new();
 
     private readonly ClubDbContext _db;
     private readonly SessionService _sessionService;
@@ -31,8 +27,10 @@ public class ClubHub : Hub
 
     public async Task Heartbeat(HeartbeatRequest request)
     {
-        ConnectionToMachine[Context.ConnectionId] = request.MachineGuid;
-        MachineToConnection[request.MachineGuid] = Context.ConnectionId;
+        // Registering a newer connection for this machine (if one already existed) immediately
+        // retires the old one, so it can never again be addressed by a command and its eventual
+        // disconnect event cannot evict this new, correct mapping.
+        Connections.Register(request.MachineGuid, Context.ConnectionId);
 
         var pc = await _db.Pcs.FirstOrDefaultAsync(p => p.MachineGuid == request.MachineGuid);
         var isNew = pc is null;
@@ -115,19 +113,31 @@ public class ClubHub : Hub
     /// </summary>
     public async Task SendTestCommand(Guid targetMachineGuid, ClientCommand command)
     {
-        if (MachineToConnection.TryGetValue(targetMachineGuid, out var connectionId))
+        if (Connections.TryGetConnectionId(targetMachineGuid, out var connectionId))
             await Clients.Client(connectionId).SendAsync(HubMethodNames.ReceiveCommand, command);
     }
 
     /// <summary>Lets session logic (SessionService) find a connected client's SignalR connection by its machine GUID.</summary>
     public static bool TryGetConnectionId(Guid machineGuid, out string connectionId) =>
-        MachineToConnection.TryGetValue(machineGuid, out connectionId);
+        Connections.TryGetConnectionId(machineGuid, out connectionId);
+
+    /// <summary>
+    /// Forcibly evicts a machine's connection mapping, e.g. when <see cref="OfflineMonitorService"/>
+    /// decides a PC is offline because its heartbeats stopped even though the socket never cleanly
+    /// disconnected (cable pulled, PC crashed/hung). Without this, commands could keep being sent to
+    /// that dead connection id until SignalR's own transport-level timeout eventually fires.
+    /// </summary>
+    public static void ForgetMachine(Guid machineGuid) => Connections.Forget(machineGuid);
 
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
-        if (ConnectionToMachine.TryRemove(Context.ConnectionId, out var machineGuid))
+        var (found, machineGuid, wasActiveConnection) = Connections.Disconnect(Context.ConnectionId);
+
+        // wasActiveConnection is false when a fast reconnect already replaced this connection's
+        // mapping with a newer one via Heartbeat - that means this disconnect is for a superseded
+        // socket and must not be treated as "the machine went offline".
+        if (found && wasActiveConnection)
         {
-            MachineToConnection.TryRemove(machineGuid, out _);
             var pc = await _db.Pcs.FirstOrDefaultAsync(p => p.MachineGuid == machineGuid);
             if (pc is not null && pc.IsOnline)
             {

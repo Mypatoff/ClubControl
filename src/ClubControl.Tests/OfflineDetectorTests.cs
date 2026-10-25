@@ -36,4 +36,24 @@ public class OfflineDetectorTests
         Assert.True(OfflineDetector.IsOffline(lastHeartbeat, now, TimeSpan.FromSeconds(15)));
         Assert.False(OfflineDetector.IsOffline(lastHeartbeat, now, TimeSpan.FromSeconds(60)));
     }
+
+    [Fact]
+    public void Online_AfterMissingASingleHeartbeatToNetworkJitter()
+    {
+        // The client heartbeats every 5s; the 15s default timeout must tolerate at least one
+        // dropped/delayed heartbeat (brief Wi-Fi/switch jitter) without flipping to offline.
+        var now = DateTime.UtcNow;
+        var lastHeartbeat = now - TimeSpan.FromSeconds(11);
+        Assert.False(OfflineDetector.IsOffline(lastHeartbeat, now));
+    }
+
+    [Fact]
+    public void Online_WhenClockSkewMakesLastHeartbeatAppearInTheFuture()
+    {
+        // A backward clock step (NTP correction) must never be misread as "ancient" heartbeat -
+        // a negative elapsed time is clearly not ">" the timeout.
+        var now = DateTime.UtcNow;
+        var lastHeartbeat = now + TimeSpan.FromSeconds(5);
+        Assert.False(OfflineDetector.IsOffline(lastHeartbeat, now));
+    }
 }

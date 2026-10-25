@@ -391,6 +391,15 @@
   <data name="WrongPassword" xml:space="preserve">
     <value>Wrong password.</value>
   </data>
+  <data name="PasswordTooShort" xml:space="preserve">
+    <value>Password must be at least {0} characters.</value>
+  </data>
+  <data name="PasswordNeedsLetterAndDigit" xml:space="preserve">
+    <value>Password must contain at least one letter and one digit.</value>
+  </data>
+  <data name="LoginLockedOut" xml:space="preserve">
+    <value>Too many wrong attempts. Try again in {0} seconds.</value>
+  </data>
   <data name="ReportsTitle" xml:space="preserve">
     <value>Reports</value>
   </data>

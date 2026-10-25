@@ -30,7 +30,17 @@ public class ServerConnection : IAsyncDisposable
             .Build();
 
         _connection.Reconnecting += _ => { StateChanged?.Invoke(_connection.State); return Task.CompletedTask; };
-        _connection.Reconnected += _ => { StateChanged?.Invoke(_connection.State); return Task.CompletedTask; };
+        _connection.Reconnected += async _ =>
+        {
+            StateChanged?.Invoke(_connection.State);
+
+            // Treat every reconnect as a resync, not a wait-for-the-next-tick: the heartbeat loop
+            // may be mid-delay for up to HeartbeatInterval, during which the server still thinks
+            // this PC is offline and the client is still showing stale/offline-unlocked state.
+            // Sending one immediately re-registers the connection mapping and gets the server's
+            // "what should this PC be doing right now" command back without that lag.
+            await SendHeartbeatAsync(CancellationToken.None);
+        };
         _connection.Closed += _ => { StateChanged?.Invoke(_connection.State); return Task.CompletedTask; };
 
         _connection.On<ClientCommand>(HubMethodNames.ReceiveCommand, command => CommandReceived?.Invoke(command));
@@ -49,25 +59,30 @@ public class ServerConnection : IAsyncDisposable
     {
         while (!cancellationToken.IsCancellationRequested)
         {
-            if (_connection.State == HubConnectionState.Connected)
-            {
-                try
-                {
-                    await _connection.InvokeAsync(HubMethodNames.Heartbeat, new HeartbeatRequest
-                    {
-                        MachineGuid = _machineGuid,
-                        IpAddress = MachineIdentity.GetLocalIpAddress(),
-                        MacAddress = MachineIdentity.GetMacAddress(),
-                        Hostname = MachineIdentity.GetHostname(),
-                    }, cancellationToken);
-                }
-                catch (Exception)
-                {
-                    // auto-reconnect will restore the connection; the next tick tries again
-                }
-            }
-
+            await SendHeartbeatAsync(cancellationToken);
             await Task.Delay(HeartbeatInterval, cancellationToken);
+        }
+    }
+
+    private async Task SendHeartbeatAsync(CancellationToken cancellationToken)
+    {
+        if (_connection.State != HubConnectionState.Connected)
+            return;
+
+        try
+        {
+            await _connection.InvokeAsync(HubMethodNames.Heartbeat, new HeartbeatRequest
+            {
+                MachineGuid = _machineGuid,
+                IpAddress = MachineIdentity.GetLocalIpAddress(),
+                MacAddress = MachineIdentity.GetMacAddress(),
+                Hostname = MachineIdentity.GetHostname(),
+            }, cancellationToken);
+        }
+        catch (Exception)
+        {
+            // auto-reconnect will restore the connection; the next tick (or the next Reconnected
+            // event) tries again.
         }
     }
 

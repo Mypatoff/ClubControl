@@ -391,6 +391,15 @@
   <data name="WrongPassword" xml:space="preserve">
     <value>Неверный пароль.</value>
   </data>
+  <data name="PasswordTooShort" xml:space="preserve">
+    <value>Пароль должен содержать не менее {0} символов.</value>
+  </data>
+  <data name="PasswordNeedsLetterAndDigit" xml:space="preserve">
+    <value>Пароль должен содержать хотя бы одну букву и одну цифру.</value>
+  </data>
+  <data name="LoginLockedOut" xml:space="preserve">
+    <value>Слишком много неверных попыток. Попробуйте снова через {0} секунд.</value>
+  </data>
   <data name="ReportsTitle" xml:space="preserve">
     <value>Отчёты</value>
   </data>

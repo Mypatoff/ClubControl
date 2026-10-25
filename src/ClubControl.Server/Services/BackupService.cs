@@ -77,13 +77,23 @@ public class BackupService : BackgroundService
 
     private static void DeleteOldBackups()
     {
-        var files = Directory.GetFiles(DbPaths.BackupDirectory, "club_*.db")
-            .Select(path => (Path: path, CreatedUtc: File.GetCreationTimeUtc(path)))
+        var directory = DbPaths.BackupDirectory;
+
+        // Age comes from the date encoded in the file name, not filesystem creation time - that
+        // metadata can change on copy/restore/backup-to-a-new-PC and would make retention
+        // nondeterministic. Anything that doesn't match the expected "club_yyyy-MM-dd.db" pattern
+        // is left alone entirely rather than guessed at.
+        var entries = Directory.GetFiles(directory, "club_*.db")
+            .Select(Path.GetFileName)
+            .Where(name => name is not null)
+            .Select(name => (Name: name!, Date: BackupRetention.TryParseBackupDate(name!)))
+            .Where(f => f.Date.HasValue)
+            .Select(f => new BackupRetention.BackupEntry(f.Name, f.Date!.Value))
             .ToList();
 
-        var timestampsToDelete = BackupRetention.FilesToDelete(files.Select(f => f.CreatedUtc)).ToHashSet();
+        var namesToDelete = BackupRetention.FilesToDelete(entries);
 
-        foreach (var file in files.Where(f => timestampsToDelete.Contains(f.CreatedUtc)))
-            File.Delete(file.Path);
+        foreach (var name in namesToDelete)
+            File.Delete(Path.Combine(directory, name));
     }
 }

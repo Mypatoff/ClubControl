@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Threading.Tasks;
 using ClubControl.Server.Data;
@@ -72,10 +73,75 @@ public class PowerService
         await _db.SaveChangesAsync();
     }
 
+    /// <summary>
+    /// Sends the magic packet as a directed broadcast on every active IPv4 interface's own subnet
+    /// (handles multi-NIC/VLAN servers where the target PC is only reachable via one specific
+    /// adapter, and where routers/switches do not forward the generic broadcast across subnets).
+    /// Falls back to the plain 255.255.255.255 broadcast if no interface yielded a usable subnet -
+    /// better to try the naive approach than to silently send nothing on an unusual network.
+    /// </summary>
     private static async Task SendMagicPacketAsync(string macAddress)
     {
         var packet = WakeOnLan.BuildMagicPacket(macAddress);
-        using var udpClient = new UdpClient { EnableBroadcast = true };
-        await udpClient.SendAsync(packet, packet.Length, new IPEndPoint(IPAddress.Broadcast, WakeOnLan.Port));
+        var sentFromAnyInterface = false;
+
+        foreach (var (localAddress, broadcastAddress) in GetInterfaceBroadcastEndpoints())
+        {
+            try
+            {
+                using var udpClient = new UdpClient(new IPEndPoint(localAddress, 0)) { EnableBroadcast = true };
+                await udpClient.SendAsync(packet, packet.Length, new IPEndPoint(broadcastAddress, WakeOnLan.Port));
+                sentFromAnyInterface = true;
+            }
+            catch (SocketException)
+            {
+                // This interface couldn't send a broadcast (e.g. disabled broadcast, link down
+                // mid-send) - other interfaces are still tried below.
+            }
+        }
+
+        if (!sentFromAnyInterface)
+        {
+            try
+            {
+                using var udpClient = new UdpClient { EnableBroadcast = true };
+                await udpClient.SendAsync(packet, packet.Length, new IPEndPoint(IPAddress.Broadcast, WakeOnLan.Port));
+            }
+            catch (SocketException)
+            {
+                // No usable network path for a broadcast at all - nothing more can be done here;
+                // the caller only logs how many WoL packets were attempted.
+            }
+        }
+    }
+
+    /// <summary>Every active, non-loopback IPv4 interface's own address paired with its subnet's directed broadcast address.</summary>
+    private static List<(IPAddress Local, IPAddress Broadcast)> GetInterfaceBroadcastEndpoints()
+    {
+        var endpoints = new List<(IPAddress Local, IPAddress Broadcast)>();
+
+        foreach (var nic in NetworkInterface.GetAllNetworkInterfaces())
+        {
+            if (nic.OperationalStatus != OperationalStatus.Up || nic.NetworkInterfaceType == NetworkInterfaceType.Loopback)
+                continue;
+
+            foreach (var unicast in nic.GetIPProperties().UnicastAddresses)
+            {
+                if (unicast.Address.AddressFamily != AddressFamily.InterNetwork || unicast.IPv4Mask is null)
+                    continue;
+
+                try
+                {
+                    var broadcast = WakeOnLan.GetDirectedBroadcastAddress(unicast.Address, unicast.IPv4Mask);
+                    endpoints.Add((unicast.Address, broadcast));
+                }
+                catch (ArgumentException)
+                {
+                    // Malformed/unusual address-mask pairing for this adapter - skip it, not fatal.
+                }
+            }
+        }
+
+        return endpoints;
     }
 }

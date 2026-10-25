@@ -1,19 +1,18 @@
 using System;
 using System.Diagnostics;
-using System.IO;
+using ClubControl.Shared;
 
 namespace ClubControl.Client.Native;
 
 /// <summary>Closes the processes named in the after-session process list, e.g. "steam.exe, csgo.exe".</summary>
 public static class ProcessCloser
 {
-    public static void CloseAll(string processListCsv)
+    public static void CloseAll(string? processListCsv)
     {
-        var names = processListCsv.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
-
-        foreach (var name in names)
+        // Parsing/validation (CSV handling, de-duplication, the Windows-critical-process
+        // blocklist) is pure logic shared with the test suite - see ProcessNameList.
+        foreach (var exeName in ProcessNameList.Parse(processListCsv))
         {
-            var exeName = Path.GetFileNameWithoutExtension(name);
             foreach (var process in Process.GetProcessesByName(exeName))
             {
                 try
@@ -22,7 +21,7 @@ public static class ProcessCloser
                 }
                 catch (Exception)
                 {
-                    // already exiting on its own - nothing to do
+                    // Already exiting on its own, or access denied - nothing more to do.
                 }
                 finally
                 {

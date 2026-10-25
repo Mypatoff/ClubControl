@@ -20,14 +20,23 @@ public static class PasswordHasher
 
     public static bool Verify(string password, string storedHash)
     {
-        var parts = storedHash.Split('.');
-        if (parts.Length != 3 || !int.TryParse(parts[0], out var iterations))
+        try
+        {
+            var parts = storedHash.Split('.');
+            if (parts.Length != 3 || !int.TryParse(parts[0], out var iterations) || iterations <= 0)
+                return false;
+
+            var salt = Convert.FromBase64String(parts[1]);
+            var expectedHash = Convert.FromBase64String(parts[2]);
+            var actualHash = Rfc2898DeriveBytes.Pbkdf2(password, salt, iterations, HashAlgorithmName.SHA256, expectedHash.Length);
+
+            return CryptographicOperations.FixedTimeEquals(actualHash, expectedHash);
+        }
+        catch (FormatException)
+        {
+            // storedHash is corrupted/not in the expected format - treat exactly like a wrong
+            // password rather than letting a malformed Setting row crash the login dialog.
             return false;
-
-        var salt = Convert.FromBase64String(parts[1]);
-        var expectedHash = Convert.FromBase64String(parts[2]);
-        var actualHash = Rfc2898DeriveBytes.Pbkdf2(password, salt, iterations, HashAlgorithmName.SHA256, expectedHash.Length);
-
-        return CryptographicOperations.FixedTimeEquals(actualHash, expectedHash);
+        }
     }
 }
