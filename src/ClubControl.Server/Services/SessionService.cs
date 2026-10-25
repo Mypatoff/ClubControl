@@ -74,10 +74,18 @@ public class SessionService
         session.Segments.Add(new SessionSegment { PcId = pc.Id, PricePerHourUzs = tariff.PricePerHourUzs, StartUtc = now });
         _db.Sessions.Add(session);
         pc.State = PcState.PrepaySession;
-        await _db.SaveChangesAsync();
 
-        LogEvent(EventType.SessionStarted, pc.Id, session.Id, $"Prepay session started: {minutes} min, {paidUzs} UZS");
-        await _db.SaveChangesAsync();
+        // The session row and its audit event must land together: if logging the event failed
+        // after the session/PC-state save already committed, a real billing change would exist
+        // with no corresponding event-log record. One transaction, two SaveChanges calls (the
+        // first is needed so the just-added session gets a real Id to log before the second).
+        await using (var transaction = await _db.Database.BeginTransactionAsync())
+        {
+            await _db.SaveChangesAsync();
+            LogEvent(EventType.SessionStarted, pc.Id, session.Id, $"Prepay session started: {minutes} min, {paidUzs} UZS");
+            await _db.SaveChangesAsync();
+            await transaction.CommitAsync();
+        }
 
         await SendCommandAsync(pc, new ClientCommand
         {
@@ -116,10 +124,14 @@ public class SessionService
 
         session.AmountUzs = newTotalPaid;
         session.PlannedEndUtc = session.PlannedEndUtc!.Value.AddMinutes(addMinutes);
-        await _db.SaveChangesAsync();
 
-        LogEvent(EventType.SessionExtended, pc.Id, session.Id, $"Extended by {addMinutes} min, {addMoneyUzs} UZS");
-        await _db.SaveChangesAsync();
+        await using (var transaction = await _db.Database.BeginTransactionAsync())
+        {
+            await _db.SaveChangesAsync();
+            LogEvent(EventType.SessionExtended, pc.Id, session.Id, $"Extended by {addMinutes} min, {addMoneyUzs} UZS");
+            await _db.SaveChangesAsync();
+            await transaction.CommitAsync();
+        }
 
         var remaining = Math.Max(0, (int)(session.PlannedEndUtc.Value - DateTime.UtcNow).TotalSeconds);
         await SendCommandAsync(pc, new ClientCommand
@@ -141,10 +153,14 @@ public class SessionService
         session.Segments.Add(new SessionSegment { PcId = pc.Id, PricePerHourUzs = tariff.PricePerHourUzs, StartUtc = now });
         _db.Sessions.Add(session);
         pc.State = PcState.PostpaySession;
-        await _db.SaveChangesAsync();
 
-        LogEvent(EventType.SessionStarted, pc.Id, session.Id, "Postpay session started");
-        await _db.SaveChangesAsync();
+        await using (var transaction = await _db.Database.BeginTransactionAsync())
+        {
+            await _db.SaveChangesAsync();
+            LogEvent(EventType.SessionStarted, pc.Id, session.Id, "Postpay session started");
+            await _db.SaveChangesAsync();
+            await transaction.CommitAsync();
+        }
 
         await SendCommandAsync(pc, new ClientCommand
         {
@@ -173,10 +189,14 @@ public class SessionService
 
         // Free sessions count up on screen exactly like postpay; there is no dedicated PcState for them.
         pc.State = PcState.PostpaySession;
-        await _db.SaveChangesAsync();
 
-        LogEvent(EventType.SessionStarted, pc.Id, session.Id, note is null ? "Free session started" : $"Free session started: {note}");
-        await _db.SaveChangesAsync();
+        await using (var transaction = await _db.Database.BeginTransactionAsync())
+        {
+            await _db.SaveChangesAsync();
+            LogEvent(EventType.SessionStarted, pc.Id, session.Id, note is null ? "Free session started" : $"Free session started: {note}");
+            await _db.SaveChangesAsync();
+            await transaction.CommitAsync();
+        }
 
         await SendCommandAsync(pc, new ClientCommand
         {
@@ -253,10 +273,14 @@ public class SessionService
 
         fromPc.State = PcState.Locked;
         toPc.State = session.Type == SessionType.Prepay ? PcState.PrepaySession : PcState.PostpaySession;
-        await _db.SaveChangesAsync();
 
-        LogEvent(EventType.SessionMoved, toPc.Id, session.Id, $"Moved from PC #{fromPc.Number} to PC #{toPc.Number}");
-        await _db.SaveChangesAsync();
+        await using (var transaction = await _db.Database.BeginTransactionAsync())
+        {
+            await _db.SaveChangesAsync();
+            LogEvent(EventType.SessionMoved, toPc.Id, session.Id, $"Moved from PC #{fromPc.Number} to PC #{toPc.Number}");
+            await _db.SaveChangesAsync();
+            await transaction.CommitAsync();
+        }
 
         await SendCommandAsync(fromPc, new ClientCommand { Type = CommandType.EndSession });
         await SendCommandAsync(fromPc, new ClientCommand { Type = CommandType.Lock, Lock = await BuildLockInfoAsync(fromPc, limitReached: false) });
@@ -318,10 +342,14 @@ public class SessionService
             {
                 openSegment.EndUtc = now; // frozen - no more time counts once locked, waiting for the admin
                 pc.State = PcState.LimitReached;
-                await _db.SaveChangesAsync();
 
-                LogEvent(EventType.LimitReached, pc.Id, session.Id, $"PC #{pc.Number} reached the tariff maximum");
-                await _db.SaveChangesAsync();
+                await using (var transaction = await _db.Database.BeginTransactionAsync())
+                {
+                    await _db.SaveChangesAsync();
+                    LogEvent(EventType.LimitReached, pc.Id, session.Id, $"PC #{pc.Number} reached the tariff maximum");
+                    await _db.SaveChangesAsync();
+                    await transaction.CommitAsync();
+                }
 
                 await SendCommandAsync(pc, new ClientCommand { Type = CommandType.Lock, Lock = await BuildLockInfoAsync(pc, limitReached: true) });
             }
@@ -591,10 +619,14 @@ public class SessionService
         session.ActualEndUtc = endUtc;
         session.Status = SessionStatus.Ended;
         pc.State = PcState.Locked;
-        await _db.SaveChangesAsync();
 
-        LogEvent(EventType.SessionEnded, pc.Id, session.Id, $"{reason} ({session.AmountUzs} UZS)");
-        await _db.SaveChangesAsync();
+        await using (var transaction = await _db.Database.BeginTransactionAsync())
+        {
+            await _db.SaveChangesAsync();
+            LogEvent(EventType.SessionEnded, pc.Id, session.Id, $"{reason} ({session.AmountUzs} UZS)");
+            await _db.SaveChangesAsync();
+            await transaction.CommitAsync();
+        }
 
         await SendCommandAsync(pc, new ClientCommand { Type = CommandType.EndSession });
         await SendCommandAsync(pc, new ClientCommand { Type = CommandType.Lock, Lock = await BuildLockInfoAsync(pc, limitReached: false) });
