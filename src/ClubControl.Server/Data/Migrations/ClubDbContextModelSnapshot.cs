@@ -50,6 +50,9 @@ namespace ClubControl.Server.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
+                    b.Property<string>("AuthTokenHash")
+                        .HasColumnType("TEXT");
+
                     b.Property<bool>("Enabled")
                         .HasColumnType("INTEGER");
 

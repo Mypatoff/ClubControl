@@ -157,14 +157,6 @@ When a future change needs a schema update, it is done via the "Add EF Migration
 workflow (Actions tab → run it with a migration name) rather than by hand, since generating a
 migration requires actually building the WPF project.
 
-**Outstanding migration needed:** `Pc.AuthTokenHash` (see "Security notes" below) was added to the
-model but its migration was **not** generated here - this dev environment is Linux and cannot
-build the Server project (`dotnet ef` needs it). Before this build runs anywhere: push this
-change to `main`, then run the "Add EF Migration" workflow once with a name like
-`AddPcAuthTokenHash`, then pull/merge the migration it commits back. Existing PCs are unaffected
-by this column appearing (it starts `null` for every row and only starts mattering once each PC
-heartbeats at least once post-upgrade - see below).
-
 ## Security notes
 
 - **Network traffic is plain HTTP, not TLS.** Kestrel listens on `http://0.0.0.0:5050`; SignalR
