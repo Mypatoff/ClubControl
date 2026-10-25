@@ -24,6 +24,7 @@ One club, one admin laptop (server), up to ~30 gaming PCs (clients) on the same 
 - Server marks a client Offline if no heartbeat for 15 s.
 - Client identity: Windows MachineGuid (`HKLM\SOFTWARE\Microsoft\Cryptography\MachineGuid`). The client also reports its IP, MAC address and hostname.
 - A new, unknown client appears in the admin panel as "New PC" until the admin gives it a number and class.
+- Once a PC has a number and class, the server mints it a random secret token on its next heartbeat and sends it once; the client stores it and must present it on every later heartbeat, or the server ignores that heartbeat entirely (no state change, no commands). This stops a second machine from taking over a PC's identity merely by knowing or guessing its MachineGuid. Clearing a PC's number (Settings) revokes its token; reassigning a number re-provisions a fresh one. See README.md "Security notes" for the full rationale and the accepted plain-HTTP (no TLS) trade-off.
 - First run of the server (elevated) adds Windows Firewall inbound rules for TCP 5050 and UDP 5051, Private profile only. The firewall is never disabled.
 
 ## 3. Time

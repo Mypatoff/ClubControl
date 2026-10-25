@@ -61,7 +61,12 @@ public partial class App : Application
 
         builder.Services.AddDbContext<ClubDbContext>(options =>
             options.UseSqlite(DbPaths.ConnectionString));
-        builder.Services.AddSignalR(options => options.EnableDetailedErrors = true);
+        // Detailed SignalR errors (full exception text/stack trace sent to the client) are only
+        // safe in development - a stack trace handed to every terminal on the LAN is an
+        // information-disclosure risk in production. Unhandled hub exceptions are still logged
+        // server-side regardless (ASP.NET Core's default logging providers), just not echoed to
+        // the caller.
+        builder.Services.AddSignalR(options => options.EnableDetailedErrors = builder.Environment.IsDevelopment());
         builder.Services.AddScoped<SessionService>();
         builder.Services.AddScoped<PowerService>();
         builder.Services.AddScoped<ReportsService>();

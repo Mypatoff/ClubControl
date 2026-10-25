@@ -5,6 +5,7 @@ using ClubControl.Server.Data.Models;
 using ClubControl.Server.Services;
 using ClubControl.Shared;
 using ClubControl.Shared.Dto;
+using ClubControl.Shared.Security;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 
@@ -27,12 +28,33 @@ public class ClubHub : Hub
 
     public async Task Heartbeat(HeartbeatRequest request)
     {
+        var pc = await _db.Pcs.FirstOrDefaultAsync(p => p.MachineGuid == request.MachineGuid);
+
+        // Once a PC has been provisioned (AuthTokenHash set - see below), its GUID alone is no
+        // longer enough to speak for it: every heartbeat must also present the matching secret
+        // token. Reject anything else outright - no connection registration, no Pc field
+        // updates, no "what should this PC be doing" resync - so an impostor claiming a real PC's
+        // GUID can never intercept the commands meant for it. A PC that has never been
+        // configured yet (AuthTokenHash still null) has no secret to check yet; see the
+        // provisioning step at the end of this method for why that bootstrap window is accepted.
+        if (pc is not null && pc.AuthTokenHash is not null &&
+            (request.AuthToken is null || !PcTokenHasher.Verify(request.AuthToken, pc.AuthTokenHash)))
+        {
+            _db.EventLogEntries.Add(new EventLogEntry
+            {
+                Type = EventType.AuthRejected,
+                PcId = pc.Id,
+                Message = $"Rejected heartbeat for PC #{pc.Number?.ToString() ?? "?"}: missing or wrong auth token (claimed from {request.IpAddress})",
+            });
+            await _db.SaveChangesAsync();
+            return;
+        }
+
         // Registering a newer connection for this machine (if one already existed) immediately
         // retires the old one, so it can never again be addressed by a command and its eventual
         // disconnect event cannot evict this new, correct mapping.
         Connections.Register(request.MachineGuid, Context.ConnectionId);
 
-        var pc = await _db.Pcs.FirstOrDefaultAsync(p => p.MachineGuid == request.MachineGuid);
         var isNew = pc is null;
 
         if (pc is null)
@@ -77,6 +99,21 @@ public class ClubHub : Hub
             var command = await _sessionService.BuildCurrentCommandAsync(pc);
             if (command is not null)
                 await Clients.Caller.SendAsync(HubMethodNames.ReceiveCommand, command);
+        }
+
+        // The first heartbeat after the admin assigns this PC a number/tariff: mint its
+        // permanent auth token now, while this connection is still the one we just finished
+        // trusting at face value above (the same trust-on-first-use moment the admin already
+        // relies on to recognise a "New PC" by its reported hostname/IP). From here on, this
+        // GUID can no longer be claimed by a different connection without this token.
+        if (pc.IsConfigured && pc.AuthTokenHash is null)
+        {
+            var token = PcTokenHasher.GenerateToken();
+            pc.AuthTokenHash = PcTokenHasher.Hash(token);
+            await _db.SaveChangesAsync();
+
+            await Clients.Caller.SendAsync(HubMethodNames.ReceiveCommand,
+                new ClientCommand { Type = CommandType.ProvisionToken, AuthToken = token });
         }
     }
 

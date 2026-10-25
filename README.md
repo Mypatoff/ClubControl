@@ -136,6 +136,12 @@ auto-discovery:
 - **Firewall rule on first run**: on a fresh admin laptop (rules not yet added), run
   `ClubControl.Server.exe` as Administrator once, or run `install-server.ps1` - check
   `netsh advfirewall firewall show rule name="ClubControl Server (TCP 5050)"` reports the rule.
+- **PC auth token provisioning**: assign a brand-new "New PC" a number and tariff and Save; check
+  `%ProgramData%\ClubControl\client-token.dat` appears on that PC within a few seconds (its next
+  heartbeat). Restart the client - it should reconnect normally. Then manually delete/corrupt that
+  file and restart the client again - the server's event log should show a rejected-heartbeat
+  entry and the PC should show offline/stuck (not silently keep working), until you clear and
+  reassign its Number in Settings to re-provision it.
 
 ## Database upgrades
 
@@ -150,6 +156,45 @@ Phase 6 build that still used `EnsureCreatedAsync`), delete it once more
 When a future change needs a schema update, it is done via the "Add EF Migration" GitHub Actions
 workflow (Actions tab → run it with a migration name) rather than by hand, since generating a
 migration requires actually building the WPF project.
+
+**Outstanding migration needed:** `Pc.AuthTokenHash` (see "Security notes" below) was added to the
+model but its migration was **not** generated here - this dev environment is Linux and cannot
+build the Server project (`dotnet ef` needs it). Before this build runs anywhere: push this
+change to `main`, then run the "Add EF Migration" workflow once with a name like
+`AddPcAuthTokenHash`, then pull/merge the migration it commits back. Existing PCs are unaffected
+by this column appearing (it starts `null` for every row and only starts mattering once each PC
+heartbeats at least once post-upgrade - see below).
+
+## Security notes
+
+- **Network traffic is plain HTTP, not TLS.** Kestrel listens on `http://0.0.0.0:5050`; SignalR
+  traffic (including the one-time delivery of a PC's auth token - see below) is unencrypted on
+  the LAN. This is an accepted trade-off for a single-club, physically-controlled private
+  network with no existing certificate infrastructure to distribute to ~30 client PCs - adding
+  real TLS would mean generating a certificate and getting every client to trust it, which is a
+  deployment project of its own. If the club's network is ever not fully trusted (e.g. a shared
+  building network, guest Wi-Fi on the same VLAN, anything beyond PCs you physically control),
+  put the server behind a LAN-only reverse proxy/VPN or revisit this before relying on it.
+- **Per-PC identity.** A gaming PC's `MachineGuid` alone is no longer enough to speak for it.
+  The first time a PC heartbeats *after* you give it a number and tariff (Settings > Computers &
+  Billiards), the server mints a random secret token for it, sends it once, and the client stores
+  it locally (`%ProgramData%\ClubControl\client-token.dat`). Every heartbeat after that must
+  include the matching token, or the server ignores it outright (logged as a rejected-heartbeat
+  event) - so a second machine that merely learns or guesses a real PC's GUID can no longer take
+  over its commands or overwrite its reported IP/MAC/hostname. A brand new, not-yet-configured PC
+  is still trusted at face value the moment it first appears as "New PC" (same as before) - that
+  bootstrap moment is unavoidable without a separate out-of-band provisioning step, and is no
+  weaker than today's "recognise it by hostname/IP in the list" process.
+- **Revoking/rotating a PC's token:** clear its **Number** in Settings > Computers & Billiards and
+  Save. That wipes its stored token; the next heartbeat (from whatever machine next claims that
+  GUID) re-provisions a fresh one the moment you reassign a number. Use this if a PC is replaced,
+  reimaged, or you suspect its token leaked.
+- **Admin panel:** the SignalR hub (`ClubHub`) exposes only `Heartbeat` to connected PCs - no
+  session/billing/command RPCs are reachable from a terminal. The admin panel calls
+  `SessionService` in-process, in the server's own process, never over the wire.
+- **SignalR detailed errors** are only enabled when `ASPNETCORE_ENVIRONMENT=Development`; a
+  normal install (no such variable set) never sends exception details/stack traces to clients.
+  Unhandled hub exceptions are still captured server-side via ASP.NET Core's default logging.
 
 ## Notes and known limitations
 

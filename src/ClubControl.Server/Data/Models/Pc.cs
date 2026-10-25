@@ -31,5 +31,14 @@ public class Pc
     public bool IsOnline { get; set; }
     public DateTime LastHeartbeatUtc { get; set; }
 
+    /// <summary>
+    /// SHA-256 hash of this PC's auth token (see ClubHub.Heartbeat and PcTokenHasher), null until
+    /// the admin has configured it (assigned a number/tariff) and it has heartbeated at least
+    /// once since. Once set, every future heartbeat for this MachineGuid must present the
+    /// matching token - this is what stops a second client from impersonating this PC merely by
+    /// knowing or guessing its GUID.
+    /// </summary>
+    public string? AuthTokenHash { get; set; }
+
     public bool IsConfigured => Number.HasValue && TariffId.HasValue;
 }

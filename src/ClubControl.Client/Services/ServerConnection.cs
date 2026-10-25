@@ -15,6 +15,7 @@ public class ServerConnection : IAsyncDisposable
     private readonly HubConnection _connection;
     private readonly Guid _machineGuid;
     private CancellationTokenSource? _heartbeatCts;
+    private string? _authToken = TokenStore.Load();
 
     public event Action<HubConnectionState>? StateChanged;
     public event Action<ClientCommand>? CommandReceived;
@@ -43,7 +44,20 @@ public class ServerConnection : IAsyncDisposable
         };
         _connection.Closed += _ => { StateChanged?.Invoke(_connection.State); return Task.CompletedTask; };
 
-        _connection.On<ClientCommand>(HubMethodNames.ReceiveCommand, command => CommandReceived?.Invoke(command));
+        _connection.On<ClientCommand>(HubMethodNames.ReceiveCommand, command =>
+        {
+            // ProvisionToken is connection-level plumbing (see ClubHub.Heartbeat), not a visible
+            // app state change - handle and persist it here rather than routing it through
+            // AppController's state machine.
+            if (command.Type == CommandType.ProvisionToken && command.AuthToken is not null)
+            {
+                _authToken = command.AuthToken;
+                TokenStore.Save(command.AuthToken);
+                return;
+            }
+
+            CommandReceived?.Invoke(command);
+        });
     }
 
     public async Task ConnectAsync()
@@ -77,6 +91,7 @@ public class ServerConnection : IAsyncDisposable
                 IpAddress = MachineIdentity.GetLocalIpAddress(),
                 MacAddress = MachineIdentity.GetMacAddress(),
                 Hostname = MachineIdentity.GetHostname(),
+                AuthToken = _authToken,
             }, cancellationToken);
         }
         catch (Exception)

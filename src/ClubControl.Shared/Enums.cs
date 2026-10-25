@@ -41,7 +41,8 @@ public enum EventType
     Warning,
     LimitReached,
     OfflineUnlock,
-    PowerCommand
+    PowerCommand,
+    AuthRejected
 }
 
 public enum LockScreenLanguage
@@ -72,5 +73,6 @@ public enum CommandType
     EndSession,
     Shutdown,
     Restart,
-    ApplySettings
+    ApplySettings,
+    ProvisionToken
 }

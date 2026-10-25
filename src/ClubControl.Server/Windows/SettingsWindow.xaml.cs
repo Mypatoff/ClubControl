@@ -24,6 +24,7 @@ public partial class SettingsWindow : Window
     private Setting _setting = null!;
     private ObservableCollection<Tariff> _tariffs = null!;
     private List<Pc> _pcs = null!;
+    private Dictionary<int, int?> _openedWithNumbers = null!;
     private AdminPanelLanguage _openedWithLanguage;
     private UiTheme _openedWithTheme;
 
@@ -102,6 +103,7 @@ public partial class SettingsWindow : Window
         _setting = await SettingsHelper.GetOrCreateAsync(_db);
         _tariffs = new ObservableCollection<Tariff>(await TariffsHelper.GetAllAsync(_db));
         _pcs = await _db.Pcs.OrderBy(p => p.Number).ToListAsync();
+        _openedWithNumbers = _pcs.ToDictionary(p => p.Id, p => p.Number);
         _openedWithLanguage = _setting.AdminPanelLanguage;
 
         ClubNameBox.Text = _setting.ClubName;
@@ -193,6 +195,16 @@ public partial class SettingsWindow : Window
         {
             ErrorText.Text = Strings.Get("TariffPriceAndLimitsMustBeValid");
             return;
+        }
+
+        // A PC whose number was just cleared is being unassigned/repurposed - its auth token (if
+        // any) no longer vouches for whatever ends up at that MachineGuid next, so require
+        // re-provisioning (see ClubHub.Heartbeat) rather than letting a stale token keep trusting
+        // it under a new identity.
+        foreach (var pc in _pcs)
+        {
+            if (_openedWithNumbers.TryGetValue(pc.Id, out var originalNumber) && originalNumber.HasValue && !pc.Number.HasValue)
+                pc.AuthTokenHash = null;
         }
 
         _setting.ClubName = ClubNameBox.Text;
