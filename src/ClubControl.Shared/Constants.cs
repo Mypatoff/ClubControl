@@ -16,10 +16,6 @@ public static class HubMethodNames
     // Client -> server
     public const string Heartbeat = "Heartbeat";
 
-    // Any connected client -> server -> target client. Dev/test only: lets ClubControl.TestClient
-    // exercise the client's command handling before the real admin panel (Phase 4) can send commands.
-    public const string SendTestCommand = "SendTestCommand";
-
     // Server -> client
     public const string ReceiveCommand = "ReceiveCommand";
 }

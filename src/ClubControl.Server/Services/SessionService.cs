@@ -85,6 +85,10 @@ public class SessionService
     {
         var (pc, session, segment, tariff) = await GetActivePrepayAsync(machineGuid);
         var addMinutes = BillingCalculator.MinutesForMoney(addMoneyUzs, segment.PricePerHourUzs);
+
+        if (!BillingCalculator.IsValidExtendIncrement(addMoneyUzs, addMinutes))
+            throw new InvalidOperationException($"{addMoneyUzs} UZS is not enough to buy any extra time at {segment.PricePerHourUzs} UZS/hour.");
+
         await ExtendPrepayAsync(pc, session, tariff, addMinutes, addMoneyUzs);
     }
 
@@ -92,13 +96,17 @@ public class SessionService
     {
         var (pc, session, segment, tariff) = await GetActivePrepayAsync(machineGuid);
         var addMoneyUzs = BillingCalculator.PriceForMinutes(addMinutes, segment.PricePerHourUzs);
+
+        if (!BillingCalculator.IsValidExtendIncrement(addMoneyUzs, addMinutes))
+            throw new InvalidOperationException("Extend time must be greater than zero.");
+
         await ExtendPrepayAsync(pc, session, tariff, addMinutes, addMoneyUzs);
     }
 
     private async Task ExtendPrepayAsync(Pc pc, Session session, Tariff tariff, int addMinutes, int addMoneyUzs)
     {
         var newTotalPaid = session.AmountUzs + addMoneyUzs;
-        if (newTotalPaid > tariff.MaxPaymentUzs)
+        if (!BillingCalculator.IsValidPrepayPayment(newTotalPaid, tariff.MinPaymentUzs, tariff.MaxPaymentUzs))
             throw new InvalidOperationException($"Extending would bring the total to {newTotalPaid} UZS, above the {tariff.MaxPaymentUzs} UZS maximum.");
 
         session.AmountUzs = newTotalPaid;

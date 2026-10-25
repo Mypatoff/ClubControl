@@ -83,6 +83,32 @@ public class BillingCalculatorTests
         Assert.Equal(expected, BillingCalculator.IsValidPrepayPayment(amountUzs, minUzs, maxUzs));
     }
 
+    // ---- extend (SPEC 5: "Extend (Доплата): add money or minutes at the current PC's price") ----
+
+    [Theory]
+    [InlineData(1000, 6, true)]   // ordinary top-up: positive money, buys real extra time
+    [InlineData(0, 0, false)]     // zero money -> zero minutes: nothing was actually added
+    [InlineData(-500, 0, false)]  // negative money (should never reach here, but must still be rejected)
+    [InlineData(500, 0, false)]   // too little money to buy even one extra minute at this price
+    public void IsValidExtendIncrement_RequiresPositiveMoneyAndMinutes(int addMoneyUzs, int addMinutes, bool expected)
+    {
+        Assert.Equal(expected, BillingCalculator.IsValidExtendIncrement(addMoneyUzs, addMinutes));
+    }
+
+    [Fact]
+    public void IsValidExtendIncrement_TooSmallMoneyAmount_BuysNoTime()
+    {
+        // The exact bug this guards against: a top-up small enough that MinutesForMoney rounds
+        // down to zero would otherwise charge money for zero added time.
+        const int pricePerHourUzs = 10000;
+        const int tooSmallMoneyUzs = 100;
+
+        var addMinutes = BillingCalculator.MinutesForMoney(tooSmallMoneyUzs, pricePerHourUzs);
+
+        Assert.Equal(0, addMinutes);
+        Assert.False(BillingCalculator.IsValidExtendIncrement(tooSmallMoneyUzs, addMinutes));
+    }
+
     // ---- postpay (SPEC 5: "Postpay") ----
 
     [Theory]

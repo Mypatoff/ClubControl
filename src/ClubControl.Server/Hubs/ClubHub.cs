@@ -80,42 +80,16 @@ public class ClubHub : Hub
         }
     }
 
-    // ---- session/billing RPCs (SPEC section 5). These will become the admin panel's API in Phase 4;
-    // for now ClubControl.TestClient calls them directly so this logic can be tested manually. ----
-
-    public Task StartPrepayByMoney(Guid machineGuid, int moneyUzs) =>
-        _sessionService.StartPrepayByMoneyAsync(machineGuid, moneyUzs);
-
-    public Task StartPrepayByTime(Guid machineGuid, int minutes) =>
-        _sessionService.StartPrepayByTimeAsync(machineGuid, minutes);
-
-    public Task StartPostpay(Guid machineGuid) =>
-        _sessionService.StartPostpayAsync(machineGuid);
-
-    public Task StartFree(Guid machineGuid, string? note) =>
-        _sessionService.StartFreeAsync(machineGuid, note);
-
-    public Task ExtendPrepayByMoney(Guid machineGuid, int addMoneyUzs) =>
-        _sessionService.ExtendPrepayByMoneyAsync(machineGuid, addMoneyUzs);
-
-    public Task ExtendPrepayByTime(Guid machineGuid, int addMinutes) =>
-        _sessionService.ExtendPrepayByTimeAsync(machineGuid, addMinutes);
-
-    public Task MoveSession(Guid fromMachineGuid, Guid toMachineGuid) =>
-        _sessionService.MoveSessionAsync(fromMachineGuid, toMachineGuid);
-
-    public Task EndSessionEarly(Guid machineGuid) =>
-        _sessionService.EndSessionEarlyAsync(machineGuid);
-
-    /// <summary>
-    /// Dev/test only: lets ClubControl.TestClient push a command to a specific client so Phase 2
-    /// (lock screen, timer, commands) can be tested manually before the admin panel (Phase 4) exists.
-    /// </summary>
-    public async Task SendTestCommand(Guid targetMachineGuid, ClientCommand command)
-    {
-        if (Connections.TryGetConnectionId(targetMachineGuid, out var connectionId))
-            await Clients.Client(connectionId).SendAsync(HubMethodNames.ReceiveCommand, command);
-    }
+    // Session/billing logic (SPEC section 5) and ClientCommand delivery are never exposed as hub
+    // RPCs: the hub is reachable by every PC terminal on the LAN, and a hub method has no notion of
+    // "admin vs. terminal" caller. The admin panel calls SessionService directly in-process (see
+    // MainWindow/StartSessionWindow/ExtendSessionWindow/MoveSessionWindow/PostpayPaymentWindow) -
+    // never through this hub - precisely so a terminal client can never invoke "start a free
+    // session", "extend my own session for free", or "unlock this PC" by calling a hub method
+    // itself. Earlier phases exposed these as hub RPCs for ClubControl.TestClient to drive by hand;
+    // that made every one of them callable, with no authorization at all, by any terminal on the
+    // club's network. Do not re-add them here - if a command needs to reach a client, route it
+    // through SessionService's own SendCommandAsync (private, server-side only).
 
     /// <summary>Lets session logic (SessionService) find a connected client's SignalR connection by its machine GUID.</summary>
     public static bool TryGetConnectionId(Guid machineGuid, out string connectionId) =>
