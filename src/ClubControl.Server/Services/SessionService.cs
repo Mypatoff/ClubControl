@@ -7,6 +7,7 @@ using ClubControl.Server.Data.Models;
 using ClubControl.Server.Hubs;
 using ClubControl.Shared;
 using ClubControl.Shared.Dto;
+using ClubControl.Shared.Security;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 
@@ -459,6 +460,36 @@ public class SessionService
         var onlinePcs = await _db.Pcs.Where(p => p.IsOnline && p.Number != null).ToListAsync();
         foreach (var pc in onlinePcs)
             await SendCommandAsync(pc, new ClientCommand { Type = CommandType.ApplySettings, Settings = dto });
+    }
+
+    /// <summary>
+    /// Mints this PC's permanent auth token (ClubHub.Heartbeat) the moment the admin finishes
+    /// configuring it in Settings > Computers & Billiards, binding the token to whichever
+    /// connection is registered for this exact MachineGuid *right now* - never to "whoever
+    /// heartbeats next", which would let anyone who already knows or guessed the GUID (e.g. from
+    /// an earlier heartbeat sniffed on the LAN) race the real PC for its own token at any point
+    /// after being configured, with no further verification. Tying it to the admin's own Save
+    /// action means the only way to win that race is to already be actively impersonating this
+    /// PC's connection at the exact moment the admin clicks Save - which collides with and
+    /// disrupts the real PC's own connection, unlike silently sniffing a GUID and waiting.
+    /// Does nothing if this PC is not currently connected (not yet provisioned, or IsManual and
+    /// never connects at all) - call this again after Settings is saved once it is online, e.g.
+    /// simply by opening Settings and saving again for any reason.
+    /// </summary>
+    public async Task ProvisionPcIfNeededAsync(Pc pc)
+    {
+        if (!pc.IsConfigured || pc.AuthTokenHash is not null)
+            return;
+
+        if (!ClubHub.TryGetConnectionId(pc.MachineGuid, out var connectionId))
+            return;
+
+        var token = PcTokenHasher.GenerateToken();
+        pc.AuthTokenHash = PcTokenHasher.Hash(token);
+        await _db.SaveChangesAsync();
+
+        await _hub.Clients.Client(connectionId).SendAsync(HubMethodNames.ReceiveCommand,
+            new ClientCommand { Type = CommandType.ProvisionToken, AuthToken = token });
     }
 
     // ---- shared helpers ----

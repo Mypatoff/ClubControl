@@ -258,6 +258,14 @@ public partial class SettingsWindow : Window
         var sessionService = _scope.ServiceProvider.GetRequiredService<SessionService>();
         await sessionService.BroadcastSettingsAsync();
 
+        // Provision any PC that is now configured but has no auth token yet - this is the only
+        // place a token is ever minted (see SessionService.ProvisionPcIfNeededAsync for why it is
+        // tied to this exact Save action rather than to the PC's next heartbeat). No-ops for a PC
+        // that is not currently connected; opening Settings and saving again once it is online
+        // provisions it then.
+        foreach (var pc in _pcs)
+            await sessionService.ProvisionPcIfNeededAsync(pc);
+
         if (_setting.AdminPanelLanguage != _openedWithLanguage)
         {
             Strings.Apply(_setting.AdminPanelLanguage);

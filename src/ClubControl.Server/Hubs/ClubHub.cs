@@ -30,15 +30,15 @@ public class ClubHub : Hub
     {
         var pc = await _db.Pcs.FirstOrDefaultAsync(p => p.MachineGuid == request.MachineGuid);
 
-        // Once a PC has been provisioned (AuthTokenHash set - see below), its GUID alone is no
-        // longer enough to speak for it: every heartbeat must also present the matching secret
-        // token. Reject anything else outright - no connection registration, no Pc field
-        // updates, no "what should this PC be doing" resync - so an impostor claiming a real PC's
-        // GUID can never intercept the commands meant for it. A PC that has never been
-        // configured yet (AuthTokenHash still null) has no secret to check yet; see the
-        // provisioning step at the end of this method for why that bootstrap window is accepted.
-        if (pc is not null && pc.AuthTokenHash is not null &&
-            (request.AuthToken is null || !PcTokenHasher.Verify(request.AuthToken, pc.AuthTokenHash)))
+        // Once a PC has been provisioned (AuthTokenHash set - see
+        // SessionService.ProvisionPcIfNeededAsync), its GUID alone is no longer enough to speak
+        // for it: every heartbeat must also present the matching secret token. Reject anything
+        // else outright - no connection registration, no Pc field updates, no "what should this
+        // PC be doing" resync - so an impostor claiming a real PC's GUID can never intercept the
+        // commands meant for it. A PC that has never been configured yet (AuthTokenHash still
+        // null) has no secret to check yet and is trusted at face value - the unavoidable
+        // trust-on-first-use bootstrap (see PcTokenHasher.IsHeartbeatAuthorized).
+        if (pc is not null && !PcTokenHasher.IsHeartbeatAuthorized(pc.AuthTokenHash, request.AuthToken))
         {
             _db.EventLogEntries.Add(new EventLogEntry
             {
@@ -101,20 +101,14 @@ public class ClubHub : Hub
                 await Clients.Caller.SendAsync(HubMethodNames.ReceiveCommand, command);
         }
 
-        // The first heartbeat after the admin assigns this PC a number/tariff: mint its
-        // permanent auth token now, while this connection is still the one we just finished
-        // trusting at face value above (the same trust-on-first-use moment the admin already
-        // relies on to recognise a "New PC" by its reported hostname/IP). From here on, this
-        // GUID can no longer be claimed by a different connection without this token.
-        if (pc.IsConfigured && pc.AuthTokenHash is null)
-        {
-            var token = PcTokenHasher.GenerateToken();
-            pc.AuthTokenHash = PcTokenHasher.Hash(token);
-            await _db.SaveChangesAsync();
-
-            await Clients.Caller.SendAsync(HubMethodNames.ReceiveCommand,
-                new ClientCommand { Type = CommandType.ProvisionToken, AuthToken = token });
-        }
+        // Deliberately does NOT auto-mint an auth token here on "the next heartbeat after the PC
+        // becomes configured": that would let anyone who already knows or guessed this GUID (e.g.
+        // from an earlier heartbeat sniffed on the LAN - see README "Security notes") win a race
+        // against the real PC for its own permanent token, any time after the admin assigns it a
+        // number/tariff, with nothing more than a single well-timed heartbeat. Provisioning only
+        // ever happens in SessionService.ProvisionPcIfNeededAsync, triggered by the admin's own
+        // Settings Save action and bound to whichever connection is actually registered for this
+        // GUID at that exact moment - see that method for the full reasoning.
     }
 
     // Session/billing logic (SPEC section 5) and ClientCommand delivery are never exposed as hub

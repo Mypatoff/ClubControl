@@ -53,4 +53,43 @@ public class PcTokenHasherTests
     {
         Assert.False(PcTokenHasher.Verify("whatever", ""));
     }
+
+    // ---- IsHeartbeatAuthorized: the decision ClubHub.Heartbeat makes about a claimed MachineGuid ----
+
+    [Fact]
+    public void IsHeartbeatAuthorized_BrandNewOrUnprovisionedPc_TrustsAnyCaller()
+    {
+        // No stored token yet (new PC, or configured but not yet provisioned) - legitimate
+        // first-time setup must not be blocked by requiring a token nobody has been given yet.
+        Assert.True(PcTokenHasher.IsHeartbeatAuthorized(storedTokenHash: null, presentedToken: null));
+        Assert.True(PcTokenHasher.IsHeartbeatAuthorized(storedTokenHash: null, presentedToken: "anything"));
+    }
+
+    [Fact]
+    public void IsHeartbeatAuthorized_ProvisionedPc_LegitimateReconnect_Succeeds()
+    {
+        var token = PcTokenHasher.GenerateToken();
+        var storedHash = PcTokenHasher.Hash(token);
+
+        Assert.True(PcTokenHasher.IsHeartbeatAuthorized(storedHash, token));
+    }
+
+    [Fact]
+    public void IsHeartbeatAuthorized_ProvisionedPc_NoToken_IsRejected()
+    {
+        // The impersonation case this whole mechanism exists to stop: an attacker who only knows
+        // the MachineGuid (e.g. sniffed off the LAN), with no token, must not be trusted.
+        var storedHash = PcTokenHasher.Hash(PcTokenHasher.GenerateToken());
+
+        Assert.False(PcTokenHasher.IsHeartbeatAuthorized(storedHash, presentedToken: null));
+    }
+
+    [Fact]
+    public void IsHeartbeatAuthorized_ProvisionedPc_WrongToken_IsRejected()
+    {
+        var storedHash = PcTokenHasher.Hash(PcTokenHasher.GenerateToken());
+        var wrongToken = PcTokenHasher.GenerateToken();
+
+        Assert.False(PcTokenHasher.IsHeartbeatAuthorized(storedHash, wrongToken));
+    }
 }

@@ -37,4 +37,17 @@ public static class PcTokenHasher
             return false;
         }
     }
+
+    /// <summary>
+    /// The one authorization decision ClubHub.Heartbeat makes about a claimed MachineGuid,
+    /// factored out as a pure function so it can be tested without a database or SignalR
+    /// connection. A PC with no stored token yet (brand new, or configured but not yet
+    /// provisioned - see ClubHub/SessionService.ProvisionPcIfNeededAsync for the only place a
+    /// token is ever minted) is trusted at face value; this is the unavoidable trust-on-first-use
+    /// bootstrap, not a gap this method is meant to close. Once a token IS stored, nothing short of
+    /// presenting the exact matching token may speak for that GUID again - so merely knowing or
+    /// guessing a MachineGuid can no longer impersonate an already-provisioned PC.
+    /// </summary>
+    public static bool IsHeartbeatAuthorized(string? storedTokenHash, string? presentedToken) =>
+        storedTokenHash is null || (presentedToken is not null && Verify(presentedToken, storedTokenHash));
 }
