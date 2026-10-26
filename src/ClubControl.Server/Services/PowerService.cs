@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
-using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Threading.Tasks;
 using ClubControl.Server.Data;
@@ -85,7 +84,7 @@ public class PowerService
         var packet = WakeOnLan.BuildMagicPacket(macAddress);
         var sentFromAnyInterface = false;
 
-        foreach (var (localAddress, broadcastAddress) in GetInterfaceBroadcastEndpoints())
+        foreach (var (localAddress, broadcastAddress) in LocalNetworkInterfaces.GetBroadcastEndpoints())
         {
             try
             {
@@ -113,35 +112,5 @@ public class PowerService
                 // the caller only logs how many WoL packets were attempted.
             }
         }
-    }
-
-    /// <summary>Every active, non-loopback IPv4 interface's own address paired with its subnet's directed broadcast address.</summary>
-    private static List<(IPAddress Local, IPAddress Broadcast)> GetInterfaceBroadcastEndpoints()
-    {
-        var endpoints = new List<(IPAddress Local, IPAddress Broadcast)>();
-
-        foreach (var nic in NetworkInterface.GetAllNetworkInterfaces())
-        {
-            if (nic.OperationalStatus != OperationalStatus.Up || nic.NetworkInterfaceType == NetworkInterfaceType.Loopback)
-                continue;
-
-            foreach (var unicast in nic.GetIPProperties().UnicastAddresses)
-            {
-                if (unicast.Address.AddressFamily != AddressFamily.InterNetwork || unicast.IPv4Mask is null)
-                    continue;
-
-                try
-                {
-                    var broadcast = WakeOnLan.GetDirectedBroadcastAddress(unicast.Address, unicast.IPv4Mask);
-                    endpoints.Add((unicast.Address, broadcast));
-                }
-                catch (ArgumentException)
-                {
-                    // Malformed/unusual address-mask pairing for this adapter - skip it, not fatal.
-                }
-            }
-        }
-
-        return endpoints;
     }
 }

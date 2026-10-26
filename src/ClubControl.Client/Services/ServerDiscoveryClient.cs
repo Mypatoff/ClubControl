@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -18,31 +20,121 @@ public static class ServerDiscoveryClient
         if (perTryTimeout == default)
             perTryTimeout = TimeSpan.FromSeconds(2);
 
-        using var udpClient = new UdpClient { EnableBroadcast = true };
         var requestBytes = Encoding.UTF8.GetBytes(NetworkConstants.DiscoveryRequestText);
-        var broadcastEndpoint = new IPEndPoint(IPAddress.Broadcast, NetworkConstants.DiscoveryPort);
+        using var sockets = new BroadcastSockets();
 
         while (!cancellationToken.IsCancellationRequested)
         {
-            await udpClient.SendAsync(requestBytes, requestBytes.Length, broadcastEndpoint);
+            await sockets.SendAsync(requestBytes);
 
             using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
             timeoutCts.CancelAfter(perTryTimeout);
 
-            try
-            {
-                var result = await udpClient.ReceiveAsync(timeoutCts.Token);
-                var text = Encoding.UTF8.GetString(result.Buffer);
-                var response = DiscoveryResponse.TryParse(text);
-                if (response is not null)
-                    return response;
-            }
-            catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
-            {
-                // this attempt timed out; loop and try again
-            }
+            var response = await sockets.ReceiveOneAsync(timeoutCts.Token);
+            if (response is not null)
+                return response;
         }
 
         return null;
+    }
+
+    /// <summary>
+    /// One UdpClient per active network interface, each bound to that interface's own address.
+    /// A single unbound socket sending to 255.255.255.255 lets Windows pick whichever interface
+    /// its default route favors, which can be the wrong one on a PC with more than one active
+    /// adapter (a second NIC, or a virtual one added by VPN software like Radmin VPN, Hyper-V, or
+    /// VMware) - the broadcast then never reaches the real LAN. Binding one socket per interface
+    /// and sending that interface's own directed broadcast address forces it out every adapter, the
+    /// same fix already applied to Wake-on-LAN in ClubControl.Server.Services.PowerService.
+    /// </summary>
+    private sealed class BroadcastSockets : IDisposable
+    {
+        private readonly List<(UdpClient Socket, IPAddress Broadcast)> _perInterface = new();
+        private readonly UdpClient? _fallback;
+
+        public BroadcastSockets()
+        {
+            foreach (var (localAddress, broadcastAddress) in LocalNetworkInterfaces.GetBroadcastEndpoints())
+            {
+                try
+                {
+                    var socket = new UdpClient(new IPEndPoint(localAddress, 0)) { EnableBroadcast = true };
+                    _perInterface.Add((socket, broadcastAddress));
+                }
+                catch (SocketException)
+                {
+                    // This interface couldn't be bound (e.g. link down mid-enumeration) - others are still tried.
+                }
+            }
+
+            // No usable interface found any usable address at all - fall back to the naive approach
+            // rather than silently never sending anything on an unusual network.
+            if (_perInterface.Count == 0)
+                _fallback = new UdpClient { EnableBroadcast = true };
+        }
+
+        public async Task SendAsync(byte[] requestBytes)
+        {
+            foreach (var (socket, broadcastAddress) in _perInterface)
+            {
+                try
+                {
+                    await socket.SendAsync(requestBytes, requestBytes.Length, new IPEndPoint(broadcastAddress, NetworkConstants.DiscoveryPort));
+                }
+                catch (SocketException)
+                {
+                    // This interface couldn't send right now; others may still get through.
+                }
+            }
+
+            if (_fallback is not null)
+                await _fallback.SendAsync(requestBytes, requestBytes.Length, new IPEndPoint(IPAddress.Broadcast, NetworkConstants.DiscoveryPort));
+        }
+
+        public async Task<DiscoveryResponse?> ReceiveOneAsync(CancellationToken cancellationToken)
+        {
+            var sockets = _perInterface.Select(p => p.Socket).Concat(_fallback is null ? Enumerable.Empty<UdpClient>() : new[] { _fallback }).ToList();
+            var pending = sockets.Select(socket => ReceiveFromAsync(socket, cancellationToken)).ToList();
+
+            while (pending.Count > 0)
+            {
+                var completed = await Task.WhenAny(pending);
+                pending.Remove(completed);
+
+                DiscoveryResponse? response;
+                try
+                {
+                    response = await completed;
+                }
+                catch (OperationCanceledException)
+                {
+                    continue;
+                }
+                catch (SocketException)
+                {
+                    continue;
+                }
+
+                if (response is not null)
+                    return response;
+            }
+
+            return null;
+        }
+
+        private static async Task<DiscoveryResponse?> ReceiveFromAsync(UdpClient socket, CancellationToken cancellationToken)
+        {
+            var result = await socket.ReceiveAsync(cancellationToken);
+            var text = Encoding.UTF8.GetString(result.Buffer);
+            return DiscoveryResponse.TryParse(text);
+        }
+
+        public void Dispose()
+        {
+            foreach (var (socket, _) in _perInterface)
+                socket.Dispose();
+
+            _fallback?.Dispose();
+        }
     }
 }
