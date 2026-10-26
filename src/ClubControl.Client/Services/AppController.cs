@@ -26,6 +26,7 @@ public class AppController
 
     private readonly List<LockWindow> _lockWindows = new();
     private TimerWindow? _timerWindow;
+    private ToastWindow? _toastWindow;
     private NativeKeyboardHook? _blockingHook;
 
     private PcState _state = PcState.Locked;
@@ -318,7 +319,12 @@ public class AppController
     private void ShowWarning(string message)
     {
         System.Media.SystemSounds.Exclamation.Play();
-        MessageBox.Show(message, _settings.ClubName, MessageBoxButton.OK, MessageBoxImage.Warning);
+
+        // At most one on screen at a time - a new warning replaces whatever is still showing.
+        _toastWindow?.Close();
+        _toastWindow = new ToastWindow(message);
+        _toastWindow.Closed += (_, _) => _toastWindow = null;
+        _toastWindow.Show();
     }
 
     // ---- staff unlock (SPEC section 4): Ctrl+Shift+F12 on a locked PC asks for the unlock password ----
