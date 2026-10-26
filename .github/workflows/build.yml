@@ -38,8 +38,8 @@ jobs:
 
       - name: Copy install scripts
         run: |
-          Copy-Item scripts/install-server.ps1 publish/server/
-          Copy-Item scripts/install-client.ps1 publish/client/
+          Copy-Item scripts/install-server.ps1, scripts/install-server.bat publish/server/
+          Copy-Item scripts/install-client.ps1, scripts/install-client.bat publish/client/
 
       - name: Upload server build
         uses: actions/upload-artifact@v4

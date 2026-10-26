@@ -14,16 +14,16 @@ dotnet publish src/ClubControl.Client/ClubControl.Client.csproj -c Release -r wi
 ```
 
 Copy `publish/server` to the admin laptop and `publish/client` to every gaming PC (e.g. with a
-USB stick or a shared folder). `scripts/install-server.ps1` / `scripts/install-client.ps1` are not
-included in the publish output - copy them into the same folder as the matching `.exe` before
-running them.
+USB stick or a shared folder). `scripts/install-server.ps1` / `scripts/install-client.ps1` (and their
+double-click launchers `install-server.bat` / `install-client.bat`) are not included in a local
+publish output - copy them into the same folder as the matching `.exe` before running them.
 
 ## One-time setup per PC
 
 ### Admin laptop (server)
 
 1. Copy the published server files and `install-server.ps1` into one folder.
-2. Run `install-server.ps1` (right-click > Run with PowerShell, or
+2. Double-click `install-server.bat` (or
    `powershell -ExecutionPolicy Bypass -File install-server.ps1`). It asks for Administrator
    rights once. It:
    - Adds two Windows Firewall inbound rules (TCP 5050, UDP 5051, **Private network profile
@@ -58,8 +58,9 @@ keyboard, will not work.
    (`https://learn.microsoft.com/sysinternals/downloads/autologon`): run it, enter the Windows
    username/password for that PC, click Enable. Use a dedicated low-privilege Windows account per
    PC, not an admin account.
-5. Copy the published client files and `install-client.ps1` into one folder on the PC, then run
-   `install-client.ps1 -UserId <the auto-logon account from step 4>`. It asks for Administrator
+5. Copy the published client files and `install-client.ps1` into one folder on the PC, then
+   double-click `install-client.bat` while logged in as the auto-logon account from step 4 (or, from
+   a command prompt, `install-client.bat -UserId <that account>`). It asks for Administrator
    rights once and creates a Task Scheduler task that starts `ClubControl.Client.exe` at logon for
    that user, with the highest available privileges (needed for the keyboard-blocking hook and
    shutdown/restart), set to restart itself automatically if it ever exits unexpectedly, with no
