@@ -34,7 +34,7 @@ One club, one admin laptop (server), up to ~30 gaming PCs (clients) on the same 
 
 ## 4. Client behaviour
 
-**States:** Locked, Prepay session, Postpay session, Limit reached (locked), Offline-unlocked.
+**States:** Locked, Prepay session, Postpay session, Limit reached (locked), Manually unlocked.
 
 **Lock screen (Locked / Limit reached):**
 - Borderless fullscreen topmost window on every monitor; re-asserts topmost every 2 s.
@@ -49,9 +49,12 @@ One club, one admin laptop (server), up to ~30 gaming PCs (clients) on the same 
 - Warnings (popup + sound) at configurable minutes left, default 5 and 1 (prepay only).
 - Postpay: warning when cost reaches 90% of the tariff maximum.
 
-**Offline rule:**
-- If the client cannot reach the server for N seconds (setting, default 60), it unlocks and shows a small "Offline mode" label.
-- When the server comes back, the client immediately applies whatever state the server says (lock instantly, or continue the session). No warning message.
+**Staff unlock (replaces the old automatic offline unlock):**
+- A PC never unlocks itself because the server is unreachable. Instead, on a locked PC (Locked / Limit reached) staff press **Ctrl+Shift+F12**; a password window opens and the correct password unlocks the PC. This works whether or not the server is reachable, because the PC may lock itself for no good reason.
+- The password is a separate "PC unlock password" in Settings (General). Only its PBKDF2 hash is sent to the clients (with ApplySettings, on connect and on every Settings save) and cached on disk, so the hotkey works after a reboot with the server down. Wrong guesses are throttled like the admin login (5 tries, then 30 s, doubling).
+- After unlocking the PC is in free use (no session, no billing) with a small "Unlocked manually" label, until the server sends a command that changes its state (Lock, Unlock, a session). If the PC is connected the server logs a "manual unlock" event; if not, it is reported when the connection returns.
+- **Sessions while the server is unreachable:** the PC keeps running the session on its own clock. Prepay counts down and, at 00:00, the PC ends the session exactly as the server would (after-session action, then lock). Postpay keeps growing the cost with the same billing math as the server (`BillingCalculator.PostpayCostWithOpenSegment`) and, at the tariff maximum, locks as "Limit reached". While the server is reachable none of this locking happens on the client - the server stays the only one that ends sessions.
+- When the server comes back to a PC it considered offline, it sends the PC's current state (so a manually unlocked PC is locked again, or continues its session). No warning message.
 
 **Commands from server:** Lock, Unlock, StartSession, UpdateSession, EndSession, Shutdown, Restart, ApplySettings.
 
@@ -92,14 +95,14 @@ One club, one admin laptop (server), up to ~30 gaming PCs (clients) on the same 
   - Toolbar: Start, Extend, Stop, Move | Turn on, Restart, Shut down (each with "selected / all").
   - Table, one row per PC, multi-select. Columns: connection dot (green online / grey offline), PC number, class, state, session type, amount (paid or current cost), start, end, remaining.
   - Row colours: free = white, prepay = light green, postpay = light blue, limit reached = orange, offline = grey.
-  - Event log panel at the bottom (PC connected/disconnected, session started/ended/extended/moved, warnings, limit reached, offline unlock, power commands). Events are also saved in the database.
+  - Event log panel at the bottom (PC connected/disconnected, session started/ended/extended/moved, warnings, limit reached, manual unlock, power commands). Events are also saved in the database.
 - Separate windows: Start session, Extend, Move, Postpay payment, Settings, Reports.
 
 ## 8. Settings
 
 - **Computers:** number, class (Standard / VIP), enabled switch (disabled PCs stay locked and are hidden from "all"), IP/MAC/hostname shown read-only.
 - **Tariffs:** one per class: price per hour, minimum payment, maximum payment.
-- **General:** club name, lock-screen text, lock-screen language (Uzbek / Russian / English), admin panel language (Russian / Uzbek), warning minutes, after-session action (close process list / restart), process list, offline-unlock wait seconds.
+- **General:** club name, lock-screen text, lock-screen language (Uzbek / Russian / English), admin panel language (Russian / Uzbek), warning minutes, after-session action (close process list / restart), process list, PC unlock password.
 
 ## 9. Reports
 

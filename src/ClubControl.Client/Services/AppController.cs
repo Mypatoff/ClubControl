@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
 using ClubControl.Client.Native;
@@ -14,9 +15,10 @@ namespace ClubControl.Client.Services;
 
 /// <summary>
 /// The client's state machine (SPEC section 4). Owns the lock windows, the timer window, the
-/// key-blocking hook, and the offline-unlock timer. Everything here reacts to commands from the
+/// key-blocking hook, and the unlock-hotkey prompt. Everything here reacts to commands from the
 /// server; it never computes money or decides when a session ends - the server is the only
-/// source of truth for that (see CLAUDE.md).
+/// source of truth for that (see CLAUDE.md). The one thing it does on its own is let staff unlock
+/// a locked PC with a password (Ctrl+Shift+F12), connected to the server or not.
 /// </summary>
 public class AppController
 {
@@ -35,14 +37,22 @@ public class AppController
     private int _sessionBaselineElapsed;
     private int _sessionCurrentCostUzs;
     private int _sessionMaxPaymentUzs;
+    private int _sessionClosedCostUzs;
+    private int _sessionBaselineOpenElapsed;
+    private int _sessionPricePerHourUzs;
+    private int _sessionMinPaymentUzs;
     private readonly Stopwatch _sessionStopwatch = new();
     private bool _warnedMinutes1;
     private bool _warnedMinutes2;
     private bool _warnedCost;
 
     private readonly DispatcherTimer _tickTimer;
-    private readonly DispatcherTimer _offlineWaitTimer;
-    private bool _offlineUnlocked;
+
+    // Staff unlock (SPEC section 4): the hash is cached on disk so it works with no server, e.g.
+    // right after a reboot. The server sends the current one with every ApplySettings.
+    private string? _unlockPasswordHash = UnlockPasswordStore.Load();
+    private UnlockWindow? _unlockWindow;
+    private bool _pendingUnlockReport; // unlocked while offline - tell the server once we can
 
     // Saves electricity: an idle PC - locked, waiting for the next customer, nobody mid-payment -
     // shuts itself down after this long. Never runs for LimitReached (someone is still there about
@@ -56,19 +66,15 @@ public class AppController
         _tickTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
         _tickTimer.Tick += (_, _) => OnTick();
 
-        _offlineWaitTimer = new DispatcherTimer();
-        _offlineWaitTimer.Tick += (_, _) => OnOfflineWaitElapsed();
-
         _autoShutdownTimer = new DispatcherTimer();
         _autoShutdownTimer.Tick += (_, _) => OnAutoShutdownElapsed();
     }
 
-    /// <summary>Locks the PC immediately and starts the offline-wait clock, with or without a server.</summary>
+    /// <summary>Locks the PC immediately, with or without a server.</summary>
     public void Start()
     {
         EnterLocked(null);
         _tickTimer.Start();
-        RestartOfflineWaitTimer();
         UpdateAutoShutdownTimer();
     }
 
@@ -83,12 +89,8 @@ public class AppController
 
     private void Handle(ClientCommand command)
     {
-        // Hearing from the server at all means we can reach it - clear any offline indication
-        // before acting on the command itself.
-        _offlineUnlocked = false;
-        _offlineWaitTimer.Stop();
-        _timerWindow?.SetOfflineBadgeVisible(false);
-
+        // A manual unlock lasts until the server sends a command that changes what the PC is
+        // doing (Lock, Unlock, session...). ApplySettings does not, so it leaves the unlock alone.
         switch (command.Type)
         {
             case CommandType.Lock:
@@ -117,6 +119,12 @@ public class AppController
                 {
                     _settings = command.Settings;
                     Strings.Apply(_settings.LockScreenLanguage);
+
+                    if (_settings.UnlockPasswordHash != _unlockPasswordHash)
+                    {
+                        _unlockPasswordHash = _settings.UnlockPasswordHash;
+                        UnlockPasswordStore.Save(_unlockPasswordHash);
+                    }
                 }
                 RefreshLockWindows();
                 break;
@@ -139,6 +147,7 @@ public class AppController
     {
         _state = PcState.Free;
 
+        CloseUnlockPrompt();
         HideLockWindows();
         HideTimerWindow();
         UpdateHook();
@@ -149,6 +158,13 @@ public class AppController
         if (info is null)
             return;
 
+        // This PC locked itself at the cost limit while the server was unreachable. The update the
+        // server sends on reconnect already shows the capped cost - stay locked until the server's
+        // own Lock arrives, instead of opening the PC for the second or two before it does.
+        if (!isNewSession && _state == PcState.LimitReached &&
+            info.MaxPaymentUzs > 0 && info.CurrentCostUzs >= info.MaxPaymentUzs)
+            return;
+
         _state = info.Type == SessionType.Prepay ? PcState.PrepaySession : PcState.PostpaySession;
 
         _sessionType = info.Type;
@@ -156,6 +172,10 @@ public class AppController
         _sessionBaselineElapsed = info.ElapsedSeconds;
         _sessionCurrentCostUzs = info.CurrentCostUzs;
         _sessionMaxPaymentUzs = info.MaxPaymentUzs;
+        _sessionClosedCostUzs = info.ClosedSegmentsCostUzs;
+        _sessionBaselineOpenElapsed = info.OpenSegmentElapsedSeconds;
+        _sessionPricePerHourUzs = info.PricePerHourUzs;
+        _sessionMinPaymentUzs = info.MinPaymentUzs;
         _sessionStopwatch.Restart();
 
         if (isNewSession)
@@ -165,9 +185,11 @@ public class AppController
             _warnedCost = false;
         }
 
+        CloseUnlockPrompt();
         HideLockWindows();
         UpdateHook();
         ShowTimerWindow();
+        _timerWindow!.SetManualUnlockBadgeVisible(false); // the timer window may still be up from a manual unlock
         RenderTimer();
     }
 
@@ -208,15 +230,60 @@ public class AppController
         {
             var remaining = Math.Max(0, _sessionBaselineRemaining - elapsedSinceSync);
             _timerWindow.ShowSession(_sessionType, remaining, 0, 0);
+
+            // Normally the server ends the session (a second or two later). With no server to do it,
+            // the PC must not stay open past the paid time - end it the same way the server would.
+            if (remaining == 0 && !IsServerReachable)
+            {
+                EndSession();
+                return;
+            }
+
             CheckMinuteWarnings(remaining);
         }
         else
         {
             var elapsed = _sessionBaselineElapsed + elapsedSinceSync;
-            _timerWindow.ShowSession(_sessionType, 0, elapsed, _sessionCurrentCostUzs);
-            CheckCostWarning();
+            var cost = EstimatePostpayCost(elapsedSinceSync);
+            _timerWindow.ShowSession(_sessionType, 0, elapsed, cost);
+
+            // Same rule as the server at the tariff maximum (SPEC section 5): lock and wait for the admin.
+            if (_sessionMaxPaymentUzs > 0 && cost >= _sessionMaxPaymentUzs && !IsServerReachable)
+            {
+                LockAtCostLimit();
+                return;
+            }
+
+            CheckCostWarning(cost);
         }
     }
+
+    private bool IsServerReachable => _connection?.State == HubConnectionState.Connected;
+
+    /// <summary>
+    /// The postpay cost right now, extrapolated from the server's last update with the shared billing
+    /// math so it matches what the server will charge. Falls back to the server's number when no
+    /// price was sent (free sessions).
+    /// </summary>
+    private int EstimatePostpayCost(int secondsSinceSync)
+    {
+        if (_sessionPricePerHourUzs <= 0)
+            return _sessionCurrentCostUzs;
+
+        var cost = BillingCalculator.PostpayCostWithOpenSegment(
+            _sessionClosedCostUzs, _sessionBaselineOpenElapsed + secondsSinceSync, _sessionPricePerHourUzs, _sessionMinPaymentUzs);
+
+        return _sessionMaxPaymentUzs > 0 ? Math.Min(cost, _sessionMaxPaymentUzs) : cost;
+    }
+
+    private void LockAtCostLimit() =>
+        EnterLocked(new LockInfo
+        {
+            LimitReached = true,
+            PcNumber = _lastLockInfo?.PcNumber,
+            TariffName = _lastLockInfo?.TariffName,
+            PricePerHourUzs = _lastLockInfo?.PricePerHourUzs ?? 0
+        });
 
     private void CheckMinuteWarnings(int remainingSeconds)
     {
@@ -236,12 +303,12 @@ public class AppController
         }
     }
 
-    private void CheckCostWarning()
+    private void CheckCostWarning(int costUzs)
     {
         if (_warnedCost || _sessionMaxPaymentUzs <= 0)
             return;
 
-        if (_sessionCurrentCostUzs >= _sessionMaxPaymentUzs * 0.9)
+        if (costUzs >= _sessionMaxPaymentUzs * 0.9)
         {
             _warnedCost = true;
             ShowWarning(Strings.Get("WarningCostApproaching"));
@@ -254,54 +321,81 @@ public class AppController
         MessageBox.Show(message, _settings.ClubName, MessageBoxButton.OK, MessageBoxImage.Warning);
     }
 
-    // ---- offline rule (SPEC section 4) ----
+    // ---- staff unlock (SPEC section 4): Ctrl+Shift+F12 on a locked PC asks for the unlock password ----
 
     private void OnConnectionStateChanged(HubConnectionState state)
     {
         if (state == HubConnectionState.Connected)
+            _ = TrySendPendingUnlockReportAsync();
+    }
+
+    private void ShowUnlockPrompt()
+    {
+        if (_state is not (PcState.Locked or PcState.LimitReached))
+            return;
+
+        if (_unlockWindow is not null)
         {
-            _offlineWaitTimer.Stop();
+            _unlockWindow.Activate();
             return;
         }
 
-        RestartOfflineWaitTimer();
-    }
+        // The lock windows keep re-asserting topmost every 2 s, which would bury the prompt and
+        // steal its focus mid-typing - hold them still while it is open.
+        foreach (var window in _lockWindows)
+            window.PauseTopmost = true;
 
-    private void RestartOfflineWaitTimer()
-    {
-        if (_offlineUnlocked || _offlineWaitTimer.IsEnabled)
-            return;
-
-        _offlineWaitTimer.Interval = TimeSpan.FromSeconds(Math.Max(1, _settings.OfflineUnlockWaitSeconds));
-        _offlineWaitTimer.Start();
-    }
-
-    private void OnOfflineWaitElapsed()
-    {
-        _offlineWaitTimer.Stop();
-
-        if (_connection?.State == HubConnectionState.Connected)
-            return;
-
-        _offlineUnlocked = true;
-
-        if (_state is PcState.Locked or PcState.LimitReached)
+        _unlockWindow = new UnlockWindow(_unlockPasswordHash);
+        _unlockWindow.Unlocked += ManualUnlock;
+        _unlockWindow.Closed += (_, _) =>
         {
-            _state = PcState.OfflineUnlocked;
-            HideLockWindows();
-            UpdateHook();
-        }
+            _unlockWindow = null;
+            foreach (var window in _lockWindows)
+                window.PauseTopmost = false;
+            UpdateAutoShutdownTimer();
+        };
 
+        UpdateAutoShutdownTimer(); // do not power off while someone is typing the password
+        _unlockWindow.Show();
+        _unlockWindow.Activate();
+    }
+
+    private void CloseUnlockPrompt() => _unlockWindow?.Close();
+
+    /// <summary>Correct password entered: open the PC for free use (no session, no billing) until the server says otherwise.</summary>
+    private void ManualUnlock()
+    {
+        if (_state is not (PcState.Locked or PcState.LimitReached))
+            return;
+
+        _state = PcState.ManualUnlocked;
+
+        CloseUnlockPrompt();
+        HideLockWindows();
+        UpdateHook();
         ShowTimerWindow();
-        _timerWindow!.SetOfflineBadgeVisible(true);
+        _timerWindow!.SetManualUnlockBadgeVisible(true);
         UpdateAutoShutdownTimer();
+
+        _pendingUnlockReport = true;
+        _ = TrySendPendingUnlockReportAsync();
+    }
+
+    /// <summary>Tells the server about a manual unlock for its event log; retried on reconnect if the server was unreachable.</summary>
+    private async Task TrySendPendingUnlockReportAsync()
+    {
+        if (!_pendingUnlockReport || _connection is null)
+            return;
+
+        if (await _connection.ReportManualUnlockAsync())
+            _pendingUnlockReport = false;
     }
 
     // ---- auto-shutdown for idle locked PCs (not LimitReached, not mid-session) ----
 
     private void UpdateAutoShutdownTimer()
     {
-        if (_state == PcState.Locked && _settings.AutoShutdownAfterMinutes > 0)
+        if (_state == PcState.Locked && _unlockWindow is null && _settings.AutoShutdownAfterMinutes > 0)
         {
             var interval = TimeSpan.FromMinutes(_settings.AutoShutdownAfterMinutes);
 
@@ -374,13 +468,25 @@ public class AppController
 
     // ---- keyboard hook ----
 
+    /// <summary>Runs inside the low-level hook, so it must return fast: the prompt is opened later, on the UI queue.</summary>
+    private bool OnLockedKeyDown(int vkCode)
+    {
+        if (UnlockHotkey.IsPressed(vkCode))
+        {
+            Application.Current.Dispatcher.BeginInvoke(ShowUnlockPrompt);
+            return true;
+        }
+
+        return BlockedKeys.IsBlockedCombo(vkCode);
+    }
+
     private void UpdateHook()
     {
         var shouldBlock = _state is PcState.Locked or PcState.LimitReached;
 
         if (shouldBlock && _blockingHook is null)
         {
-            _blockingHook = new NativeKeyboardHook(BlockedKeys.IsBlockedCombo);
+            _blockingHook = new NativeKeyboardHook(OnLockedKeyDown);
             _blockingHook.Install();
         }
         else if (!shouldBlock && _blockingHook is not null)

@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Data;
 using System.Windows.Media;
 using System.Windows.Threading;
 using ClubControl.Server.Data;
@@ -60,15 +61,6 @@ public partial class MainWindow : Window
 
         EventLogHeaderText.Text = Strings.Get("EventLogHeader");
 
-        KindIconColumn.Header = "";
-        PcNumberColumn.Header = Strings.Get("ColumnPcNumber");
-        TariffColumn.Header = Strings.Get("ColumnTariff");
-        StateColumn.Header = Strings.Get("ColumnState");
-        SessionColumn.Header = Strings.Get("ColumnSession");
-        AmountColumn.Header = Strings.Get("ColumnAmount");
-        StartColumn.Header = Strings.Get("ColumnStart");
-        EndColumn.Header = Strings.Get("ColumnEnd");
-        RemainingColumn.Header = Strings.Get("ColumnRemaining");
     }
 
     private bool _allowClose;
@@ -97,6 +89,10 @@ public partial class MainWindow : Window
 
     private async Task RefreshAsync()
     {
+        // The refresh rebuilds every card, which would break a rectangle selection in progress.
+        if (_dragging)
+            return;
+
         using var scope = Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ClubDbContext>();
         var sessionService = scope.ServiceProvider.GetRequiredService<SessionService>();
@@ -113,11 +109,19 @@ public partial class MainWindow : Window
         var pcs = await db.Pcs.AsNoTracking().OrderBy(p => p.Number).ToListAsync();
         pcs = pcs.Where(p => p.Enabled || snapshots.ContainsKey(p.Id)).ToList();
 
-        var selectedIds = PcGrid.SelectedItems.Cast<PcRow>().Select(p => p.Id).ToHashSet();
+        var selectedIds = PcList.SelectedItems.Cast<PcRow>().Select(p => p.Id).ToHashSet();
         var rows = pcs.Select(pc => BuildRow(pc, tariffNames, snapshots.GetValueOrDefault(pc.Id))).ToList();
-        PcGrid.ItemsSource = rows;
+
+        // Replacing ItemsSource rebuilds every card and resets the scroll position, so remember it.
+        var scrollOffset = FindDescendant<ScrollViewer>(PcList)?.VerticalOffset ?? 0;
+        PcList.ItemsSource = BuildCardView(rows);
         foreach (var row in rows.Where(r => selectedIds.Contains(r.Id)))
-            PcGrid.SelectedItems.Add(row);
+            PcList.SelectedItems.Add(row);
+        if (scrollOffset > 0)
+            _ = Dispatcher.BeginInvoke(() => FindDescendant<ScrollViewer>(PcList)?.ScrollToVerticalOffset(scrollOffset),
+                DispatcherPriority.Loaded);
+
+        UpdateCounters(rows);
 
         var events = await db.EventLogEntries.AsNoTracking()
             .OrderByDescending(e => e.TimestampUtc)
@@ -127,6 +131,30 @@ public partial class MainWindow : Window
 
         StatusText.Text = Strings.Format("StatusListening", NetworkConstants.SignalRPort, NetworkConstants.DiscoveryPort,
             pcs.Count(p => p.IsOnline), pcs.Count);
+    }
+
+    /// <summary>PCs first, then billiards - the list shows them as two separate sections (see MainWindow.xaml).</summary>
+    private static ListCollectionView BuildCardView(List<PcRow> rows)
+    {
+        var view = new ListCollectionView(rows);
+        view.GroupDescriptions.Add(new PropertyGroupDescription(nameof(PcRow.IsBilliard)));
+        view.SortDescriptions.Add(new SortDescription(nameof(PcRow.IsBilliard), ListSortDirection.Ascending));
+        view.SortDescriptions.Add(new SortDescription(nameof(PcRow.Number), ListSortDirection.Ascending));
+        return view;
+    }
+
+    private void UpdateCounters(List<PcRow> rows)
+    {
+        var computers = rows.Where(r => !r.IsBilliard).ToList();
+        var billiards = rows.Where(r => r.IsBilliard).ToList();
+
+        var busy = computers.Count(r => r.HasActiveSession);
+        var offline = computers.Count(r => r.IsDimmed && !r.HasActiveSession);
+
+        StatFreeText.Text = $"{computers.Count - busy - offline} {Strings.Get("StateFree")}";
+        StatBusyText.Text = $"{busy} {Strings.Get("StatBusy")}";
+        StatOfflineText.Text = $"{offline} {Strings.Get("StatOffline")}";
+        StatBilliardText.Text = $"{billiards.Count(r => r.HasActiveSession)}/{billiards.Count} {Strings.Get("KindBilliardPlural")}";
     }
 
     private static PcRow BuildRow(Pc pc, Dictionary<int, string> tariffNames, SessionService.ActiveSessionSnapshot? snap)
@@ -140,7 +168,8 @@ public partial class MainWindow : Window
         if (snap is not null)
         {
             sessionType = Strings.SessionTypeName(snap.Type, snap.IsFree);
-            amount = snap.CapUzs > 0
+            // Prepay shows progress through the prepaid total; postpay shows only what the client owes right now.
+            amount = snap.Type == SessionType.Prepay && snap.CapUzs > 0
                 ? $"{snap.ConsumedUzs:N0} / {snap.CapUzs:N0} UZS"
                 : $"{snap.AmountOrCostUzs:N0} UZS";
             start = snap.StartUtc.ToLocalTime().ToString("HH:mm:ss");
@@ -149,7 +178,7 @@ public partial class MainWindow : Window
                 end = snap.PlannedEndUtc.Value.ToLocalTime().ToString("HH:mm:ss");
 
             if (snap.Type == SessionType.Prepay)
-                remaining = TimeSpan.FromSeconds(Math.Max(0, snap.RemainingSeconds)).ToString(@"mm\:ss");
+                remaining = FormatTimeLeft(snap.RemainingSeconds);
         }
 
         return new PcRow
@@ -181,19 +210,19 @@ public partial class MainWindow : Window
     // Right-clicking anywhere that isn't a row (empty space, the header) suppresses the context
     // menu entirely instead of opening it with nothing valid to act on. ----
 
-    private void PcGrid_PreviewMouseRightButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+    private void PcList_PreviewMouseRightButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
     {
-        var row = FindAncestor<DataGridRow>((DependencyObject)e.OriginalSource);
-        if (row?.Item is not PcRow pcRow)
+        var card = FindAncestor<ListBoxItem>((DependencyObject)e.OriginalSource);
+        if (card?.Content is not PcRow pcRow)
         {
             e.Handled = true;
             return;
         }
 
-        if (!PcGrid.SelectedItems.Contains(pcRow))
+        if (!PcList.SelectedItems.Contains(pcRow))
         {
-            PcGrid.SelectedItems.Clear();
-            PcGrid.SelectedItems.Add(pcRow);
+            PcList.SelectedItems.Clear();
+            PcList.SelectedItems.Add(pcRow);
         }
     }
 
@@ -209,15 +238,117 @@ public partial class MainWindow : Window
         return null;
     }
 
+    private static T? FindDescendant<T>(DependencyObject parent) where T : DependencyObject
+    {
+        for (var i = 0; i < VisualTreeHelper.GetChildrenCount(parent); i++)
+        {
+            var child = VisualTreeHelper.GetChild(parent, i);
+            if (child is T match)
+                return match;
+
+            var nested = FindDescendant<T>(child);
+            if (nested is not null)
+                return nested;
+        }
+
+        return null;
+    }
+
     // ---- keyboard shortcuts (Enter = Start, Delete = Stop) and the selection-count hint ----
 
-    private void PcGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    private void PcList_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        var count = PcGrid.SelectedItems.Count;
+        var count = PcList.SelectedItems.Count;
         SelectionCountText.Text = count > 0 ? Strings.Format("SelectionCountFormat", count) : "";
     }
 
-    private void PcGrid_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+    // ---- drag-to-select: a plain click selects one card (the list's normal behaviour); pressing a card and
+    // dragging to another selects every card from the first to the last, in list order (like PC 1 to PC 5).
+    // Holding Ctrl while pressing keeps what was already selected, so several groups can be added one by one. ----
+
+    private PcRow? _dragAnchor;
+    private bool _dragging;
+    private HashSet<PcRow> _selectionBeforeDrag = new();
+
+    private void PcList_PreviewMouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+    {
+        _dragging = false;
+        _dragAnchor = FindAncestor<ListBoxItem>((DependencyObject)e.OriginalSource)?.Content as PcRow;
+
+        // A click on empty space (between cards, a section header, the blank area) deselects everything.
+        // Ctrl-click is left alone so a slip while building a multi-selection doesn't wipe it, and the
+        // scrollbar is not "empty space".
+        var onScrollBar = FindAncestor<System.Windows.Controls.Primitives.ScrollBar>((DependencyObject)e.OriginalSource) is not null;
+        if (_dragAnchor is null && !onScrollBar && !System.Windows.Input.Keyboard.Modifiers.HasFlag(System.Windows.Input.ModifierKeys.Control))
+            PcList.SelectedItems.Clear();
+
+        _selectionBeforeDrag = System.Windows.Input.Keyboard.Modifiers.HasFlag(System.Windows.Input.ModifierKeys.Control)
+            ? PcList.SelectedItems.Cast<PcRow>().ToHashSet()
+            : new HashSet<PcRow>();
+    }
+
+    private void PcList_PreviewMouseMove(object sender, System.Windows.Input.MouseEventArgs e)
+    {
+        if (_dragAnchor is null)
+            return;
+
+        if (e.LeftButton != System.Windows.Input.MouseButtonState.Pressed)
+        {
+            EndDrag();
+            return;
+        }
+
+        // The list captures the mouse while it is pressed, so find the card under the pointer by position.
+        var position = e.GetPosition(PcList);
+        var hovered = FindDescendants<ListBoxItem>(PcList)
+            .FirstOrDefault(card => card.TransformToAncestor(PcList).TransformBounds(new Rect(card.RenderSize)).Contains(position))
+            ?.Content as PcRow;
+        if (hovered is null || (!_dragging && hovered == _dragAnchor))
+            return;
+
+        _dragging = true;
+
+        // Stops the list's own drag handling so only this range logic changes the selection.
+        e.Handled = true;
+
+        var cards = PcList.Items.Cast<PcRow>().ToList();
+        var from = cards.IndexOf(_dragAnchor);
+        var to = cards.IndexOf(hovered);
+        if (from < 0 || to < 0)
+            return;
+
+        var wanted = new HashSet<PcRow>(_selectionBeforeDrag);
+        foreach (var row in cards.Skip(Math.Min(from, to)).Take(Math.Abs(from - to) + 1))
+            wanted.Add(row);
+
+        foreach (var row in PcList.SelectedItems.Cast<PcRow>().Where(r => !wanted.Contains(r)).ToList())
+            PcList.SelectedItems.Remove(row);
+        foreach (var row in wanted.Where(r => !PcList.SelectedItems.Contains(r)))
+            PcList.SelectedItems.Add(row);
+    }
+
+    private void PcList_PreviewMouseLeftButtonUp(object sender, System.Windows.Input.MouseButtonEventArgs e) => EndDrag();
+
+    private void EndDrag()
+    {
+        _dragAnchor = null;
+        _dragging = false;
+    }
+
+    private static IEnumerable<T> FindDescendants<T>(DependencyObject parent) where T : DependencyObject
+    {
+        for (var i = 0; i < VisualTreeHelper.GetChildrenCount(parent); i++)
+        {
+            var child = VisualTreeHelper.GetChild(parent, i);
+            if (child is T match)
+                yield return match;
+
+            foreach (var nested in FindDescendants<T>(child))
+                yield return nested;
+        }
+    }
+
+    private void PcList_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
     {
         switch (e.Key)
         {
@@ -236,7 +367,7 @@ public partial class MainWindow : Window
 
     private PcRow? GetSingleSelectedPc()
     {
-        var selected = PcGrid.SelectedItems.Cast<PcRow>().ToList();
+        var selected = PcList.SelectedItems.Cast<PcRow>().ToList();
         if (selected.Count == 1)
             return selected[0];
 
@@ -252,7 +383,7 @@ public partial class MainWindow : Window
     /// </summary>
     private List<PcRow>? GetReadySelectionForStart()
     {
-        var selected = PcGrid.SelectedItems.Cast<PcRow>().ToList();
+        var selected = PcList.SelectedItems.Cast<PcRow>().ToList();
         if (selected.Count == 0)
         {
             MessageBox.Show(Strings.Get("SelectAtLeastOnePc"), Strings.Get("ConfirmTitle"),
@@ -344,7 +475,7 @@ public partial class MainWindow : Window
     /// </summary>
     private List<PcRow>? GetReadySelectionForStop()
     {
-        var selected = PcGrid.SelectedItems.Cast<PcRow>().ToList();
+        var selected = PcList.SelectedItems.Cast<PcRow>().ToList();
         if (selected.Count == 0)
         {
             MessageBox.Show(Strings.Get("SelectAtLeastOnePc"), Strings.Get("ConfirmTitle"),
@@ -378,12 +509,13 @@ public partial class MainWindow : Window
 
         if (targets[0].State == PcState.PrepaySession)
         {
-            if (MessageBox.Show(Strings.Get("StopPrepayConfirm"), Strings.Get("ConfirmTitle"),
-                    MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes)
-                return;
-
             using var scope = Services.CreateScope();
             var sessionService = scope.ServiceProvider.GetRequiredService<SessionService>();
+
+            var (lines, totalMoney) = await BuildStopPrepayLinesAsync(sessionService, targets);
+            if (new StopPrepayWindow(lines, totalMoney) { Owner = this }.ShowDialog() != true)
+                return;
+
             var failures = new List<string>();
 
             foreach (var target in targets)
@@ -410,6 +542,40 @@ public partial class MainWindow : Window
         await RefreshAsync();
     }
 
+    /// <summary>
+    /// What the stop dialog shows for prepay: for each PC, how much of its prepaid money is still unused
+    /// and how much time that is, plus the total. The stop itself still gives no refund (SPEC 5).
+    /// </summary>
+    private static async Task<(List<StopPrepayLine> Lines, string TotalMoney)> BuildStopPrepayLinesAsync(
+        SessionService sessionService, List<PcRow> targets)
+    {
+        var lines = new List<StopPrepayLine>();
+        var totalUzs = 0;
+
+        foreach (var target in targets)
+        {
+            var snapshot = await sessionService.GetActiveSessionSnapshotAsync(target.MachineGuid);
+            if (snapshot is null)
+                continue;
+
+            totalUzs += snapshot.RemainingMoneyUzs;
+            lines.Add(new StopPrepayLine(
+                Strings.Format("PcNumberFormat", target.Number!),
+                $"{snapshot.RemainingMoneyUzs:N0} UZS",
+                $"{Strings.Get("ColumnRemaining")}: {FormatTimeLeft(snapshot.RemainingSeconds)}",
+                Strings.Get("StopPrepayUnused")));
+        }
+
+        return (lines, $"{totalUzs:N0} UZS");
+    }
+
+    /// <summary>mm:ss under an hour, h:mm:ss from an hour up (a plain mm:ss would show 90 minutes as 30:00).</summary>
+    private static string FormatTimeLeft(int seconds)
+    {
+        var left = TimeSpan.FromSeconds(Math.Max(0, seconds));
+        return left.TotalHours >= 1 ? left.ToString(@"h\:mm\:ss") : left.ToString(@"mm\:ss");
+    }
+
     // ---- power control (SPEC section 6) ----
 
     private async void OnTurnOn(object sender, RoutedEventArgs e) =>
@@ -423,7 +589,7 @@ public partial class MainWindow : Window
 
     private async Task RunPowerActionAsync(Func<PowerService, List<Pc>, Task<int>> action, bool checkActiveSessions)
     {
-        var selected = PcGrid.SelectedItems.Cast<PcRow>().ToList();
+        var selected = PcList.SelectedItems.Cast<PcRow>().ToList();
         List<PcRow> targets;
 
         if (selected.Count == 0)
@@ -432,7 +598,7 @@ public partial class MainWindow : Window
                     MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes)
                 return;
 
-            targets = PcGrid.ItemsSource.Cast<PcRow>().Where(p => p.Enabled).ToList();
+            targets = PcList.ItemsSource.Cast<PcRow>().Where(p => p.Enabled).ToList();
         }
         else
         {

@@ -13,8 +13,29 @@
   <data name="PerHourFormat" xml:space="preserve">
     <value>{0} UZS/soat</value>
   </data>
-  <data name="OfflineMode" xml:space="preserve">
-    <value>Oflayn rejim</value>
+  <data name="ManualUnlockBadge" xml:space="preserve">
+    <value>Qo'lda ochildi</value>
+  </data>
+  <data name="UnlockTitle" xml:space="preserve">
+    <value>Kompyuterni ochish</value>
+  </data>
+  <data name="UnlockPrompt" xml:space="preserve">
+    <value>Ochish parolini kiriting.</value>
+  </data>
+  <data name="UnlockWrongPassword" xml:space="preserve">
+    <value>Parol noto'g'ri.</value>
+  </data>
+  <data name="UnlockNotConfigured" xml:space="preserve">
+    <value>Ochish paroli belgilanmagan. Uni server sozlamalarida belgilang.</value>
+  </data>
+  <data name="UnlockLockedOut" xml:space="preserve">
+    <value>Juda ko'p noto'g'ri urinish. {0} soniyadan keyin qayta urining.</value>
+  </data>
+  <data name="Ok" xml:space="preserve">
+    <value>OK</value>
+  </data>
+  <data name="Cancel" xml:space="preserve">
+    <value>Bekor qilish</value>
   </data>
   <data name="Remaining" xml:space="preserve">
     <value>qoldi</value>

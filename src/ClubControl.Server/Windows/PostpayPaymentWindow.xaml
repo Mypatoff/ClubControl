@@ -1,9 +1,9 @@
 <Window x:Class="ClubControl.Server.Windows.PostpayPaymentWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Payment" Width="320" SizeToContent="Height"
+        Title="Payment" Width="400" SizeToContent="Height"
         WindowStartupLocation="CenterOwner" ResizeMode="NoResize" ShowInTaskbar="False">
-    <StackPanel Margin="20">
+    <StackPanel Margin="24">
         <TextBlock x:Name="PcText" FontWeight="Bold" Margin="0,0,0,12" TextWrapping="Wrap" />
 
         <TextBlock x:Name="BreakdownText" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,8" TextWrapping="Wrap" />
@@ -12,8 +12,8 @@
         <TextBlock x:Name="AmountText" FontSize="20" FontWeight="Bold" Margin="0,0,0,12" />
 
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
-            <Button x:Name="CancelButton" Width="80" Margin="0,0,8,0" Style="{StaticResource SecondaryButtonStyle}" Click="OnCancel" IsCancel="True" />
-            <Button x:Name="PaidButton" Width="80" IsDefault="True" IsEnabled="False" Click="OnPaid" />
+            <Button x:Name="CancelButton" Width="110" Height="38" Margin="0,0,10,0" Style="{StaticResource SecondaryButtonStyle}" Click="OnCancel" IsCancel="True" />
+            <Button x:Name="PaidButton" Width="110" Height="38" IsDefault="True" IsEnabled="False" Click="OnPaid" />
         </StackPanel>
     </StackPanel>
 </Window>

@@ -115,6 +115,23 @@ public class ServerConnection : IAsyncDisposable
         }
     }
 
+    /// <summary>Tells the server staff unlocked this PC (event log only). Returns false if it could not be delivered.</summary>
+    public async Task<bool> ReportManualUnlockAsync()
+    {
+        if (_connection.State != HubConnectionState.Connected)
+            return false;
+
+        try
+        {
+            await _connection.InvokeAsync(HubMethodNames.ReportManualUnlock, _machineGuid, _authToken);
+            return true;
+        }
+        catch (Exception)
+        {
+            return false;
+        }
+    }
+
     public async ValueTask DisposeAsync()
     {
         _heartbeatCts?.Cancel();

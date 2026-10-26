@@ -4,6 +4,7 @@ using System.Windows.Threading;
 using ClubControl.Server.Resources;
 using ClubControl.Server.Security;
 using ClubControl.Shared;
+using ClubControl.Shared.Security;
 
 namespace ClubControl.Server.Windows;
 

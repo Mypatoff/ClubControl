@@ -6,7 +6,7 @@ using ClubControl.Shared;
 
 namespace ClubControl.Client.Windows;
 
-/// <summary>Small movable always-on-top corner window (SPEC section 4). Shows the running session and/or the offline badge.</summary>
+/// <summary>Small movable always-on-top corner window (SPEC section 4). Shows the running session and/or the manual-unlock badge.</summary>
 public partial class TimerWindow : Window
 {
     public TimerWindow()
@@ -40,10 +40,11 @@ public partial class TimerWindow : Window
         SubText.Text = "";
     }
 
-    public void SetOfflineBadgeVisible(bool visible)
+    /// <summary>Shows or hides the "Unlocked manually" label (the PC was opened with the unlock hotkey, not by a session).</summary>
+    public void SetManualUnlockBadgeVisible(bool visible)
     {
-        OfflineText.Text = Strings.Get("OfflineMode");
-        OfflineText.Visibility = visible ? Visibility.Visible : Visibility.Collapsed;
+        BadgeText.Text = Strings.Get("ManualUnlockBadge");
+        BadgeText.Visibility = visible ? Visibility.Visible : Visibility.Collapsed;
     }
 
     private static string FormatTime(int totalSeconds)

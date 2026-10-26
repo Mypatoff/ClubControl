@@ -37,10 +37,11 @@ public partial class App : Application
 
 #if DEBUG
         // Test-only escape hatch: the lock screen blocks Alt+F4 and friends, so without this a
-        // tester can get stuck behind it. Ctrl+Shift+F12 just exits the client; never built into Release.
+        // tester can get stuck behind it. Ctrl+Shift+F11 just exits the client; never built into Release.
+        // (Ctrl+Shift+F12 is the real unlock-password hotkey, see UnlockHotkey.)
         _debugExitHook = new NativeKeyboardHook(vkCode =>
         {
-            if (vkCode == VkF12 && NativeKeyboardHook.IsControlDown && NativeKeyboardHook.IsShiftDown)
+            if (vkCode == VkF11 && NativeKeyboardHook.IsControlDown && NativeKeyboardHook.IsShiftDown)
                 Dispatcher.Invoke(Shutdown);
 
             return false; // never swallow the key - this hook only watches
@@ -50,7 +51,7 @@ public partial class App : Application
     }
 
 #if DEBUG
-    private const int VkF12 = 0x7B;
+    private const int VkF11 = 0x7A;
     private NativeKeyboardHook? _debugExitHook;
 
     protected override void OnExit(ExitEventArgs e)

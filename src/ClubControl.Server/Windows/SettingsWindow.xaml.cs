@@ -9,6 +9,7 @@ using ClubControl.Server.Data.Models;
 using ClubControl.Server.Resources;
 using ClubControl.Server.Services;
 using ClubControl.Shared;
+using ClubControl.Shared.Security;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -75,7 +76,7 @@ public partial class SettingsWindow : Window
         WarningMinutesLabel.Text = Strings.Get("LabelWarningMinutes");
         AfterSessionActionLabel.Text = Strings.Get("LabelAfterSessionAction");
         ProcessListLabel.Text = Strings.Get("LabelProcessList");
-        OfflineWaitLabel.Text = Strings.Get("LabelOfflineWait");
+        UnlockPasswordLabel.Text = Strings.Get("LabelUnlockPassword");
         AutoShutdownLabel.Text = Strings.Get("LabelAutoShutdown");
 
         AddTariffButton.Content = Strings.Get("ButtonAdd");
@@ -142,7 +143,6 @@ public partial class SettingsWindow : Window
             .First(o => o.Value == _setting.AfterSessionAction);
 
         ProcessListBox.Text = _setting.ProcessListCsv;
-        OfflineWaitBox.Text = _setting.OfflineUnlockWaitSeconds.ToString();
         AutoShutdownBox.Text = _setting.AutoShutdownAfterMinutes.ToString();
 
         TariffGrid.ItemsSource = _tariffs;
@@ -284,7 +284,11 @@ public partial class SettingsWindow : Window
         _setting.WarningMinutes2 = ParseInt(WarningMinutes2Box.Text, _setting.WarningMinutes2);
         _setting.AfterSessionAction = ((ComboOption<AfterSessionAction>)AfterSessionActionCombo.SelectedItem!).Value;
         _setting.ProcessListCsv = ProcessListBox.Text;
-        _setting.OfflineUnlockWaitSeconds = ParseInt(OfflineWaitBox.Text, _setting.OfflineUnlockWaitSeconds);
+
+        // Empty box = keep the current unlock password; typing one replaces it.
+        if (!string.IsNullOrWhiteSpace(UnlockPasswordBox.Password))
+            _setting.ClientUnlockPasswordHash = PasswordHasher.Hash(UnlockPasswordBox.Password);
+
         _setting.AutoShutdownAfterMinutes = ParseInt(AutoShutdownBox.Text, _setting.AutoShutdownAfterMinutes);
 
         foreach (var tariff in _tariffs)

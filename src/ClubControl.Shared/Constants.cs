@@ -16,6 +16,9 @@ public static class HubMethodNames
     // Client -> server
     public const string Heartbeat = "Heartbeat";
 
+    /// <summary>Tells the server (for the event log only) that staff unlocked this PC with the hotkey.</summary>
+    public const string ReportManualUnlock = "ReportManualUnlock";
+
     // Server -> client
     public const string ReceiveCommand = "ReceiveCommand";
 }

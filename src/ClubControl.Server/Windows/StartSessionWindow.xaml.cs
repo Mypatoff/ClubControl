@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Media;
 using ClubControl.Server.Resources;
 using ClubControl.Server.Services;
 using ClubControl.Shared;
@@ -27,11 +29,33 @@ public partial class StartSessionWindow : Window
         Title = Strings.Get("StartSessionTitle");
         TargetText.Text = TargetHeader.Build(targets);
         PrepayMoneyRadio.Content = Strings.Get("PrepayByMoney");
-        PrepayTimeRadio.Content = Strings.Get("PrepayByTime");
         PostpayRadio.Content = Strings.Get("Postpay");
         CancelButton.Content = Strings.Get("Cancel");
         StartButton.Content = Strings.Get("ButtonStart");
+
+        // Clicking anywhere on an option (or typing in its box) picks that option.
+        MoneyCard.MouseLeftButtonUp += (_, _) => { PrepayMoneyRadio.IsChecked = true; MoneyBox.Focus(); };
+        PostpayCard.MouseLeftButtonUp += (_, _) => PostpayRadio.IsChecked = true;
+        MoneyBox.GotFocus += (_, _) => PrepayMoneyRadio.IsChecked = true;
+        Loaded += (_, _) => MoneyBox.Focus();
+
+        // The picked option is outlined in the accent colour.
+        foreach (var radio in new[] { PrepayMoneyRadio, PostpayRadio })
+        {
+            radio.Checked += (_, _) => UpdateOutlines();
+            radio.Unchecked += (_, _) => UpdateOutlines();
+        }
+
+        UpdateOutlines();
     }
+
+    private void UpdateOutlines()
+    {
+        MoneyCard.BorderBrush = OutlineFor(PrepayMoneyRadio);
+        PostpayCard.BorderBrush = OutlineFor(PostpayRadio);
+    }
+
+    private Brush OutlineFor(RadioButton radio) => (Brush)FindResource(radio.IsChecked == true ? "AccentBrush" : "DividerBrush");
 
     private async void OnOk(object sender, RoutedEventArgs e)
     {
@@ -45,8 +69,6 @@ public partial class StartSessionWindow : Window
             {
                 if (PrepayMoneyRadio.IsChecked == true)
                     await sessionService.StartPrepayByMoneyAsync(target.MachineGuid, ParseInt(MoneyBox.Text));
-                else if (PrepayTimeRadio.IsChecked == true)
-                    await sessionService.StartPrepayByTimeAsync(target.MachineGuid, ParseInt(MinutesBox.Text));
                 else
                     await sessionService.StartPostpayAsync(target.MachineGuid);
             }

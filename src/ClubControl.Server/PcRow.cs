@@ -1,12 +1,14 @@
 using System;
+using System.Linq;
 using System.Windows;
 using System.Windows.Media;
+using ClubControl.Server.Resources;
 using ClubControl.Shared;
 
 namespace ClubControl.Server;
 
 // Looks the brushes up from the active theme (Themes/Theme.xaml or DarkTheme.xaml) rather than
-// hardcoding colours, so rows re-theme automatically on the next refresh tick after a theme
+// hardcoding colours, so cards re-theme automatically on the next refresh tick after a theme
 // switch - PcRow instances are rebuilt fresh every second anyway (see MainWindow.RefreshAsync).
 
 /// <summary>
@@ -43,15 +45,36 @@ public class PcRow
     private static Brush Resource(string key) =>
         Application.Current.TryFindResource(key) as Brush ?? Brushes.Transparent;
 
-    /// <summary>Row colours (SPEC 7): offline overrides everything else for networked PCs; manual resources are never "offline".</summary>
-    public Brush RowBrush => !IsManual && !IsOnline
-        ? Resource("OfflineRowBrush")
+    public bool IsBilliard => Kind == ResourceKind.Billiard;
+
+    /// <summary>A networked PC that is switched off / disconnected: its card is shown faded.</summary>
+    public bool IsDimmed => !IsManual && !IsOnline;
+
+    /// <summary>Section heading on the main panel ("PCs" / "Billiards"); the cards are grouped by <see cref="IsBilliard"/>.</summary>
+    public string GroupTitle => Strings.Get(IsBilliard ? "KindBilliardPlural" : "KindComputerPlural");
+
+    public string NumberDisplay => Number?.ToString() ?? "–";
+
+    /// <summary>The big line on the card: time left for prepay, running cost for postpay / limit reached.</summary>
+    public string PrimaryDisplay => RemainingDisplay != "" ? RemainingDisplay : AmountDisplay;
+
+    /// <summary>Everything the compact card leaves out (tariff, amount, start/end), shown on hover.</summary>
+    public string TooltipText => string.Join("\n", new[]
+    {
+        TariffDisplay,
+        AmountDisplay,
+        StartDisplay != "" ? StartDisplay + (EndDisplay != "" ? " – " + EndDisplay : "") : ""
+    }.Where(line => line != ""));
+
+    /// <summary>Card accent colour (SPEC 7): offline overrides everything else for networked PCs; manual resources are never "offline".</summary>
+    public Brush AccentBrush => IsDimmed
+        ? Resource("StateOfflineBrush")
         : State switch
         {
-            PcState.PrepaySession => Resource("PrepayRowBrush"),
-            PcState.PostpaySession => Resource("PostpayRowBrush"),
-            PcState.LimitReached => Resource("LimitRowBrush"),
-            _ => Resource("SurfaceBrush")
+            PcState.PrepaySession => Resource("StatePrepayBrush"),
+            PcState.PostpaySession => Resource("StatePostpayBrush"),
+            PcState.LimitReached => Resource("StateLimitBrush"),
+            _ => Resource("StateIdleBrush")
         };
 
     public Brush DotBrush => IsManual ? Brushes.Transparent : (IsOnline ? Resource("OnlineDotBrush") : Resource("OfflineDotBrush"));

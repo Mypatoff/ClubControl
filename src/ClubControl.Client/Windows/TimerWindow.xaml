@@ -11,7 +11,7 @@
                            FontFamily="Segoe UI" HorizontalAlignment="Center" />
                 <TextBlock x:Name="SubText" Foreground="#AEB4BD" FontSize="13"
                            FontFamily="Segoe UI" HorizontalAlignment="Center" Margin="0,4,0,0" />
-                <TextBlock x:Name="OfflineText" Foreground="#F5A623" FontSize="13"
+                <TextBlock x:Name="BadgeText" Foreground="#F5A623" FontSize="13"
                            FontFamily="Segoe UI" HorizontalAlignment="Center" Margin="0,4,0,0" Visibility="Collapsed" />
             </StackPanel>
         </Grid>

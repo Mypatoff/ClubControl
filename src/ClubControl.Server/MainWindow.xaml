@@ -1,51 +1,137 @@
 <Window x:Class="ClubControl.Server.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="ClubControl" Height="700" Width="1150">
-    <DockPanel Margin="12">
-        <Border DockPanel.Dock="Top" Background="{StaticResource SurfaceBrush}" BorderBrush="{StaticResource DividerBrush}"
-                BorderThickness="1" CornerRadius="8" Margin="0,0,0,10" Padding="12,10">
-            <StackPanel>
-                <DockPanel Margin="0,0,0,10">
-                    <TextBlock x:Name="SelectionCountText" DockPanel.Dock="Right" Foreground="{StaticResource TextSecondaryBrush}" />
-                    <TextBlock x:Name="StatusText" Foreground="{StaticResource TextSecondaryBrush}" Text="Starting..." />
-                </DockPanel>
-                <StackPanel Orientation="Horizontal">
-                    <Button x:Name="StartButton" Margin="0,0,6,0" Click="OnStart" />
-                    <Button x:Name="StopButton" Margin="0,0,6,0" Click="OnStop" />
-                    <Button x:Name="MoveButton" Margin="0,0,6,0" Click="OnMove" />
-                    <Button x:Name="ExtendButton" Margin="0,0,14,0" Click="OnExtend" />
-                    <Border Width="1" Background="{StaticResource DividerBrush}" Margin="0,2,14,2" />
-                    <Button x:Name="TurnOnButton" Margin="0,0,6,0" Click="OnTurnOn" />
-                    <Button x:Name="RestartButton" Margin="0,0,6,0" Click="OnRestart" />
-                    <Button x:Name="ShutDownButton" Margin="0,0,14,0" Click="OnShutDown" />
-                    <Border Width="1" Background="{StaticResource DividerBrush}" Margin="0,2,14,2" />
+        Title="ClubControl" Height="800" Width="1280" MinWidth="900" MinHeight="560">
+    <Window.Resources>
+        <!-- Small pill in the header: a coloured dot plus a live counter -->
+        <Style x:Key="ChipStyle" TargetType="Border">
+            <Setter Property="Background" Value="{StaticResource SurfaceBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource DividerBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="14" />
+            <Setter Property="Padding" Value="11,4" />
+            <Setter Property="Margin" Value="0,0,8,0" />
+        </Style>
+
+        <Style x:Key="ChipTextStyle" TargetType="TextBlock">
+            <Setter Property="TextWrapping" Value="NoWrap" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Margin" Value="7,0,0,0" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+        </Style>
+
+        <!-- One card per PC / billiard table. Selection and hover are drawn as a coloured outline. -->
+        <Style x:Key="CardItemStyle" TargetType="ListBoxItem">
+            <Setter Property="Margin" Value="0,0,6,6" />
+            <Setter Property="Background" Value="{StaticResource CardBrush}" />
+            <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="2" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBoxItem">
+                        <Border x:Name="Card" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="12">
+                            <ContentPresenter />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Card" Property="BorderBrush" Value="{StaticResource TextSecondaryBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="Card" Property="BorderBrush" Value="{StaticResource SelectionBorderBrush}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsBilliard}" Value="True">
+                    <Setter Property="Background" Value="{StaticResource FeltCardBrush}" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+    </Window.Resources>
+
+    <Grid Margin="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- Title + live counters -->
+        <DockPanel Grid.Row="0" Margin="2,0,2,12" LastChildFill="False">
+            <TextBlock DockPanel.Dock="Left" VerticalAlignment="Center" FontSize="22" FontWeight="Bold" TextWrapping="NoWrap">
+                <Run Text="CLUB" Foreground="{StaticResource AccentBrush}" /><Run Text="CONTROL" />
+            </TextBlock>
+            <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" VerticalAlignment="Center" Margin="28,0,0,0">
+                <Border Style="{StaticResource ChipStyle}">
+                    <StackPanel Orientation="Horizontal">
+                        <Ellipse Width="9" Height="9" Fill="{StaticResource StateIdleBrush}" />
+                        <TextBlock x:Name="StatFreeText" Style="{StaticResource ChipTextStyle}" />
+                    </StackPanel>
+                </Border>
+                <Border Style="{StaticResource ChipStyle}">
+                    <StackPanel Orientation="Horizontal">
+                        <Ellipse Width="9" Height="9" Fill="{StaticResource StatePrepayBrush}" />
+                        <TextBlock x:Name="StatBusyText" Style="{StaticResource ChipTextStyle}" />
+                    </StackPanel>
+                </Border>
+                <Border Style="{StaticResource ChipStyle}">
+                    <StackPanel Orientation="Horizontal">
+                        <Ellipse Width="9" Height="9" Fill="{StaticResource StateOfflineBrush}" />
+                        <TextBlock x:Name="StatOfflineText" Style="{StaticResource ChipTextStyle}" />
+                    </StackPanel>
+                </Border>
+                <Border Style="{StaticResource ChipStyle}" BorderBrush="{StaticResource FeltBorderBrush}">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="🎱" VerticalAlignment="Center" />
+                        <TextBlock x:Name="StatBilliardText" Style="{StaticResource ChipTextStyle}" Foreground="{StaticResource FeltTextBrush}" />
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+            <TextBlock x:Name="SelectionCountText" DockPanel.Dock="Right" VerticalAlignment="Center"
+                       Foreground="{StaticResource TextSecondaryBrush}" FontWeight="SemiBold" />
+        </DockPanel>
+
+        <!-- Action bar -->
+        <Border Grid.Row="1" Background="{StaticResource SurfaceBrush}" BorderBrush="{StaticResource DividerBrush}"
+                BorderThickness="1" CornerRadius="12" Padding="10,8">
+            <DockPanel>
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
                     <Button x:Name="SettingsButton" Margin="0,0,6,0" Style="{StaticResource SecondaryButtonStyle}" Click="OnSettings" />
                     <Button x:Name="ReportsButton" Style="{StaticResource SecondaryButtonStyle}" Click="OnReports" />
                 </StackPanel>
-            </StackPanel>
-        </Border>
-
-        <Border DockPanel.Dock="Bottom" Background="{StaticResource SurfaceBrush}" BorderBrush="{StaticResource DividerBrush}"
-                BorderThickness="1" CornerRadius="8" Margin="0,10,0,0" Padding="12,10" Height="160">
-            <DockPanel>
-                <TextBlock x:Name="EventLogHeaderText" DockPanel.Dock="Top" FontWeight="SemiBold" Margin="0,0,0,6" />
-                <ListBox x:Name="EventLogList" BorderThickness="0" FontFamily="Consolas" Background="Transparent" />
+                <StackPanel Orientation="Horizontal">
+                    <Button x:Name="StartButton" Margin="0,0,6,0" Style="{StaticResource SuccessButtonStyle}" Click="OnStart" />
+                    <Button x:Name="StopButton" Margin="0,0,6,0" Style="{StaticResource DangerButtonStyle}" Click="OnStop" />
+                    <Button x:Name="MoveButton" Margin="0,0,6,0" Style="{StaticResource SecondaryButtonStyle}" Click="OnMove" />
+                    <Button x:Name="ExtendButton" Margin="0,0,14,0" Style="{StaticResource SecondaryButtonStyle}" Click="OnExtend" />
+                    <Border Width="1" Background="{StaticResource DividerBrush}" Margin="0,2,14,2" />
+                    <Button x:Name="TurnOnButton" Margin="0,0,6,0" Style="{StaticResource SecondaryButtonStyle}" Click="OnTurnOn" />
+                    <Button x:Name="RestartButton" Margin="0,0,6,0" Style="{StaticResource SecondaryButtonStyle}" Click="OnRestart" />
+                    <Button x:Name="ShutDownButton" Style="{StaticResource SecondaryButtonStyle}" Click="OnShutDown" />
+                </StackPanel>
             </DockPanel>
         </Border>
 
-        <Border Background="{StaticResource SurfaceBrush}" BorderBrush="{StaticResource DividerBrush}"
-                BorderThickness="1" CornerRadius="8">
-            <DataGrid x:Name="PcGrid" Margin="1" AutoGenerateColumns="False" IsReadOnly="True" BorderThickness="0"
-                      SelectionMode="Extended" SelectionUnit="FullRow" CanUserAddRows="False"
-                      PreviewMouseRightButtonDown="PcGrid_PreviewMouseRightButtonDown"
-                      SelectionChanged="PcGrid_SelectionChanged" KeyDown="PcGrid_KeyDown">
-                <DataGrid.RowStyle>
-                    <Style TargetType="DataGridRow" BasedOn="{StaticResource {x:Type DataGridRow}}">
-                        <Setter Property="Background" Value="{Binding RowBrush}" />
-                    </Style>
-                </DataGrid.RowStyle>
-                <DataGrid.ContextMenu>
+        <!-- PCs and billiards as cards, grouped into two sections (billiards on a green felt panel) -->
+        <Border Grid.Row="2" Margin="0,12" Background="{StaticResource SurfaceBrush}" BorderBrush="{StaticResource DividerBrush}"
+                BorderThickness="1" CornerRadius="12">
+            <Grid Margin="8">
+            <ListBox x:Name="PcList" Background="Transparent" BorderThickness="0" SelectionMode="Extended"
+                     ScrollViewer.CanContentScroll="False" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                     ItemContainerStyle="{StaticResource CardItemStyle}"
+                     PreviewMouseLeftButtonDown="PcList_PreviewMouseLeftButtonDown"
+                     PreviewMouseMove="PcList_PreviewMouseMove"
+                     PreviewMouseLeftButtonUp="PcList_PreviewMouseLeftButtonUp"
+                     PreviewMouseRightButtonDown="PcList_PreviewMouseRightButtonDown"
+                     SelectionChanged="PcList_SelectionChanged" KeyDown="PcList_KeyDown">
+                <ListBox.ContextMenu>
                     <ContextMenu>
                         <MenuItem x:Name="CtxStart" InputGestureText="Enter" Click="OnStart" />
                         <MenuItem x:Name="CtxFree" Click="OnFree" />
@@ -57,26 +143,124 @@
                         <MenuItem x:Name="CtxRestart" Click="OnRestart" />
                         <MenuItem x:Name="CtxShutDown" Click="OnShutDown" />
                     </ContextMenu>
-                </DataGrid.ContextMenu>
-                <DataGrid.Columns>
-                    <DataGridTemplateColumn Header="●" Width="26">
-                        <DataGridTemplateColumn.CellTemplate>
-                            <DataTemplate>
-                                <Ellipse Width="10" Height="10" Fill="{Binding DotBrush}" />
-                            </DataTemplate>
-                        </DataGridTemplateColumn.CellTemplate>
-                    </DataGridTemplateColumn>
-                    <DataGridTextColumn x:Name="KindIconColumn" Binding="{Binding KindIcon}" Width="34" />
-                    <DataGridTextColumn x:Name="PcNumberColumn" Binding="{Binding Number}" Width="50" />
-                    <DataGridTextColumn x:Name="TariffColumn" Binding="{Binding TariffDisplay}" Width="100" />
-                    <DataGridTextColumn x:Name="StateColumn" Binding="{Binding StateDisplay}" Width="110" />
-                    <DataGridTextColumn x:Name="SessionColumn" Binding="{Binding SessionTypeDisplay}" Width="80" />
-                    <DataGridTextColumn x:Name="AmountColumn" Binding="{Binding AmountDisplay}" Width="110" />
-                    <DataGridTextColumn x:Name="StartColumn" Binding="{Binding StartDisplay}" Width="80" />
-                    <DataGridTextColumn x:Name="EndColumn" Binding="{Binding EndDisplay}" Width="80" />
-                    <DataGridTextColumn x:Name="RemainingColumn" Binding="{Binding RemainingDisplay}" Width="90" />
-                </DataGrid.Columns>
-            </DataGrid>
+                </ListBox.ContextMenu>
+
+                <!-- When the list is grouped, ItemsPanel lays out the cards inside each section... -->
+                <ListBox.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <WrapPanel />
+                    </ItemsPanelTemplate>
+                </ListBox.ItemsPanel>
+
+                <ListBox.GroupStyle>
+                    <GroupStyle>
+                        <!-- ...and GroupStyle.Panel lays out the sections: PCs take the width, billiards a narrow column on the right -->
+                        <GroupStyle.Panel>
+                            <ItemsPanelTemplate>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                </Grid>
+                            </ItemsPanelTemplate>
+                        </GroupStyle.Panel>
+                        <GroupStyle.ContainerStyle>
+                            <Style TargetType="GroupItem">
+                                <Setter Property="Grid.Column" Value="0" />
+                                <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
+                                <Setter Property="VerticalAlignment" Value="Stretch" />
+                                <Setter Property="Margin" Value="0" />
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="GroupItem">
+                                            <Border x:Name="Section" Background="Transparent" BorderBrush="Transparent"
+                                                    BorderThickness="1" CornerRadius="14" Padding="12,10,0,0">
+                                                <StackPanel>
+                                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                                        <TextBlock Text="{Binding Items[0].KindIcon}" FontSize="18" VerticalAlignment="Center" />
+                                                        <TextBlock x:Name="SectionTitle" Text="{Binding Items[0].GroupTitle}" Margin="8,0,0,0"
+                                                                   FontSize="16" FontWeight="Bold" VerticalAlignment="Center" TextWrapping="NoWrap" />
+                                                        <Border Background="{StaticResource HeaderBackgroundBrush}" CornerRadius="9" Padding="8,1" Margin="10,0,0,0"
+                                                                VerticalAlignment="Center">
+                                                            <TextBlock Text="{Binding ItemCount}" Foreground="{StaticResource TextSecondaryBrush}"
+                                                                       FontWeight="SemiBold" />
+                                                        </Border>
+                                                    </StackPanel>
+                                                    <ItemsPresenter />
+                                                </StackPanel>
+                                            </Border>
+                                            <ControlTemplate.Triggers>
+                                                <!-- Group key is IsBilliard: the billiards section gets the felt look -->
+                                                <DataTrigger Binding="{Binding Name}" Value="True">
+                                                    <Setter TargetName="Section" Property="Background" Value="{StaticResource FeltBrush}" />
+                                                    <Setter TargetName="Section" Property="BorderBrush" Value="{StaticResource FeltBorderBrush}" />
+                                                    <Setter TargetName="SectionTitle" Property="Foreground" Value="{StaticResource FeltTextBrush}" />
+                                                </DataTrigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                                <Style.Triggers>
+                                    <!-- Group key is IsBilliard; MaxWidth keeps the billiard cards in a single column -->
+                                    <DataTrigger Binding="{Binding Name}" Value="True">
+                                        <Setter Property="Grid.Column" Value="1" />
+                                        <Setter Property="MaxWidth" Value="172" />
+                                        <Setter Property="Margin" Value="12,0,0,0" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </GroupStyle.ContainerStyle>
+                    </GroupStyle>
+                </ListBox.GroupStyle>
+
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <!-- Compact on purpose: 30 PCs + 3 tables must fit on one screen. Details are in the tooltip. -->
+                        <Grid x:Name="CardRoot" Width="136" Height="62" ToolTip="{Binding TooltipText}">
+                            <!-- state tint + coloured left edge -->
+                            <Border Background="{Binding AccentBrush}" Opacity="0.12" CornerRadius="10" />
+                            <Border Width="4" HorizontalAlignment="Left" Background="{Binding AccentBrush}" CornerRadius="10,0,0,10" />
+
+                            <Grid Margin="14,5,8,5">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+
+                                <DockPanel Grid.Row="0">
+                                    <TextBlock DockPanel.Dock="Right" Text="{Binding StateDisplay}" Foreground="{Binding AccentBrush}"
+                                               FontSize="10.5" FontWeight="SemiBold" VerticalAlignment="Center" Margin="6,0,0,0"
+                                               TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" />
+                                    <TextBlock Text="{Binding NumberDisplay}" FontSize="20" FontWeight="Bold" TextWrapping="NoWrap" />
+                                </DockPanel>
+
+                                <TextBlock Grid.Row="1" Text="{Binding PrimaryDisplay}" FontSize="15" FontWeight="Bold"
+                                           TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" MinHeight="20" />
+                            </Grid>
+                        </Grid>
+                        <DataTemplate.Triggers>
+                            <DataTrigger Binding="{Binding IsDimmed}" Value="True">
+                                <Setter TargetName="CardRoot" Property="Opacity" Value="0.7" />
+                            </DataTrigger>
+                        </DataTemplate.Triggers>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+            </Grid>
         </Border>
-    </DockPanel>
+
+        <!-- Status + event log -->
+        <Border Grid.Row="3" Background="{StaticResource SurfaceBrush}" BorderBrush="{StaticResource DividerBrush}"
+                BorderThickness="1" CornerRadius="12" Padding="12,8" Height="110">
+            <DockPanel>
+                <DockPanel DockPanel.Dock="Top" Margin="0,0,0,6">
+                    <TextBlock x:Name="StatusText" DockPanel.Dock="Right" Foreground="{StaticResource TextSecondaryBrush}"
+                               Text="Starting..." />
+                    <TextBlock x:Name="EventLogHeaderText" FontWeight="SemiBold" />
+                </DockPanel>
+                <ListBox x:Name="EventLogList" BorderThickness="0" FontFamily="Consolas" Background="Transparent" />
+            </DockPanel>
+        </Border>
+    </Grid>
 </Window>

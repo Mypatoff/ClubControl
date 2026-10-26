@@ -127,6 +127,33 @@ public class SessionServiceTests : SessionTestBase
         Assert.Equal(PcState.Locked, (await GetPcAsync(Pc1)).State);
     }
 
+    [Fact]
+    public async Task A_prepay_session_reports_the_unused_money_for_the_stop_confirmation()
+    {
+        using (var before = NewDb())
+            await ServiceFor(before).StartPrepayByMoneyAsync(Pc1, 10_000); // 60 min at 10 000/h
+        await BackdateSessionAsync(TimeSpan.FromMinutes(30));              // 30 min left = about 5 000 UZS
+
+        using var db = NewDb();
+        var snapshot = await ServiceFor(db).GetActiveSessionSnapshotAsync(Pc1);
+
+        Assert.NotNull(snapshot);
+        Assert.InRange(snapshot!.RemainingMoneyUzs, 4_800, 5_000);
+        Assert.Equal(10_000, snapshot.AmountOrCostUzs); // what was paid is unchanged
+    }
+
+    [Fact]
+    public async Task A_postpay_session_has_no_unused_prepay_money()
+    {
+        using (var before = NewDb())
+            await ServiceFor(before).StartPostpayAsync(Pc1);
+
+        using var db = NewDb();
+        var snapshot = await ServiceFor(db).GetActiveSessionSnapshotAsync(Pc1);
+
+        Assert.Equal(0, snapshot!.RemainingMoneyUzs);
+    }
+
     // ---- extend ----
 
     [Fact]

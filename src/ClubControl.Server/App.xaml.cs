@@ -33,6 +33,13 @@ public partial class App : Application
         // preference once the database is available.
         ThemeManager.Apply(UiTheme.Light);
 
+        // The theme's implicit <Style TargetType="Window"> only matches a plain Window - WPF matches the
+        // exact type, so MainWindow, LoginWindow etc. would stay white with black text even in the dark
+        // theme. Point every window at that style (as a resource reference, so it follows theme switches).
+        EventManager.RegisterClassHandler(typeof(Window), FrameworkElement.LoadedEvent,
+            new RoutedEventHandler((sender, _) =>
+                ((Window)sender).SetResourceReference(FrameworkElement.StyleProperty, typeof(Window))));
+
         // Without this, an unhandled exception on any thread just silently kills the process -
         // no dialog, nothing in the event log the admin can see. Show what happened instead.
         AppDomain.CurrentDomain.UnhandledException += (_, args) => ShowFatalError(args.ExceptionObject as Exception);

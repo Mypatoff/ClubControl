@@ -21,8 +21,8 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
 
-        // Lock the PC and start the offline-wait clock right away - a client that cannot find a
-        // server yet behaves exactly like one that lost a server it was already talking to.
+        // Lock the PC right away, before any server is found. The unlock hotkey works from this
+        // moment on, so a PC that boots while the server is down can still be opened by staff.
         _controller.Start();
 
         _ = ConnectToServerAsync();

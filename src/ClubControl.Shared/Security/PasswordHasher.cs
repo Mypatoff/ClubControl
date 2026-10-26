@@ -1,16 +1,20 @@
 using System;
 using System.Security.Cryptography;
 
-namespace ClubControl.Server.Security;
+namespace ClubControl.Shared.Security;
 
-/// <summary>PBKDF2 (HMAC-SHA256) hashing for the single admin password (SPEC section 7).</summary>
+/// <summary>
+/// PBKDF2 (HMAC-SHA256) password hashing, shared because two places need to check a password: the
+/// server (admin password, SPEC section 7) and the client (the lock-screen unlock password, which
+/// must be checkable with no server reachable).
+/// </summary>
 public static class PasswordHasher
 {
     private const int IterationCount = 100_000;
     private const int SaltSizeBytes = 16;
     private const int HashSizeBytes = 32;
 
-    /// <summary>Returns "iterations.saltBase64.hashBase64", stored as-is in Setting.AdminPasswordHash.</summary>
+    /// <summary>Returns "iterations.saltBase64.hashBase64", stored as-is (e.g. in Setting.AdminPasswordHash).</summary>
     public static string Hash(string password)
     {
         var salt = RandomNumberGenerator.GetBytes(SaltSizeBytes);
@@ -35,7 +39,7 @@ public static class PasswordHasher
         catch (FormatException)
         {
             // storedHash is corrupted/not in the expected format - treat exactly like a wrong
-            // password rather than letting a malformed Setting row crash the login dialog.
+            // password rather than letting a malformed row crash the login dialog.
             return false;
         }
     }

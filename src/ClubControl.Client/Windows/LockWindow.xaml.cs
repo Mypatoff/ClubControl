@@ -29,8 +29,14 @@ public partial class LockWindow : Window
         Closed += (_, _) => _topmostTimer.Stop();
     }
 
+    /// <summary>True while the unlock prompt is open: re-asserting would put this window above it and steal its focus.</summary>
+    public bool PauseTopmost { get; set; }
+
     private void ReassertTopmost()
     {
+        if (PauseTopmost)
+            return;
+
         Topmost = false;
         Topmost = true;
         Activate();

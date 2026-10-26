@@ -6,10 +6,10 @@
     <SolidColorBrush x:Key="AccentHoverBrush" Color="#3E78D9" />
     <SolidColorBrush x:Key="AccentPressedBrush" Color="#2F62B8" />
 
-    <SolidColorBrush x:Key="PageBackgroundBrush" Color="#1B1D22" />
-    <SolidColorBrush x:Key="SurfaceBrush" Color="#23262D" />
-    <SolidColorBrush x:Key="HeaderBackgroundBrush" Color="#2B2F38" />
-    <SolidColorBrush x:Key="DividerBrush" Color="#3A3F4A" />
+    <SolidColorBrush x:Key="PageBackgroundBrush" Color="#14161C" />
+    <SolidColorBrush x:Key="SurfaceBrush" Color="#1B1E26" />
+    <SolidColorBrush x:Key="HeaderBackgroundBrush" Color="#232733" />
+    <SolidColorBrush x:Key="DividerBrush" Color="#2E3340" />
 
     <SolidColorBrush x:Key="TextPrimaryBrush" Color="#E7E9ED" />
     <SolidColorBrush x:Key="TextSecondaryBrush" Color="#9AA1AC" />
@@ -23,13 +23,27 @@
     <SolidColorBrush x:Key="SelectionHighlightBrush" Color="#664C8DFF" />
     <SolidColorBrush x:Key="SelectionBorderBrush" Color="#4C8DFF" />
 
-    <!-- Darker-tinted status colours so they stay harmonious on a dark page (SPEC 7 row colours) -->
-    <SolidColorBrush x:Key="PrepayRowBrush" Color="#1F3A2A" />
-    <SolidColorBrush x:Key="PostpayRowBrush" Color="#1E2F44" />
-    <SolidColorBrush x:Key="LimitRowBrush" Color="#4D3414" />
-    <SolidColorBrush x:Key="OfflineRowBrush" Color="#26282E" />
+    <SolidColorBrush x:Key="SuccessBrush" Color="#2BB673" />
+    <SolidColorBrush x:Key="DangerBrush" Color="#E5484D" />
+
+    <!-- Main-panel resource cards: the card's accent colour follows its state (SPEC 7) -->
+    <SolidColorBrush x:Key="CardBrush" Color="#232733" />
+    <SolidColorBrush x:Key="StateIdleBrush" Color="#6C7A92" />
+    <SolidColorBrush x:Key="StatePrepayBrush" Color="#2ECC71" />
+    <SolidColorBrush x:Key="StatePostpayBrush" Color="#4C8DFF" />
+    <SolidColorBrush x:Key="StateLimitBrush" Color="#FFA02E" />
+    <SolidColorBrush x:Key="StateOfflineBrush" Color="#5F6677" />
     <SolidColorBrush x:Key="OnlineDotBrush" Color="#3DDC84" />
     <SolidColorBrush x:Key="OfflineDotBrush" Color="#6B7280" />
+
+    <!-- Billiards sit on their own green "felt" panel so they read as a separate zone -->
+    <LinearGradientBrush x:Key="FeltBrush" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#123F2E" Offset="0" />
+        <GradientStop Color="#0C2B20" Offset="1" />
+    </LinearGradientBrush>
+    <SolidColorBrush x:Key="FeltBorderBrush" Color="#1F7A52" />
+    <SolidColorBrush x:Key="FeltCardBrush" Color="#0F2A20" />
+    <SolidColorBrush x:Key="FeltTextBrush" Color="#7FE0AE" />
 
     <!-- ===== Base ===== -->
     <Style TargetType="Window">
@@ -59,11 +73,12 @@
                                           Margin="{TemplateBinding Padding}" />
                     </Border>
                     <ControlTemplate.Triggers>
+                        <!-- Opacity (not a fixed brush) so Success/Danger variants can reuse this template -->
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="Bg" Property="Background" Value="{StaticResource AccentHoverBrush}" />
+                            <Setter TargetName="Bg" Property="Opacity" Value="0.88" />
                         </Trigger>
                         <Trigger Property="IsPressed" Value="True">
-                            <Setter TargetName="Bg" Property="Background" Value="{StaticResource AccentPressedBrush}" />
+                            <Setter TargetName="Bg" Property="Opacity" Value="0.7" />
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="False">
                             <Setter TargetName="Bg" Property="Background" Value="{StaticResource DisabledButtonBrush}" />
@@ -106,6 +121,14 @@
         </Setter>
     </Style>
 
+    <Style x:Key="SuccessButtonStyle" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+        <Setter Property="Background" Value="{StaticResource SuccessBrush}" />
+    </Style>
+
+    <Style x:Key="DangerButtonStyle" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+        <Setter Property="Background" Value="{StaticResource DangerBrush}" />
+    </Style>
+
     <!-- ===== Inputs ===== -->
     <Style TargetType="TextBox">
         <Setter Property="Padding" Value="8,5" />
@@ -123,14 +146,6 @@
         <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
     </Style>
 
-    <Style TargetType="ComboBox">
-        <Setter Property="Padding" Value="8,5" />
-        <Setter Property="BorderBrush" Value="{StaticResource DividerBrush}" />
-        <Setter Property="BorderThickness" Value="1" />
-        <Setter Property="Background" Value="{StaticResource SurfaceBrush}" />
-        <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
-    </Style>
-
     <Style TargetType="DatePicker">
         <Setter Property="Padding" Value="6,4" />
         <Setter Property="BorderBrush" Value="{StaticResource DividerBrush}" />
@@ -139,8 +154,11 @@
         <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
     </Style>
 
-    <Style TargetType="CheckBox">
-        <Setter Property="VerticalAlignment" Value="Center" />
+    <Style TargetType="ToolTip">
+        <Setter Property="Background" Value="{StaticResource HeaderBackgroundBrush}" />
+        <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
+        <Setter Property="BorderBrush" Value="{StaticResource DividerBrush}" />
+        <Setter Property="Padding" Value="8,5" />
     </Style>
 
     <!-- ===== Tabs ===== -->
@@ -177,6 +195,7 @@
 
     <!-- ===== Lists / grids ===== -->
     <Style TargetType="ListBox">
+        <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
         <Setter Property="Background" Value="{StaticResource SurfaceBrush}" />
         <Setter Property="BorderBrush" Value="{StaticResource DividerBrush}" />
         <Setter Property="BorderThickness" Value="1" />
@@ -207,6 +226,7 @@
     </Style>
 
     <Style TargetType="DataGridRow">
+        <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
         <Setter Property="Background" Value="{StaticResource SurfaceBrush}" />
         <Style.Triggers>
             <Trigger Property="IsSelected" Value="True">
@@ -217,6 +237,7 @@
     </Style>
 
     <Style TargetType="DataGridCell">
+        <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
         <Setter Property="Padding" Value="8,4" />
         <Setter Property="BorderThickness" Value="0" />
         <Setter Property="Background" Value="Transparent" />

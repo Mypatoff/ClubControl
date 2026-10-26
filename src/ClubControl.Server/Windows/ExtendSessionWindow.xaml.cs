@@ -1,5 +1,7 @@
 using System;
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Media;
 using ClubControl.Server.Resources;
 using ClubControl.Server.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -23,7 +25,29 @@ public partial class ExtendSessionWindow : Window
         TimeRadio.Content = Strings.Get("AddTime");
         CancelButton.Content = Strings.Get("Cancel");
         ExtendButton.Content = Strings.Get("ButtonExtend");
+
+        // Clicking anywhere on an option (or typing in its box) picks that option, which is outlined in the accent colour.
+        MoneyCard.MouseLeftButtonUp += (_, _) => { MoneyRadio.IsChecked = true; MoneyBox.Focus(); };
+        TimeCard.MouseLeftButtonUp += (_, _) => { TimeRadio.IsChecked = true; MinutesBox.Focus(); };
+        MoneyBox.GotFocus += (_, _) => MoneyRadio.IsChecked = true;
+        MinutesBox.GotFocus += (_, _) => TimeRadio.IsChecked = true;
+        Loaded += (_, _) => MoneyBox.Focus();
+        foreach (var radio in new[] { MoneyRadio, TimeRadio })
+        {
+            radio.Checked += (_, _) => UpdateOutlines();
+            radio.Unchecked += (_, _) => UpdateOutlines();
+        }
+
+        UpdateOutlines();
     }
+
+    private void UpdateOutlines()
+    {
+        MoneyCard.BorderBrush = OutlineFor(MoneyRadio);
+        TimeCard.BorderBrush = OutlineFor(TimeRadio);
+    }
+
+    private Brush OutlineFor(RadioButton radio) => (Brush)FindResource(radio.IsChecked == true ? "AccentBrush" : "DividerBrush");
 
     private async void OnOk(object sender, RoutedEventArgs e)
     {

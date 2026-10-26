@@ -95,6 +95,19 @@ public static class BillingCalculator
         return Math.Max(raw, minPaymentUzs);
     }
 
+    /// <summary>
+    /// Postpay cost of a session whose last segment is still running, from the pieces the server
+    /// sends the client: the cost of the already-closed segments (after a Move), plus the open
+    /// segment's elapsed time at its price, never below the tariff minimum. Gives the same number as
+    /// <see cref="SumPostpaySegments"/> with the minimum applied, so the client can let the cost grow
+    /// between server updates (or while the server is unreachable) without drifting from the server.
+    /// </summary>
+    public static int PostpayCostWithOpenSegment(int closedSegmentsCostUzs, int openSegmentElapsedSeconds, int pricePerHourUzs, int minPaymentUzs)
+    {
+        var raw = closedSegmentsCostUzs + PriceForMinutes(StartedMinutes(openSegmentElapsedSeconds), pricePerHourUzs);
+        return Math.Max(raw, minPaymentUzs);
+    }
+
     /// <summary>A postpay session reaches "Limit reached" once its cost reaches the tariff maximum.</summary>
     public static bool HasReachedLimit(int costUzs, int maxPaymentUzs) =>
         maxPaymentUzs > 0 && costUzs >= maxPaymentUzs;
@@ -110,6 +123,22 @@ public static class BillingCalculator
 
         long remainingMoneyUzs = (long)remainingSeconds * oldPricePerHourUzs / 3600;
         return MinutesForMoney((int)remainingMoneyUzs, newPricePerHourUzs);
+    }
+
+    /// <summary>
+    /// Prepay: the money still unused if the session stops now - the remaining time valued at the
+    /// current price, rounded DOWN to 100 UZS (never promise more than is really left) and never more
+    /// than what was paid. It is shown to the admin when stopping early; the stop itself still gives
+    /// no refund (SPEC 5).
+    /// </summary>
+    public static int RemainingPrepayMoney(int remainingSeconds, int pricePerHourUzs, int paidUzs)
+    {
+        if (remainingSeconds <= 0 || pricePerHourUzs <= 0 || paidUzs <= 0)
+            return 0;
+
+        var remainingUzs = (long)remainingSeconds * pricePerHourUzs / 3600;
+        var roundedDown = remainingUzs / RoundingUzs * RoundingUzs;
+        return (int)Math.Min(roundedDown, paidUzs);
     }
 
     /// <summary>

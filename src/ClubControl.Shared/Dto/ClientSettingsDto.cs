@@ -13,7 +13,11 @@ public class ClientSettingsDto
     public AfterSessionAction AfterSessionAction { get; set; } = AfterSessionAction.CloseProcesses;
     public string ProcessListCsv { get; set; } = "";
 
-    public int OfflineUnlockWaitSeconds { get; set; } = 60;
+    /// <summary>
+    /// PBKDF2 hash of the staff unlock password (Setting.ClientUnlockPasswordHash). The client
+    /// caches it on disk so the unlock hotkey still works with no server reachable. Null = none set.
+    /// </summary>
+    public string? UnlockPasswordHash { get; set; }
 
     // Safe default is 0 (disabled) rather than mirroring the server's default: a client that
     // hasn't synced real settings yet (e.g. still searching for the server at boot) must never

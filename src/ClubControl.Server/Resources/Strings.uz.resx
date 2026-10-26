@@ -88,6 +88,12 @@
   <data name="ColumnRemaining" xml:space="preserve">
     <value>Qoldi</value>
   </data>
+  <data name="StatBusy" xml:space="preserve">
+    <value>Band</value>
+  </data>
+  <data name="StatOffline" xml:space="preserve">
+    <value>Oflayn</value>
+  </data>
   <data name="EventLogHeader" xml:space="preserve">
     <value>Voqealar jurnali</value>
   </data>
@@ -109,8 +115,8 @@
   <data name="StateLimitReached" xml:space="preserve">
     <value>Limitga yetdi</value>
   </data>
-  <data name="StateOfflineUnlocked" xml:space="preserve">
-    <value>Oflayn ochildi</value>
+  <data name="StateManualUnlocked" xml:space="preserve">
+    <value>Qo'lda ochildi</value>
   </data>
   <data name="StateNewPc" xml:space="preserve">
     <value>Yangi kompyuter</value>
@@ -154,8 +160,17 @@
   <data name="PcHasNoActiveSession" xml:space="preserve">
     <value>Bu kompyuterda faol sessiya yoʻq.</value>
   </data>
-  <data name="StopPrepayConfirm" xml:space="preserve">
-    <value>Oldindan toʻlov sessiyasini hozir toʻxtatasizmi? Pul qaytarilmaydi.</value>
+  <data name="StopPrepayHeader" xml:space="preserve">
+    <value>Oldindan toʻlov sessiyasini toʻxtatasizmi?</value>
+  </data>
+  <data name="StopPrepayUnused" xml:space="preserve">
+    <value>Ishlatilmagan pul</value>
+  </data>
+  <data name="StopPrepayTotal" xml:space="preserve">
+    <value>Jami ishlatilmagan</value>
+  </data>
+  <data name="StopPrepayNoRefund" xml:space="preserve">
+    <value>Sessiya toʻliq toʻlangan deb qayd etiladi. Pul avtomatik qaytarilmaydi.</value>
   </data>
   <data name="CannotStopSessionTitle" xml:space="preserve">
     <value>Sessiyani toʻxtatib boʻlmadi</value>
@@ -211,8 +226,8 @@
   <data name="LabelProcessList" xml:space="preserve">
     <value>Jarayonlar roʻyxati (vergul bilan, masalan steam.exe)</value>
   </data>
-  <data name="LabelOfflineWait" xml:space="preserve">
-    <value>Oflayn ochilish kutish vaqti (soniya)</value>
+  <data name="LabelUnlockPassword" xml:space="preserve">
+    <value>Kompyuterni ochish paroli (qulflangan kompyuterda Ctrl+Shift+F12). O'zgartirmaslik uchun bo'sh qoldiring.</value>
   </data>
   <data name="LabelAutoShutdown" xml:space="preserve">
     <value>Band boʻlmagan bloklangan kompyuterlarni oʻchirish (daqiqa, 0 = oʻchirilgan)</value>

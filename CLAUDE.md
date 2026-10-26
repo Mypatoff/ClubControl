@@ -51,3 +51,7 @@ C# .NET 8. WPF for Server (admin panel + hosted ASP.NET Core/SignalR) and Client
       duplicate-MainWindow-on-login bug (stray `StartupUri` racing the manual `MainWindow` creation),
       relaxed admin password policy (no more min-length/letter+digit rule), disabled PCs/billiards
       now actually disappear from the main panel (previously only excluded from bulk "all" actions)
+- [x] Post-phase-6 change: automatic offline unlock replaced by the Ctrl+Shift+F12 staff-unlock password
+      prompt on locked PCs (works with or without the server; new `Setting.ClientUnlockPasswordHash` +
+      migration; `Setting.OfflineUnlockWaitSeconds` column is now unused but kept). Clicking empty space in
+      the main panel now deselects. Debug-build client exit hook moved to Ctrl+Shift+F11.

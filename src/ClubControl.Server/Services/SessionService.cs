@@ -358,7 +358,7 @@ public class SessionService
                 await SendCommandAsync(pc, new ClientCommand
                 {
                     Type = CommandType.UpdateSession,
-                    Session = new SessionInfo { Type = SessionType.Postpay, ElapsedSeconds = totalElapsed, CurrentCostUzs = cost, MaxPaymentUzs = tariff.MaxPaymentUzs }
+                    Session = BuildPostpayInfo(session, now, totalElapsed, cost, tariff)
                 });
             }
         }
@@ -402,10 +402,11 @@ public class SessionService
     /// One row's worth of session info for the main table: amount is "paid" for prepay, "current
     /// cost" otherwise. ConsumedUzs/CapUzs let the UI show progress toward a ceiling (money spent
     /// so far vs. the prepaid total, or current postpay cost vs. the tariff max) - CapUzs is 0 for
-    /// free sessions, which have no such ceiling to show.
+    /// free sessions, which have no such ceiling to show. RemainingMoneyUzs is the unused part of a
+    /// prepay payment (0 for other sessions) - shown when the admin stops a prepay session early.
     /// </summary>
     public record ActiveSessionSnapshot(int SessionId, SessionType Type, DateTime StartUtc, DateTime? PlannedEndUtc,
-        int AmountOrCostUzs, int RemainingSeconds, bool IsFree, int ConsumedUzs, int CapUzs);
+        int AmountOrCostUzs, int RemainingSeconds, bool IsFree, int ConsumedUzs, int CapUzs, int RemainingMoneyUzs = 0);
 
     public async Task<Dictionary<int, ActiveSessionSnapshot>> GetActiveSessionSnapshotsAsync()
     {
@@ -441,9 +442,15 @@ public class SessionService
 
         int consumedUzs;
         int capUzs;
+        var remainingMoneyUzs = 0;
 
         if (session.Type == SessionType.Prepay && session.PlannedEndUtc.HasValue)
         {
+            // Valued at the price of the PC the session is on right now (after a move, that is the new PC's price).
+            var openSegment = session.Segments.FirstOrDefault(s => s.EndUtc == null);
+            if (openSegment is not null)
+                remainingMoneyUzs = BillingCalculator.RemainingPrepayMoney(info.RemainingSeconds, openSegment.PricePerHourUzs, session.AmountUzs);
+
             // Pure progress indicator (not a billing calculation) - how much of the prepaid time/
             // money has elapsed so far, proportional to the planned total.
             var totalPlannedSeconds = (session.PlannedEndUtc.Value - session.StartUtc).TotalSeconds;
@@ -465,29 +472,39 @@ public class SessionService
         }
 
         return new ActiveSessionSnapshot(session.Id, session.Type, session.StartUtc, session.PlannedEndUtc,
-            amountOrCost, info.RemainingSeconds, session.IsFree, consumedUzs, capUzs);
+            amountOrCost, info.RemainingSeconds, session.IsFree, consumedUzs, capUzs, remainingMoneyUzs);
+    }
+
+    /// <summary>The ApplySettings command carrying the current General settings; sent on connect and whenever settings are saved.</summary>
+    public async Task<ClientCommand> BuildApplySettingsCommandAsync()
+    {
+        var setting = await SettingsHelper.GetOrCreateAsync(_db);
+        return new ClientCommand
+        {
+            Type = CommandType.ApplySettings,
+            Settings = new ClientSettingsDto
+            {
+                ClubName = setting.ClubName,
+                LockScreenText = setting.LockScreenText,
+                LockScreenLanguage = setting.LockScreenLanguage,
+                WarningMinutes1 = setting.WarningMinutes1,
+                WarningMinutes2 = setting.WarningMinutes2,
+                AfterSessionAction = setting.AfterSessionAction,
+                ProcessListCsv = setting.ProcessListCsv,
+                UnlockPasswordHash = setting.ClientUnlockPasswordHash,
+                AutoShutdownAfterMinutes = setting.AutoShutdownAfterMinutes
+            }
+        };
     }
 
     /// <summary>Pushes the current General settings to every online, configured PC (SPEC section 8).</summary>
     public async Task BroadcastSettingsAsync()
     {
-        var setting = await SettingsHelper.GetOrCreateAsync(_db);
-        var dto = new ClientSettingsDto
-        {
-            ClubName = setting.ClubName,
-            LockScreenText = setting.LockScreenText,
-            LockScreenLanguage = setting.LockScreenLanguage,
-            WarningMinutes1 = setting.WarningMinutes1,
-            WarningMinutes2 = setting.WarningMinutes2,
-            AfterSessionAction = setting.AfterSessionAction,
-            ProcessListCsv = setting.ProcessListCsv,
-            OfflineUnlockWaitSeconds = setting.OfflineUnlockWaitSeconds,
-            AutoShutdownAfterMinutes = setting.AutoShutdownAfterMinutes
-        };
+        var command = await BuildApplySettingsCommandAsync();
 
         var onlinePcs = await _db.Pcs.Where(p => p.IsOnline && p.Number != null).ToListAsync();
         foreach (var pc in onlinePcs)
-            await SendCommandAsync(pc, new ClientCommand { Type = CommandType.ApplySettings, Settings = dto });
+            await SendCommandAsync(pc, command);
     }
 
     /// <summary>
@@ -605,7 +622,28 @@ public class SessionService
         var cost = Math.Min(
             Math.Max(BillingCalculator.SumPostpaySegments(elapsedPerSegment), tariff.MinPaymentUzs),
             tariff.MaxPaymentUzs);
-        return new SessionInfo { Type = SessionType.Postpay, ElapsedSeconds = totalElapsed, CurrentCostUzs = cost, MaxPaymentUzs = tariff.MaxPaymentUzs };
+        return BuildPostpayInfo(session, now, totalElapsed, cost, tariff);
+    }
+
+    /// <summary>The postpay SessionInfo, including the pieces the client needs to keep the cost growing on its own.</summary>
+    private static SessionInfo BuildPostpayInfo(Session session, DateTime now, int totalElapsed, int cost, Tariff tariff)
+    {
+        var openSegment = session.Segments.FirstOrDefault(s => s.EndUtc == null);
+        var closedSegmentsCost = BillingCalculator.SumPostpaySegments(session.Segments
+            .Where(s => s.EndUtc != null)
+            .Select(s => ((int)(s.EndUtc!.Value - s.StartUtc).TotalSeconds, s.PricePerHourUzs)));
+
+        return new SessionInfo
+        {
+            Type = SessionType.Postpay,
+            ElapsedSeconds = totalElapsed,
+            CurrentCostUzs = cost,
+            MaxPaymentUzs = tariff.MaxPaymentUzs,
+            ClosedSegmentsCostUzs = closedSegmentsCost,
+            OpenSegmentElapsedSeconds = openSegment is null ? 0 : (int)(now - openSegment.StartUtc).TotalSeconds,
+            PricePerHourUzs = openSegment?.PricePerHourUzs ?? 0,
+            MinPaymentUzs = tariff.MinPaymentUzs
+        };
     }
 
     private async Task CloseSessionAsync(Session session, DateTime endUtc, string reason)

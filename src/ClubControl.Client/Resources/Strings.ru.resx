@@ -13,8 +13,29 @@
   <data name="PerHourFormat" xml:space="preserve">
     <value>{0} UZS/час</value>
   </data>
-  <data name="OfflineMode" xml:space="preserve">
-    <value>Офлайн-режим</value>
+  <data name="ManualUnlockBadge" xml:space="preserve">
+    <value>Разблокирован вручную</value>
+  </data>
+  <data name="UnlockTitle" xml:space="preserve">
+    <value>Разблокировать ПК</value>
+  </data>
+  <data name="UnlockPrompt" xml:space="preserve">
+    <value>Введите пароль разблокировки.</value>
+  </data>
+  <data name="UnlockWrongPassword" xml:space="preserve">
+    <value>Неверный пароль.</value>
+  </data>
+  <data name="UnlockNotConfigured" xml:space="preserve">
+    <value>Пароль разблокировки не задан. Задайте его в настройках сервера.</value>
+  </data>
+  <data name="UnlockLockedOut" xml:space="preserve">
+    <value>Слишком много неверных попыток. Повторите через {0} с.</value>
+  </data>
+  <data name="Ok" xml:space="preserve">
+    <value>OK</value>
+  </data>
+  <data name="Cancel" xml:space="preserve">
+    <value>Отмена</value>
   </data>
   <data name="Remaining" xml:space="preserve">
     <value>осталось</value>

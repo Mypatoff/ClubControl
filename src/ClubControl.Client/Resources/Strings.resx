@@ -13,8 +13,29 @@
   <data name="PerHourFormat" xml:space="preserve">
     <value>{0} UZS/hour</value>
   </data>
-  <data name="OfflineMode" xml:space="preserve">
-    <value>Offline mode</value>
+  <data name="ManualUnlockBadge" xml:space="preserve">
+    <value>Unlocked manually</value>
+  </data>
+  <data name="UnlockTitle" xml:space="preserve">
+    <value>Unlock this PC</value>
+  </data>
+  <data name="UnlockPrompt" xml:space="preserve">
+    <value>Enter the staff unlock password.</value>
+  </data>
+  <data name="UnlockWrongPassword" xml:space="preserve">
+    <value>Wrong password.</value>
+  </data>
+  <data name="UnlockNotConfigured" xml:space="preserve">
+    <value>No unlock password is set. Set one in the server Settings.</value>
+  </data>
+  <data name="UnlockLockedOut" xml:space="preserve">
+    <value>Too many wrong attempts. Try again in {0} s.</value>
+  </data>
+  <data name="Ok" xml:space="preserve">
+    <value>OK</value>
+  </data>
+  <data name="Cancel" xml:space="preserve">
+    <value>Cancel</value>
   </data>
   <data name="Remaining" xml:space="preserve">
     <value>remaining</value>

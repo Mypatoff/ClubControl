@@ -96,6 +96,10 @@ public class ClubHub : Hub
         // (SPEC 4 "Offline rule", SPEC 5 "Power cuts / restarts").
         if (isNew || !wasOnline)
         {
+            // Settings first: they carry the unlock-password hash the client caches for offline use,
+            // and a freshly booted client otherwise only has built-in defaults until the admin saves Settings.
+            await Clients.Caller.SendAsync(HubMethodNames.ReceiveCommand, await _sessionService.BuildApplySettingsCommandAsync());
+
             var command = await _sessionService.BuildCurrentCommandAsync(pc);
             if (command is not null)
                 await Clients.Caller.SendAsync(HubMethodNames.ReceiveCommand, command);
@@ -109,6 +113,26 @@ public class ClubHub : Hub
         // ever happens in SessionService.ProvisionPcIfNeededAsync, triggered by the admin's own
         // Settings Save action and bound to whichever connection is actually registered for this
         // GUID at that exact moment - see that method for the full reasoning.
+    }
+
+    /// <summary>
+    /// Log-only: a client reports that staff unlocked it with the hotkey. Same token check as
+    /// <see cref="Heartbeat"/>, so only the real PC can write this entry; it changes no state and
+    /// cannot start, extend or unlock anything (see the note below).
+    /// </summary>
+    public async Task ReportManualUnlock(Guid machineGuid, string? authToken)
+    {
+        var pc = await _db.Pcs.FirstOrDefaultAsync(p => p.MachineGuid == machineGuid);
+        if (pc is null || !PcTokenHasher.IsHeartbeatAuthorized(pc.AuthTokenHash, authToken))
+            return;
+
+        _db.EventLogEntries.Add(new EventLogEntry
+        {
+            Type = EventType.ManualUnlock,
+            PcId = pc.Id,
+            Message = $"PC #{pc.Number?.ToString() ?? "?"} unlocked manually with the unlock password",
+        });
+        await _db.SaveChangesAsync();
     }
 
     // Session/billing logic (SPEC section 5) and ClientCommand delivery are never exposed as hub

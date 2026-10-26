@@ -67,7 +67,7 @@ public static class Strings
             PcState.PrepaySession => Get("StatePrepay"),
             PcState.PostpaySession => Get("StatePostpay"),
             PcState.LimitReached => Get("StateLimitReached"),
-            PcState.OfflineUnlocked => Get("StateOfflineUnlocked"),
+            PcState.ManualUnlocked => Get("StateManualUnlocked"),
             _ => state.ToString()
         };
 

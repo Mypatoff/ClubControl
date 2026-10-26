@@ -191,6 +191,9 @@ namespace ClubControl.Server.Data.Migrations
                     b.Property<int>("AutoShutdownAfterMinutes")
                         .HasColumnType("INTEGER");
 
+                    b.Property<string>("ClientUnlockPasswordHash")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("ClubName")
                         .IsRequired()
                         .HasColumnType("TEXT");

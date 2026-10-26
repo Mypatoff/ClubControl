@@ -160,6 +160,39 @@ public class BillingCalculatorTests
         Assert.Equal(0, BillingCalculator.RecalculateMinutesForMove(remainingSeconds, oldPrice, newPrice));
     }
 
+    // ---- stop early: unused prepaid money (SPEC 5: "Early stop") ----
+
+    [Fact]
+    public void RemainingPrepayMoney_ValuesTheTimeLeftAtThePrice()
+    {
+        // 30 minutes left at 10000/hr = 5000 UZS unused.
+        Assert.Equal(5000, BillingCalculator.RemainingPrepayMoney(remainingSeconds: 1800, pricePerHourUzs: 10000, paidUzs: 10000));
+    }
+
+    [Fact]
+    public void RemainingPrepayMoney_RoundsDownToHundred()
+    {
+        // 29m30s at 10000/hr = 4916 UZS -> 4900, never 5000.
+        Assert.Equal(4900, BillingCalculator.RemainingPrepayMoney(remainingSeconds: 29 * 60 + 30, pricePerHourUzs: 10000, paidUzs: 10000));
+    }
+
+    [Fact]
+    public void RemainingPrepayMoney_NeverExceedsWhatWasPaid()
+    {
+        // A paid amount that bought slightly less time than the arithmetic suggests must cap the answer.
+        Assert.Equal(4000, BillingCalculator.RemainingPrepayMoney(remainingSeconds: 3600, pricePerHourUzs: 10000, paidUzs: 4000));
+    }
+
+    [Theory]
+    [InlineData(0, 10000, 5000)]
+    [InlineData(-5, 10000, 5000)]
+    [InlineData(1800, 0, 5000)]
+    [InlineData(1800, 10000, 0)]
+    public void RemainingPrepayMoney_InvalidInputs_YieldZero(int remainingSeconds, int price, int paid)
+    {
+        Assert.Equal(0, BillingCalculator.RemainingPrepayMoney(remainingSeconds, price, paid));
+    }
+
     [Fact]
     public void SumPostpaySegments_AddsEachSegmentsOwnRoundedCharge()
     {
@@ -176,6 +209,36 @@ public class BillingCalculatorTests
     public void SumPostpaySegments_NoSegments_IsZero()
     {
         Assert.Equal(0, BillingCalculator.SumPostpaySegments(Array.Empty<(int, int)>()));
+    }
+
+    // ---- client-side extrapolation of the postpay cost (offline fallback) must match the server's math ----
+
+    [Theory]
+    [InlineData(0, 0, 10_000, 2_000, 2_000)]        // nothing run yet: the minimum payment
+    [InlineData(0, 1, 10_000, 2_000, 2_000)]        // 1 started minute = 200, still below the minimum
+    [InlineData(0, 1_770, 10_000, 2_000, 5_000)]    // 29.5 min -> 30 started minutes = 5 000
+    [InlineData(5_000, 0, 15_000, 3_000, 5_000)]    // after a Move: kept cost, nothing added at the new price yet
+    [InlineData(5_000, 600, 15_000, 3_000, 7_500)]  // ... then 10 minutes at the new price (2 500)
+    public void PostpayCostWithOpenSegment_AddsTheOpenSegmentToTheKeptCost(
+        int closedCost, int openElapsedSeconds, int price, int min, int expected)
+    {
+        Assert.Equal(expected, BillingCalculator.PostpayCostWithOpenSegment(closedCost, openElapsedSeconds, price, min));
+    }
+
+    [Fact]
+    public void PostpayCostWithOpenSegment_MatchesTheServersSegmentSum()
+    {
+        // The server sums closed segments + the open one with SumPostpaySegments, then applies the minimum.
+        var closed = new[] { (ElapsedSeconds: 1_770, PricePerHourUzs: 10_000) };
+        var closedCost = BillingCalculator.SumPostpaySegments(closed);
+
+        for (var openElapsed = 0; openElapsed <= 3 * 3600; openElapsed += 37)
+        {
+            var serverCost = Math.Max(
+                BillingCalculator.SumPostpaySegments(closed.Append((openElapsed, 15_000))), 3_000);
+
+            Assert.Equal(serverCost, BillingCalculator.PostpayCostWithOpenSegment(closedCost, openElapsed, 15_000, 3_000));
+        }
     }
 
     // ---- tariff integrity (the exact bug this guards against: a price of 0 lets MinutesForMoney

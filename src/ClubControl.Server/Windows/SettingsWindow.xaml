@@ -6,8 +6,8 @@
     <DockPanel Margin="16">
         <TextBlock x:Name="ErrorText" DockPanel.Dock="Bottom" Foreground="{StaticResource ErrorBrush}" TextWrapping="Wrap" Margin="0,8,0,0" />
         <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,8,0,0">
-            <Button x:Name="CancelButton" Width="90" Margin="0,0,8,0" Style="{StaticResource SecondaryButtonStyle}" Click="OnCancel" IsCancel="True" />
-            <Button x:Name="SaveButton" Width="90" IsDefault="True" Click="OnSave" />
+            <Button x:Name="CancelButton" Width="120" Height="38" Margin="0,0,10,0" Style="{StaticResource SecondaryButtonStyle}" Click="OnCancel" IsCancel="True" />
+            <Button x:Name="SaveButton" Width="120" Height="38" IsDefault="True" Click="OnSave" />
         </StackPanel>
 
         <Border Background="{StaticResource SurfaceBrush}" BorderBrush="{StaticResource DividerBrush}" BorderThickness="1" CornerRadius="8">
@@ -41,8 +41,8 @@
                     <TextBlock x:Name="ProcessListLabel" Margin="0,0,0,2" />
                     <TextBox x:Name="ProcessListBox" Margin="0,0,0,10" />
 
-                    <TextBlock x:Name="OfflineWaitLabel" Margin="0,0,0,2" />
-                    <TextBox x:Name="OfflineWaitBox" Width="80" HorizontalAlignment="Left" Margin="0,0,0,10" />
+                    <TextBlock x:Name="UnlockPasswordLabel" Margin="0,0,0,2" TextWrapping="Wrap" />
+                    <PasswordBox x:Name="UnlockPasswordBox" Width="200" HorizontalAlignment="Left" Margin="0,0,0,10" />
 
                     <TextBlock x:Name="AutoShutdownLabel" Margin="0,0,0,2" />
                     <TextBox x:Name="AutoShutdownBox" Width="80" HorizontalAlignment="Left" />

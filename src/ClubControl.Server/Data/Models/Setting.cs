@@ -22,7 +22,15 @@ public class Setting
     public AfterSessionAction AfterSessionAction { get; set; } = AfterSessionAction.CloseProcesses;
     public string ProcessListCsv { get; set; } = "steam.exe";
 
+    /// <summary>
+    /// No longer used: PCs no longer unlock themselves after losing the server (replaced by the
+    /// unlock hotkey, see <see cref="ClientUnlockPasswordHash"/>). The column is kept so no
+    /// risky column-drop migration is needed.
+    /// </summary>
     public int OfflineUnlockWaitSeconds { get; set; } = 60;
+
+    /// <summary>PBKDF2 hash of the password that unlocks a locked client PC from its hotkey. Null = none set yet.</summary>
+    public string? ClientUnlockPasswordHash { get; set; }
 
     /// <summary>Idle-locked PCs (not limit-reached, not mid-session) shut themselves down after this many minutes. 0 = disabled.</summary>
     public int AutoShutdownAfterMinutes { get; set; } = 1;

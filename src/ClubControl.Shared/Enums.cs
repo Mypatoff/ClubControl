@@ -14,7 +14,7 @@ public enum PcState
     PrepaySession,
     PostpaySession,
     LimitReached,
-    OfflineUnlocked
+    ManualUnlocked
 }
 
 public enum SessionType
@@ -42,7 +42,8 @@ public enum EventType
     LimitReached,
     OfflineUnlock,
     PowerCommand,
-    AuthRejected
+    AuthRejected,
+    ManualUnlock
 }
 
 public enum LockScreenLanguage
