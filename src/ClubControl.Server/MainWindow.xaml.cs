@@ -210,9 +210,12 @@ public partial class MainWindow : Window
     // Right-clicking anywhere that isn't a row (empty space, the header) suppresses the context
     // menu entirely instead of opening it with nothing valid to act on. ----
 
+    private bool _rightClickedCard;
+
     private void PcList_PreviewMouseRightButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
     {
         var card = FindAncestor<ListBoxItem>((DependencyObject)e.OriginalSource);
+        _rightClickedCard = card?.Content is PcRow;
         if (card?.Content is not PcRow pcRow)
         {
             e.Handled = true;
@@ -224,6 +227,15 @@ public partial class MainWindow : Window
             PcList.SelectedItems.Clear();
             PcList.SelectedItems.Add(pcRow);
         }
+    }
+
+    // Handling the mouse-down alone doesn't stop the menu: it opens on mouse-up, so cancel it here.
+    // A negative CursorLeft means it was opened from the keyboard (menu key), which needs a selection.
+    private void PcList_ContextMenuOpening(object sender, ContextMenuEventArgs e)
+    {
+        var fromKeyboard = e.CursorLeft < 0;
+        if (fromKeyboard ? PcList.SelectedItems.Count == 0 : !_rightClickedCard)
+            e.Handled = true;
     }
 
     private static T? FindAncestor<T>(DependencyObject? current) where T : DependencyObject
@@ -274,6 +286,8 @@ public partial class MainWindow : Window
     {
         _dragging = false;
         _dragAnchor = FindAncestor<ListBoxItem>((DependencyObject)e.OriginalSource)?.Content as PcRow;
+        if (_dragAnchor is not null)
+            _cursorId = _anchorId = _dragAnchor.Id;
 
         // A click on empty space (between cards, a section header, the blank area) deselects everything.
         // Ctrl-click is left alone so a slip while building a multi-selection doesn't wipe it, and the
@@ -348,19 +362,146 @@ public partial class MainWindow : Window
         }
     }
 
-    private void PcList_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+    // Listened to on the whole window (not just the list), so it works whichever control has focus -
+    // otherwise Enter would "click" a toolbar button that was focused by an earlier click.
+    private void Window_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
     {
-        switch (e.Key)
+        var isArrow = e.Key is System.Windows.Input.Key.Up or System.Windows.Input.Key.Down
+            or System.Windows.Input.Key.Left or System.Windows.Input.Key.Right;
+        if (!isArrow && e.Key is not (System.Windows.Input.Key.Enter or System.Windows.Input.Key.Delete))
+            return;
+
+        // Let real text boxes keep their own Enter/Delete/arrow behaviour.
+        var focused = System.Windows.Input.Keyboard.FocusedElement;
+        if (focused is System.Windows.Controls.Primitives.TextBoxBase or System.Windows.Controls.PasswordBox
+            or System.Windows.Controls.ComboBox)
+            return;
+
+        if (isArrow)
         {
-            case System.Windows.Input.Key.Enter:
-                OnStart(sender, e);
-                e.Handled = true;
-                break;
-            case System.Windows.Input.Key.Delete:
-                OnStop(sender, e);
-                e.Handled = true;
-                break;
+            // Arrows inside another list (the event log) just scroll that list.
+            if (focused is DependencyObject d && FindAncestor<ListBox>(d) is { } otherList && otherList != PcList)
+                return;
+
+            e.Handled = true;
+            MoveSelection(e.Key);
+            return;
         }
+
+        e.Handled = true;
+        if (e.IsRepeat)
+            return;
+
+        if (e.Key == System.Windows.Input.Key.Enter)
+            OnStart(sender, e);
+        else
+            OnStop(sender, e);
+    }
+
+    // ---- arrow keys: move through the cards the way they look on screen.
+    //   Arrow            select only the next card
+    //   Shift + arrow    select every card (in list order) from the starting card to the next one
+    //   Ctrl + arrow     add the next card to what is already selected
+    //   Ctrl+Shift+arrow add that whole range to what is already selected ----
+
+    private int? _cursorId;   // the card the last arrow press landed on
+    private int? _anchorId;   // where a Shift range starts (set by clicks and plain/Ctrl arrows)
+
+    private void MoveSelection(System.Windows.Input.Key key)
+    {
+        var cards = FindDescendants<ListBoxItem>(PcList).Where(c => c.Content is PcRow).ToList();
+        if (cards.Count == 0)
+            return;
+
+        var shift = System.Windows.Input.Keyboard.Modifiers.HasFlag(System.Windows.Input.ModifierKeys.Shift);
+        var ctrl = System.Windows.Input.Keyboard.Modifiers.HasFlag(System.Windows.Input.ModifierKeys.Control);
+
+        // Where we are now: the last card moved to, else the last selected card, else nothing (first press picks the first card).
+        var current = cards.FirstOrDefault(c => ((PcRow)c.Content).Id == _cursorId)
+            ?? cards.LastOrDefault(c => c.IsSelected);
+
+        var target = current is null ? cards[0] : FindNeighbour(cards, current, key);
+        if (target is null)
+            return;
+
+        var targetRow = (PcRow)target.Content;
+        _cursorId = targetRow.Id;
+
+        var wanted = new HashSet<PcRow>();
+        if (ctrl)
+            wanted.UnionWith(PcList.SelectedItems.Cast<PcRow>());
+
+        if (shift)
+        {
+            // Same list-order range as drag-select: the anchor card to the target card.
+            var ordered = PcList.Items.Cast<PcRow>().ToList();
+            var anchor = ordered.FirstOrDefault(r => r.Id == _anchorId) ?? (current?.Content as PcRow) ?? targetRow;
+            _anchorId = anchor.Id;
+            var from = ordered.IndexOf(anchor);
+            var to = ordered.IndexOf(targetRow);
+            foreach (var row in ordered.Skip(Math.Min(from, to)).Take(Math.Abs(from - to) + 1))
+                wanted.Add(row);
+        }
+        else
+        {
+            wanted.Add(targetRow);
+            _anchorId = targetRow.Id;
+        }
+
+        foreach (var row in PcList.SelectedItems.Cast<PcRow>().Where(r => !wanted.Contains(r)).ToList())
+            PcList.SelectedItems.Remove(row);
+        foreach (var row in wanted.Where(r => !PcList.SelectedItems.Contains(r)))
+            PcList.SelectedItems.Add(row);
+
+        target.BringIntoView();
+    }
+
+    /// <summary>The closest card in the pressed direction: nearest along that axis, with sideways drift penalised.</summary>
+    private ListBoxItem? FindNeighbour(List<ListBoxItem> cards, ListBoxItem current, System.Windows.Input.Key key)
+    {
+        Rect BoundsOf(ListBoxItem card) => card.TransformToAncestor(PcList).TransformBounds(new Rect(card.RenderSize));
+
+        var from = BoundsOf(current);
+        ListBoxItem? best = null;
+        var bestScore = double.MaxValue;
+
+        foreach (var card in cards.Where(c => c != current))
+        {
+            var to = BoundsOf(card);
+            double gap, sideways;
+            switch (key)
+            {
+                case System.Windows.Input.Key.Right:
+                    gap = to.Left - from.Right;
+                    sideways = Math.Abs((to.Top + to.Height / 2) - (from.Top + from.Height / 2));
+                    break;
+                case System.Windows.Input.Key.Left:
+                    gap = from.Left - to.Right;
+                    sideways = Math.Abs((to.Top + to.Height / 2) - (from.Top + from.Height / 2));
+                    break;
+                case System.Windows.Input.Key.Down:
+                    gap = to.Top - from.Bottom;
+                    sideways = Math.Abs((to.Left + to.Width / 2) - (from.Left + from.Width / 2));
+                    break;
+                default:
+                    gap = from.Top - to.Bottom;
+                    sideways = Math.Abs((to.Left + to.Width / 2) - (from.Left + from.Width / 2));
+                    break;
+            }
+
+            // Must lie beyond the current card in that direction (a pixel of slack for margins/rounding).
+            if (gap < -1)
+                continue;
+
+            var score = Math.Max(gap, 0) + 2 * sideways;
+            if (score < bestScore)
+            {
+                bestScore = score;
+                best = card;
+            }
+        }
+
+        return best;
     }
 
     // ---- toolbar ----
