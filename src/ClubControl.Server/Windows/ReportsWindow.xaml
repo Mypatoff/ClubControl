@@ -26,6 +26,7 @@
         </Border>
 
         <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0">
+            <Button x:Name="ExportButton" Width="90" Margin="0,0,8,0" Style="{StaticResource SecondaryButtonStyle}" Click="OnExport" />
             <Button x:Name="CloseButton" Width="90" Style="{StaticResource SecondaryButtonStyle}" Click="OnClose" IsCancel="True" />
         </StackPanel>
 

@@ -1,6 +1,5 @@
 <Application x:Class="ClubControl.Server.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             StartupUri="MainWindow.xaml">
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <!-- Theme is applied in code (ThemeManager) so it can be switched at runtime - see App.xaml.cs. -->
 </Application>

@@ -101,9 +101,17 @@ public partial class MainWindow : Window
         var db = scope.ServiceProvider.GetRequiredService<ClubDbContext>();
         var sessionService = scope.ServiceProvider.GetRequiredService<SessionService>();
 
-        var pcs = await db.Pcs.AsNoTracking().OrderBy(p => p.Number).ToListAsync();
         var tariffNames = await db.Tariffs.AsNoTracking().ToDictionaryAsync(t => t.Id, t => t.Name);
         var snapshots = await sessionService.GetActiveSessionSnapshotsAsync();
+
+        // Disabled resources are hidden from this operational panel entirely (SPEC section 8) -
+        // they're still locked and excluded from "all" actions, but a disabled PC/billiard has no
+        // visible row here to be confused by. Settings > Computers is where they're re-enabled or
+        // actually deleted. The one exception is a disabled PC that somehow still has an active
+        // session (e.g. disabled mid-session) - that must stay visible, since hiding it would also
+        // hide the only place to free/stop it and collect payment.
+        var pcs = await db.Pcs.AsNoTracking().OrderBy(p => p.Number).ToListAsync();
+        pcs = pcs.Where(p => p.Enabled || snapshots.ContainsKey(p.Id)).ToList();
 
         var selectedIds = PcGrid.SelectedItems.Cast<PcRow>().Select(p => p.Id).ToHashSet();
         var rows = pcs.Select(pc => BuildRow(pc, tariffNames, snapshots.GetValueOrDefault(pc.Id))).ToList();

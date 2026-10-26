@@ -99,9 +99,7 @@ public partial class LoginWindow : Window
         {
             if (!PasswordPolicy.IsValid(password, out var error))
             {
-                ErrorText.Text = error == "PasswordTooShort"
-                    ? Strings.Format(error, PasswordPolicy.MinLength)
-                    : Strings.Get(error!);
+                ErrorText.Text = Strings.Get(error!);
                 return;
             }
 

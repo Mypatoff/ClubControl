@@ -248,7 +248,7 @@
     <value>У каждого тарифа цена должна быть больше 0, а минимальная оплата не может быть больше максимальной.</value>
   </data>
   <data name="ComputersHint" xml:space="preserve">
-    <value>Назначьте номер и тариф новому ПК или бильярду, чтобы его можно было использовать. Отключённые строки остаются заблокированными.</value>
+    <value>Назначьте номер и тариф новому ПК или бильярду, чтобы его можно было использовать. Отключённые строки остаются заблокированными и пропадают из главной панели.</value>
   </data>
   <data name="LabelNumber" xml:space="preserve">
     <value>Номер</value>
@@ -285,6 +285,18 @@
   </data>
   <data name="CannotDeleteResourceWithHistory" xml:space="preserve">
     <value>У этого компьютера/бильярда есть история сессий, поэтому его нельзя удалить - это удалило бы его и из прошлых отчётов. Снимите галочку «Включён», чтобы скрыть его вместо удаления.</value>
+  </data>
+  <data name="SelectATariffToDelete" xml:space="preserve">
+    <value>Выберите тариф для удаления.</value>
+  </data>
+  <data name="DeleteTariffConfirm" xml:space="preserve">
+    <value>Удалить этот тариф? Это действие нельзя отменить.</value>
+  </data>
+  <data name="CannotDeleteTariffInUse" xml:space="preserve">
+    <value>Этот тариф назначен компьютеру или бильярду, поэтому его нельзя удалить. Сначала назначьте другой тариф.</value>
+  </data>
+  <data name="TariffKindMismatch" xml:space="preserve">
+    <value>Компьютер может использовать только тариф для компьютеров, а бильярд - только тариф для бильярда. Проверьте вкладку «Компьютеры».</value>
   </data>
   <data name="ColumnEnabled" xml:space="preserve">
     <value>Включён</value>
@@ -468,5 +480,8 @@
   </data>
   <data name="Refresh" xml:space="preserve">
     <value>Обновить</value>
+  </data>
+  <data name="Export" xml:space="preserve">
+    <value>Экспорт</value>
   </data>
 </root>

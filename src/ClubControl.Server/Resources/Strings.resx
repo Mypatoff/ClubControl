@@ -248,7 +248,7 @@
     <value>Every tariff needs a price above 0, and the minimum payment cannot be greater than the maximum.</value>
   </data>
   <data name="ComputersHint" xml:space="preserve">
-    <value>Assign a number and tariff to a new PC or billiard so it can be used. Disabled rows stay locked.</value>
+    <value>Assign a number and tariff to a new PC or billiard so it can be used. Disabled rows stay locked and disappear from the main panel.</value>
   </data>
   <data name="LabelNumber" xml:space="preserve">
     <value>Number</value>
@@ -285,6 +285,18 @@
   </data>
   <data name="CannotDeleteResourceWithHistory" xml:space="preserve">
     <value>This computer/billiard has session history and can't be deleted, since that would also erase it from past reports. Uncheck "Enabled" instead to hide it.</value>
+  </data>
+  <data name="SelectATariffToDelete" xml:space="preserve">
+    <value>Select a tariff to delete.</value>
+  </data>
+  <data name="DeleteTariffConfirm" xml:space="preserve">
+    <value>Delete this tariff? This cannot be undone.</value>
+  </data>
+  <data name="CannotDeleteTariffInUse" xml:space="preserve">
+    <value>This tariff is assigned to a computer or billiard and can't be deleted. Reassign it to a different tariff first.</value>
+  </data>
+  <data name="TariffKindMismatch" xml:space="preserve">
+    <value>A computer can only use a computer tariff, and a billiard can only use a billiard tariff. Check the Computers tab.</value>
   </data>
   <data name="ColumnEnabled" xml:space="preserve">
     <value>Enabled</value>
@@ -468,5 +480,8 @@
   </data>
   <data name="Refresh" xml:space="preserve">
     <value>Refresh</value>
+  </data>
+  <data name="Export" xml:space="preserve">
+    <value>Export</value>
   </data>
 </root>

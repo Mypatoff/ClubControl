@@ -79,6 +79,7 @@ public partial class SettingsWindow : Window
         AutoShutdownLabel.Text = Strings.Get("LabelAutoShutdown");
 
         AddTariffButton.Content = Strings.Get("ButtonAdd");
+        DeleteTariffButton.Content = "🗑 " + Strings.Get("ButtonDelete");
         TariffNameColumn.Header = Strings.Get("LabelName");
         TariffKindColumn.Header = Strings.Get("ColumnKind");
         TariffPriceColumn.Header = Strings.Get("LabelPricePerHour");
@@ -156,6 +157,34 @@ public partial class SettingsWindow : Window
         _tariffs.Add(tariff);
     }
 
+    private void OnDeleteTariff(object sender, RoutedEventArgs e)
+    {
+        if (TariffGrid.SelectedItem is not Tariff tariff)
+        {
+            MessageBox.Show(Strings.Get("SelectATariffToDelete"), Strings.Get("ConfirmTitle"),
+                MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        // A PC/billiard currently assigned to this tariff (including an edit made earlier in this
+        // same dialog, before Save) would be left pointing at a tariff that no longer exists -
+        // block that and point the admin at reassigning it first, same as OnDeleteResource does
+        // for session history.
+        if (_pcs.Any(p => p.TariffId == tariff.Id))
+        {
+            MessageBox.Show(Strings.Get("CannotDeleteTariffInUse"), Strings.Get("ConfirmTitle"),
+                MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+
+        if (MessageBox.Show(Strings.Get("DeleteTariffConfirm"), Strings.Get("ConfirmTitle"),
+                MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes)
+            return;
+
+        _db.Tariffs.Remove(tariff);
+        _tariffs.Remove(tariff);
+    }
+
     private async void OnAddComputer(object sender, RoutedEventArgs e) => await AddResourceAsync(ResourceKind.Computer);
 
     private async void OnAddBilliard(object sender, RoutedEventArgs e) => await AddResourceAsync(ResourceKind.Billiard);
@@ -225,6 +254,14 @@ public partial class SettingsWindow : Window
         if (_tariffs.Any(t => !BillingCalculator.IsValidTariff(t.PricePerHourUzs, t.MinPaymentUzs, t.MaxPaymentUzs)))
         {
             ErrorText.Text = Strings.Get("TariffPriceAndLimitsMustBeValid");
+            return;
+        }
+
+        // A computer picking a billiard tariff (or vice versa) wouldn't crash - it would just bill
+        // under the wrong class and quietly corrupt the per-class report breakdown (SPEC section 9).
+        if (_pcs.Any(p => p.TariffId.HasValue && _tariffs.Any(t => t.Id == p.TariffId.Value && t.Kind != p.Kind)))
+        {
+            ErrorText.Text = Strings.Get("TariffKindMismatch");
             return;
         }
 

@@ -52,7 +52,8 @@
             <TabItem x:Name="TariffsTab">
                 <DockPanel Margin="12">
                     <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Margin="0,8,0,0">
-                        <Button x:Name="AddTariffButton" Style="{StaticResource SecondaryButtonStyle}" Click="OnAddTariff" />
+                        <Button x:Name="AddTariffButton" Margin="0,0,8,0" Style="{StaticResource SecondaryButtonStyle}" Click="OnAddTariff" />
+                        <Button x:Name="DeleteTariffButton" Style="{StaticResource SecondaryButtonStyle}" Click="OnDeleteTariff" />
                     </StackPanel>
                     <DataGrid x:Name="TariffGrid" AutoGenerateColumns="False" CanUserAddRows="False" BorderThickness="0">
                         <DataGrid.Columns>
