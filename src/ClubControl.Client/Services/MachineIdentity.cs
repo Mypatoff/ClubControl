@@ -30,10 +30,23 @@ public static class MachineIdentity
 
     public static string GetMacAddress()
     {
-        var nic = NetworkInterface.GetAllNetworkInterfaces()
-            .FirstOrDefault(n => n.OperationalStatus == OperationalStatus.Up &&
-                                  n.NetworkInterfaceType != NetworkInterfaceType.Loopback);
+        var candidates = NetworkInterface.GetAllNetworkInterfaces()
+            .Where(n => n.OperationalStatus == OperationalStatus.Up &&
+                        n.NetworkInterfaceType != NetworkInterfaceType.Loopback)
+            .ToList();
+
+        // Prefer the real Ethernet/Wi-Fi adapter that actually has a default gateway (the real LAN
+        // uplink) over a virtual adapter added by VPN software (Radmin VPN, Hyper-V, VMware, etc.) -
+        // those often report as NetworkInterfaceType.Ethernet too, but don't carry a gateway of
+        // their own, so this is what actually tells them apart. Falls back to the first "up"
+        // adapter if nothing matches, same as before, rather than ever reporting no MAC at all.
+        var nic = candidates.FirstOrDefault(IsRealLanAdapter) ?? candidates.FirstOrDefault();
 
         return nic?.GetPhysicalAddress().ToString() ?? "";
     }
+
+    private static bool IsRealLanAdapter(NetworkInterface nic) =>
+        (nic.NetworkInterfaceType == NetworkInterfaceType.Ethernet ||
+         nic.NetworkInterfaceType == NetworkInterfaceType.Wireless80211) &&
+        nic.GetIPProperties().GatewayAddresses.Count > 0;
 }
