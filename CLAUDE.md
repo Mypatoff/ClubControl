@@ -9,7 +9,8 @@ C# .NET 8. WPF for Server (admin panel + hosted ASP.NET Core/SignalR) and Client
 - ClubControl.Shared: DTOs, enums, contracts, constants
 - ClubControl.Server: server + admin panel (tray app)
 - ClubControl.Client: lock screen + timer on gaming PCs
-- ClubControl.Tests: billing/session tests
+- ClubControl.Tests: billing maths and other cross-platform tests
+- ClubControl.Server.Tests: SessionService tests on a real in-memory SQLite database (Windows only, references Server)
 
 ## Rules
 - Work only on the current phase. Do not start the next phase.

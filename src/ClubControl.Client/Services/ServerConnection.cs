@@ -27,7 +27,7 @@ public class ServerConnection : IAsyncDisposable
         _machineGuid = machineGuid;
         _connection = new HubConnectionBuilder()
             .WithUrl($"http://{serverIp}:{port}{NetworkConstants.HubRoute}")
-            .WithAutomaticReconnect()
+            .WithAutomaticReconnect(new ReconnectForeverPolicy())
             .Build();
 
         _connection.Reconnecting += _ => { StateChanged?.Invoke(_connection.State); return Task.CompletedTask; };
@@ -62,7 +62,21 @@ public class ServerConnection : IAsyncDisposable
 
     public async Task ConnectAsync()
     {
-        await _connection.StartAsync();
+        // The very first connect is not covered by automatic reconnect, so retry it here as well:
+        // the server may be mid-restart at the moment this PC boots (SPEC section 2: reconnect forever).
+        while (true)
+        {
+            try
+            {
+                await _connection.StartAsync();
+                break;
+            }
+            catch (Exception)
+            {
+                await Task.Delay(ReconnectForeverPolicy.SteadyDelay);
+            }
+        }
+
         StateChanged?.Invoke(_connection.State);
 
         _heartbeatCts = new CancellationTokenSource();
@@ -105,5 +119,17 @@ public class ServerConnection : IAsyncDisposable
     {
         _heartbeatCts?.Cancel();
         await _connection.DisposeAsync();
+    }
+
+    /// <summary>
+    /// SignalR's default reconnect gives up after about 40 seconds and then never tries again, which
+    /// would leave this PC offline-unlocked until it is rebooted. SPEC section 2 says reconnect forever.
+    /// </summary>
+    private sealed class ReconnectForeverPolicy : IRetryPolicy
+    {
+        public static readonly TimeSpan SteadyDelay = TimeSpan.FromSeconds(5);
+
+        public TimeSpan? NextRetryDelay(RetryContext retryContext) =>
+            retryContext.PreviousRetryCount == 0 ? TimeSpan.Zero : SteadyDelay;
     }
 }

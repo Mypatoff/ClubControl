@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using ClubControl.Server.Data;
@@ -22,6 +23,7 @@ public partial class App : Application
 {
     private WebApplication? _host;
     private System.Windows.Forms.NotifyIcon? _trayIcon;
+    private Mutex? _singleInstanceMutex;
 
     public IServiceProvider? Services => _host?.Services;
 
@@ -49,6 +51,22 @@ public partial class App : Application
     protected override async void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
+
+        // SPEC section 1: single instance only. A second copy could not bind the same ports and
+        // would fail with a raw socket error, so say so plainly and exit. "Global\" makes the
+        // check work across Windows user sessions too.
+        _singleInstanceMutex = new Mutex(initiallyOwned: true, @"Global\ClubControl.Server", out var isFirstInstance);
+        if (!isFirstInstance)
+        {
+            MessageBox.Show(
+                "ClubControl server is already running - look for its icon in the system tray.\n" +
+                "ClubControl сервер уже запущен - найдите его значок в системном трее.",
+                "ClubControl", MessageBoxButton.OK, MessageBoxImage.Information);
+            _singleInstanceMutex.Dispose();
+            _singleInstanceMutex = null;
+            Shutdown();
+            return;
+        }
 
         // This is a tray app (SPEC section 1): closing the main window only hides it, so closing it
         // must never shut down the whole application on its own.
@@ -218,6 +236,10 @@ public partial class App : Application
 
         if (_host is not null)
             await _host.StopAsync();
+
+        // No ReleaseMutex: it must run on the owning thread, and Windows frees the mutex when the
+        // process exits anyway.
+        _singleInstanceMutex?.Dispose();
 
         base.OnExit(e);
     }
