@@ -367,9 +367,6 @@
   <data name="ButtonStart" xml:space="preserve">
     <value>Start</value>
   </data>
-  <data name="FreeSessionTitle" xml:space="preserve">
-    <value>Free</value>
-  </data>
   <data name="LabelNote" xml:space="preserve">
     <value>Note (optional)</value>
   </data>
@@ -474,9 +471,6 @@
   </data>
   <data name="TotalHours" xml:space="preserve">
     <value>Total hours</value>
-  </data>
-  <data name="FreeMinutes" xml:space="preserve">
-    <value>Free minutes</value>
   </data>
   <data name="ByPc" xml:space="preserve">
     <value>By PC</value>

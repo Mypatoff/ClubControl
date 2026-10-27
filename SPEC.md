@@ -74,10 +74,10 @@ One club, one admin laptop (server), up to ~30 gaming PCs (clients) on the same 
   - Open session, counts up. Current cost = started minutes × price/60, never below min.
   - When cost reaches the tariff maximum → client goes to "Limit reached" (locked), session waits for the admin.
   - Admin ends it → payment window shows amount due → admin clicks "Paid" → session closed, PC locked.
-- **Free time:** start dialog has a "Free" option with an optional note; amount is 0, reported separately.
-- **Move:** move an active session to a FREE PC. A session is stored as segments (PC, price per hour, start, end).
-  - Prepay: remaining money is recalculated into minutes at the new PC's price.
-  - Postpay: the cost so far is kept; counting continues at the new PC's price.
+- **Note:** the start dialog has an optional note (e.g. "birthday group"); it is saved with the session and shown in the card tooltip and the event log. There is no free-time option any more (older free sessions still show in reports).
+- **Move:** select two cards of the same kind and tariff and press Move: a running session moves onto a free card, or two running sessions swap. A session is stored as segments (PC, price per hour, start, end).
+  - Prepay: the remaining time is unchanged (same tariff, so the price is the same).
+  - Postpay: the cost so far is kept; counting continues at the same price.
 - **Power cuts / restarts:** every session and every PC state is saved to the database immediately. On server start, active sessions are restored. A prepay session whose end time passed while the server was down is closed at its planned end time. Postpay keeps counting (customer was playing).
 
 ## 6. Power control
@@ -107,7 +107,7 @@ One club, one admin laptop (server), up to ~30 gaming PCs (clients) on the same 
 ## 9. Reports
 
 - Daily, weekly, monthly (date picker).
-- Total income, number of sessions, total hours, free minutes.
+- Total income, number of sessions, total hours.
 - Breakdown per PC, per class (Standard / VIP), per session type (prepay / postpay).
 
 ## 10. Reliability

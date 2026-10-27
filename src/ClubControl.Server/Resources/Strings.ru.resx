@@ -367,9 +367,6 @@
   <data name="ButtonStart" xml:space="preserve">
     <value>Старт</value>
   </data>
-  <data name="FreeSessionTitle" xml:space="preserve">
-    <value>Бесплатно</value>
-  </data>
   <data name="LabelNote" xml:space="preserve">
     <value>Заметка (необязательно)</value>
   </data>
@@ -474,9 +471,6 @@
   </data>
   <data name="TotalHours" xml:space="preserve">
     <value>Часов всего</value>
-  </data>
-  <data name="FreeMinutes" xml:space="preserve">
-    <value>Бесплатных минут</value>
   </data>
   <data name="ByPc" xml:space="preserve">
     <value>По ПК</value>

@@ -24,7 +24,7 @@ public class ReportsService
         _db = db;
     }
 
-    public record Totals(int TotalIncomeUzs, int SessionCount, double TotalHours, double FreeMinutes);
+    public record Totals(int TotalIncomeUzs, int SessionCount, double TotalHours);
     public record PcRow(int? PcNumber, string PcName, int IncomeUzs, int SessionCount, double Hours);
     public record TariffRow(string TariffName, int IncomeUzs, int SessionCount, double Hours);
     public record TypeRow(SessionType Type, int IncomeUzs, int SessionCount, double Hours);
@@ -46,8 +46,7 @@ public class ReportsService
         var totals = new Totals(
             TotalIncomeUzs: sessions.Sum(s => s.AmountUzs),
             SessionCount: sessions.Count,
-            TotalHours: sessions.Sum(HoursOf),
-            FreeMinutes: sessions.Where(s => s.IsFree).Sum(s => HoursOf(s) * 60));
+            TotalHours: sessions.Sum(HoursOf));
 
         var byPc = sessions
             .GroupBy(s => (Number: s.Pc?.Number, Name: s.Pc?.Name ?? ""))

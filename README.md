@@ -128,7 +128,7 @@ auto-discovery:
 - **Shutdown / Restart**: with a client online, select it (or several, or none for "all"), click
   "Shut down" or "Restart". If any target has an active session you are asked to confirm first.
 - **Reports**: open Reports, switch between the Computers/Other buttons, try Daily/Weekly/
-  Monthly and the manual date pickers after running a few test sessions (prepay, postpay, free) on
+  Monthly and the manual date pickers after running a few test sessions (prepay, postpay) on
   both kinds. Check totals and the per-PC/per-tariff/per-type breakdowns match what you started,
   and that an "Other" session never shows up in the Computers report or vice versa.
 - **Manual resources**: click "Add Computer" and "Add Named Resource" (it asks for a name, e.g. "Table 3"), confirm both appear in the main
@@ -152,7 +152,7 @@ auto-discovery:
   upgrading an existing installation rather than starting fresh, this is **disabled (0)** by
   default on your existing settings row - set it explicitly in Settings if you want it.
 - **Bulk start**: select several PCs (or named resources) that share one tariff (Ctrl/Shift-click or
-  drag), click Start (or right-click > Free) - one dialog should start identical sessions on all
+  drag), click Start - one dialog should start identical sessions on all
   of them. Try mixing PCs with different tariffs selected together - it should refuse with a clear
   message instead of guessing. Try it with one of the selected PCs already mid-session - it should
   start the rest and tell you which one it skipped.

@@ -30,6 +30,7 @@ public partial class StartSessionWindow : Window
         TargetText.Text = TargetHeader.Build(targets);
         PrepayMoneyRadio.Content = Strings.Get("PrepayByMoney");
         PostpayRadio.Content = Strings.Get("Postpay");
+        NoteLabel.Text = Strings.Get("LabelNote");
         CancelButton.Content = Strings.Get("Cancel");
         StartButton.Content = Strings.Get("ButtonStart");
 
@@ -68,9 +69,9 @@ public partial class StartSessionWindow : Window
             try
             {
                 if (PrepayMoneyRadio.IsChecked == true)
-                    await sessionService.StartPrepayByMoneyAsync(target.MachineGuid, ParseInt(MoneyBox.Text));
+                    await sessionService.StartPrepayByMoneyAsync(target.MachineGuid, ParseInt(MoneyBox.Text), NoteBox.Text);
                 else
-                    await sessionService.StartPostpayAsync(target.MachineGuid);
+                    await sessionService.StartPostpayAsync(target.MachineGuid, NoteBox.Text);
             }
             catch (Exception ex)
             {

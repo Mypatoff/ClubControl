@@ -367,9 +367,6 @@
   <data name="ButtonStart" xml:space="preserve">
     <value>Boshlash</value>
   </data>
-  <data name="FreeSessionTitle" xml:space="preserve">
-    <value>Bepul</value>
-  </data>
   <data name="LabelNote" xml:space="preserve">
     <value>Izoh (ixtiyoriy)</value>
   </data>
@@ -474,9 +471,6 @@
   </data>
   <data name="TotalHours" xml:space="preserve">
     <value>Jami soat</value>
-  </data>
-  <data name="FreeMinutes" xml:space="preserve">
-    <value>Bepul daqiqalar</value>
   </data>
   <data name="ByPc" xml:space="preserve">
     <value>Kompyuter boʻyicha</value>

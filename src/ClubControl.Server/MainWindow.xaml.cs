@@ -53,7 +53,6 @@ public partial class MainWindow : Window
         ReportsButton.Content = "📊 " + Strings.Get("ToolbarReports");
 
         CtxStart.Header = Strings.Get("ToolbarStart");
-        CtxFree.Header = Strings.Get("FreeSessionTitle");
         CtxStop.Header = Strings.Get("ToolbarStop");
         CtxMove.Header = Strings.Get("ToolbarMove");
         CtxExtend.Header = Strings.Get("ToolbarExtend");
@@ -204,6 +203,7 @@ public partial class MainWindow : Window
             StartDisplay = start,
             EndDisplay = end,
             RemainingDisplay = remaining,
+            Note = snap?.Note ?? "",
             ClientVersion = pc.IsOnline ? ClubHub.GetClientVersion(pc.MachineGuid) : ""
         };
     }
@@ -522,9 +522,9 @@ public partial class MainWindow : Window
     }
 
     /// <summary>
-    /// Validates the current selection for Start/Free (SPEC extension: bulk-start several PCs or
+    /// Validates the current selection for Start (SPEC extension: bulk-start several PCs or
     /// resources at once, as long as they all share one tariff - that's what makes "apply the same
-    /// prepay/postpay/free parameters to each" unambiguous). Shows the relevant error and returns
+    /// prepay/postpay parameters to each" unambiguous). Shows the relevant error and returns
     /// null if the selection isn't usable.
     /// </summary>
     private List<PcRow>? GetReadySelectionForStart()
@@ -561,17 +561,6 @@ public partial class MainWindow : Window
             return;
 
         var window = new StartSessionWindow(Services, targets) { Owner = this };
-        if (window.ShowDialog() == true)
-            await RefreshAsync();
-    }
-
-    private async void OnFree(object sender, RoutedEventArgs e)
-    {
-        var targets = GetReadySelectionForStart();
-        if (targets is null)
-            return;
-
-        var window = new FreeSessionWindow(Services, targets) { Owner = this };
         if (window.ShowDialog() == true)
             await RefreshAsync();
     }

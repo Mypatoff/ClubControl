@@ -280,20 +280,20 @@ public class SessionServiceTests : SessionTestBase
     }
 
     [Fact]
-    public async Task Free_time_is_recorded_as_free_with_a_zero_amount()
+    public async Task The_note_typed_at_start_is_saved_with_the_session_and_is_optional()
     {
-        using var db = NewDb();
-        var service = ServiceFor(db);
-        await service.StartFreeAsync(Pc1, "tournament winner");
+        using (var db = NewDb())
+        {
+            var service = ServiceFor(db);
+            await service.StartPrepayByMoneyAsync(Pc1, 5_000, "  birthday group  ");
+            await service.StartPostpayAsync(Pc2, "   ");
+        }
 
-        var session = await GetOnlySessionAsync();
-        Assert.True(session.IsFree);
-        Assert.Equal(SessionType.Free, session.Type);
-        Assert.Equal("tournament winner", session.Note);
-
-        await service.EndSessionEarlyAsync(Pc1);
-
-        Assert.Equal(0, (await GetOnlySessionAsync()).AmountUzs);
+        using var check = NewDb();
+        var sessions = await check.Sessions.AsNoTracking().Include(s => s.Pc).ToListAsync();
+        Assert.Equal("birthday group", sessions.Single(s => s.Pc!.MachineGuid == Pc1).Note);
+        Assert.Null(sessions.Single(s => s.Pc!.MachineGuid == Pc2).Note);
+        Assert.Contains(await check.EventLogEntries.ToListAsync(), e => e.Message.Contains("birthday group"));
     }
 
     [Fact]

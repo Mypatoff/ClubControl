@@ -137,7 +137,6 @@
                 <ListBox.ContextMenu>
                     <ContextMenu>
                         <MenuItem x:Name="CtxStart" InputGestureText="Enter" Click="OnStart" />
-                        <MenuItem x:Name="CtxFree" Click="OnFree" />
                         <MenuItem x:Name="CtxStop" InputGestureText="Delete" Click="OnStop" />
                         <MenuItem x:Name="CtxMove" Click="OnMove" />
                         <MenuItem x:Name="CtxExtend" Click="OnExtend" />

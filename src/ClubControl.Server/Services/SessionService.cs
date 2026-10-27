@@ -32,7 +32,7 @@ public class SessionService
 
     // ---- prepay ----
 
-    public async Task StartPrepayByMoneyAsync(Guid machineGuid, int moneyUzs)
+    public async Task StartPrepayByMoneyAsync(Guid machineGuid, int moneyUzs, string? note = null)
     {
         var pc = await GetReadyPcAsync(machineGuid);
         var tariff = await GetTariffAsync(pc.TariffId!.Value);
@@ -45,10 +45,10 @@ public class SessionService
                 $"Payment must be between {tariff.MinPaymentUzs} and {tariff.MaxPaymentUzs} UZS, and buy at least one minute.");
 
         var minutes = BillingCalculator.MinutesForMoney(moneyUzs, tariff.PricePerHourUzs);
-        await StartPrepayAsync(pc, tariff, minutes, moneyUzs);
+        await StartPrepayAsync(pc, tariff, minutes, moneyUzs, note);
     }
 
-    public async Task StartPrepayByTimeAsync(Guid machineGuid, int minutes)
+    public async Task StartPrepayByTimeAsync(Guid machineGuid, int minutes, string? note = null)
     {
         var pc = await GetReadyPcAsync(machineGuid);
         var tariff = await GetTariffAsync(pc.TariffId!.Value);
@@ -57,10 +57,10 @@ public class SessionService
         if (!BillingCalculator.IsValidPrepayPayment(price, tariff.MinPaymentUzs, tariff.MaxPaymentUzs))
             throw new InvalidOperationException($"That much time costs {price} UZS, outside {tariff.MinPaymentUzs}-{tariff.MaxPaymentUzs} UZS.");
 
-        await StartPrepayAsync(pc, tariff, minutes, price);
+        await StartPrepayAsync(pc, tariff, minutes, price, note);
     }
 
-    private async Task StartPrepayAsync(Pc pc, Tariff tariff, int minutes, int paidUzs)
+    private async Task StartPrepayAsync(Pc pc, Tariff tariff, int minutes, int paidUzs, string? note)
     {
         var now = DateTime.UtcNow;
         var session = new Session
@@ -70,6 +70,7 @@ public class SessionService
             StartUtc = now,
             PlannedEndUtc = now.AddMinutes(minutes),
             AmountUzs = paidUzs,
+            Note = CleanNote(note),
         };
         session.Segments.Add(new SessionSegment { PcId = pc.Id, PricePerHourUzs = tariff.PricePerHourUzs, StartUtc = now });
         _db.Sessions.Add(session);
@@ -82,7 +83,7 @@ public class SessionService
         await using (var transaction = await _db.Database.BeginTransactionAsync())
         {
             await _db.SaveChangesAsync();
-            LogEvent(EventType.SessionStarted, pc.Id, session.Id, $"Prepay session started: {minutes} min, {paidUzs} UZS");
+            LogEvent(EventType.SessionStarted, pc.Id, session.Id, WithNote($"Prepay session started: {minutes} min, {paidUzs} UZS", session.Note));
             await _db.SaveChangesAsync();
             await transaction.CommitAsync();
         }
@@ -141,15 +142,15 @@ public class SessionService
         });
     }
 
-    // ---- postpay / free ----
+    // ---- postpay ----
 
-    public async Task StartPostpayAsync(Guid machineGuid)
+    public async Task StartPostpayAsync(Guid machineGuid, string? note = null)
     {
         var pc = await GetReadyPcAsync(machineGuid);
         var tariff = await GetTariffAsync(pc.TariffId!.Value);
         var now = DateTime.UtcNow;
 
-        var session = new Session { PcId = pc.Id, Type = SessionType.Postpay, StartUtc = now };
+        var session = new Session { PcId = pc.Id, Type = SessionType.Postpay, StartUtc = now, Note = CleanNote(note) };
         session.Segments.Add(new SessionSegment { PcId = pc.Id, PricePerHourUzs = tariff.PricePerHourUzs, StartUtc = now });
         _db.Sessions.Add(session);
         pc.State = PcState.PostpaySession;
@@ -157,7 +158,7 @@ public class SessionService
         await using (var transaction = await _db.Database.BeginTransactionAsync())
         {
             await _db.SaveChangesAsync();
-            LogEvent(EventType.SessionStarted, pc.Id, session.Id, "Postpay session started");
+            LogEvent(EventType.SessionStarted, pc.Id, session.Id, WithNote("Postpay session started", session.Note));
             await _db.SaveChangesAsync();
             await transaction.CommitAsync();
         }
@@ -172,36 +173,6 @@ public class SessionService
                 CurrentCostUzs = tariff.MinPaymentUzs,
                 MaxPaymentUzs = tariff.MaxPaymentUzs
             }
-        });
-    }
-
-    public async Task StartFreeAsync(Guid machineGuid, string? note)
-    {
-        var pc = await GetReadyPcAsync(machineGuid);
-        var now = DateTime.UtcNow;
-
-        // Free sessions still belong to a tariff for segment bookkeeping, but are never charged.
-        var pricePerHourUzs = (await GetTariffAsync(pc.TariffId!.Value)).PricePerHourUzs;
-
-        var session = new Session { PcId = pc.Id, Type = SessionType.Free, IsFree = true, StartUtc = now, AmountUzs = 0, Note = note };
-        session.Segments.Add(new SessionSegment { PcId = pc.Id, PricePerHourUzs = pricePerHourUzs, StartUtc = now });
-        _db.Sessions.Add(session);
-
-        // Free sessions count up on screen exactly like postpay; there is no dedicated PcState for them.
-        pc.State = PcState.PostpaySession;
-
-        await using (var transaction = await _db.Database.BeginTransactionAsync())
-        {
-            await _db.SaveChangesAsync();
-            LogEvent(EventType.SessionStarted, pc.Id, session.Id, note is null ? "Free session started" : $"Free session started: {note}");
-            await _db.SaveChangesAsync();
-            await transaction.CommitAsync();
-        }
-
-        await SendCommandAsync(pc, new ClientCommand
-        {
-            Type = CommandType.StartSession,
-            Session = new SessionInfo { Type = SessionType.Free, ElapsedSeconds = 0, CurrentCostUzs = 0, MaxPaymentUzs = 0 }
         });
     }
 
@@ -461,7 +432,7 @@ public class SessionService
     /// prepay payment (0 for other sessions) - shown when the admin stops a prepay session early.
     /// </summary>
     public record ActiveSessionSnapshot(int SessionId, SessionType Type, DateTime StartUtc, DateTime? PlannedEndUtc,
-        int AmountOrCostUzs, int RemainingSeconds, bool IsFree, int ConsumedUzs, int CapUzs, int RemainingMoneyUzs = 0);
+        int AmountOrCostUzs, int RemainingSeconds, bool IsFree, int ConsumedUzs, int CapUzs, int RemainingMoneyUzs = 0, string? Note = null);
 
     public async Task<Dictionary<int, ActiveSessionSnapshot>> GetActiveSessionSnapshotsAsync()
     {
@@ -527,7 +498,7 @@ public class SessionService
         }
 
         return new ActiveSessionSnapshot(session.Id, session.Type, session.StartUtc, session.PlannedEndUtc,
-            amountOrCost, info.RemainingSeconds, session.IsFree, consumedUzs, capUzs, remainingMoneyUzs);
+            amountOrCost, info.RemainingSeconds, session.IsFree, consumedUzs, capUzs, remainingMoneyUzs, session.Note);
     }
 
     /// <summary>The ApplySettings command carrying the current General settings; sent on connect and whenever settings are saved.</summary>
@@ -593,6 +564,11 @@ public class SessionService
     }
 
     // ---- shared helpers ----
+
+    /// <summary>The optional note typed when starting a session: trimmed, and null when left empty.</summary>
+    private static string? CleanNote(string? note) => string.IsNullOrWhiteSpace(note) ? null : note.Trim();
+
+    private static string WithNote(string message, string? note) => note is null ? message : $"{message} - {note}";
 
     private async Task<Pc> GetPcAsync(Guid machineGuid) =>
         await _db.Pcs.FirstOrDefaultAsync(p => p.MachineGuid == machineGuid)

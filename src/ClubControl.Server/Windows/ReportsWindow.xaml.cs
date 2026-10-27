@@ -47,7 +47,6 @@ public partial class ReportsWindow : Window
         TotalIncomeLabel.Text = Strings.Get("TotalIncome");
         TotalSessionsLabel.Text = Strings.Get("TotalSessions");
         TotalHoursLabel.Text = Strings.Get("TotalHours");
-        FreeMinutesLabel.Text = Strings.Get("FreeMinutes");
 
         ByPcTab.Header = Strings.Get("ByPc");
         ByTariffTab.Header = Strings.Get("ByTariff");
@@ -122,7 +121,6 @@ public partial class ReportsWindow : Window
         TotalIncomeValue.Text = $"{report.Totals.TotalIncomeUzs:N0} UZS";
         TotalSessionsValue.Text = report.Totals.SessionCount.ToString();
         TotalHoursValue.Text = report.Totals.TotalHours.ToString("N1");
-        FreeMinutesValue.Text = report.Totals.FreeMinutes.ToString("N0");
 
         ByPcGrid.ItemsSource = report.ByPc.Select(r => new
         {
@@ -170,10 +168,9 @@ public partial class ReportsWindow : Window
         var sb = new StringBuilder();
         void WriteRow(params object[] values) => sb.AppendLine(string.Join(",", values.Select(EscapeCsv)));
 
-        WriteRow(Strings.Get("TotalIncome"), Strings.Get("TotalSessions"), Strings.Get("TotalHours"), Strings.Get("FreeMinutes"));
+        WriteRow(Strings.Get("TotalIncome"), Strings.Get("TotalSessions"), Strings.Get("TotalHours"));
         WriteRow(report.Totals.TotalIncomeUzs, report.Totals.SessionCount,
-            report.Totals.TotalHours.ToString("F1", CultureInfo.InvariantCulture),
-            report.Totals.FreeMinutes.ToString("F0", CultureInfo.InvariantCulture));
+            report.Totals.TotalHours.ToString("F1", CultureInfo.InvariantCulture));
         sb.AppendLine();
 
         WriteRow(Strings.Get("ByPc"));

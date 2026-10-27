@@ -75,3 +75,6 @@ C# .NET 8. WPF for Server (admin panel + hosted ASP.NET Core/SignalR) and Client
       every non-computer resource has an admin-chosen `Pc.Name` ("Table 3", "PS5 room"; new column +
       `AddPcName` migration). The name shows on the card, in dialogs (`PcRow.Label`/`Strings.ResourceLabel`)
       and in reports.
+- [x] Post-phase-6 change: free sessions removed (no Free menu item/window, no "Free minutes" in reports;
+      `SessionType.Free` and `Session.IsFree` stay so old rows still display). Starting a prepay/postpay
+      session now takes an optional note (`Session.Note`, shown in the card tooltip and event log).

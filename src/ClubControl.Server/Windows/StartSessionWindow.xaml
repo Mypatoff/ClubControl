@@ -19,6 +19,9 @@
             <RadioButton x:Name="PostpayRadio" GroupName="Mode" FontWeight="SemiBold" />
         </Border>
 
+        <TextBlock x:Name="NoteLabel" Margin="0,8,0,2" />
+        <TextBox x:Name="NoteBox" MaxLength="100" Margin="0,0,0,10" />
+
         <TextBlock x:Name="ErrorText" Foreground="{StaticResource ErrorBrush}" TextWrapping="Wrap" />
 
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,14,0,0">

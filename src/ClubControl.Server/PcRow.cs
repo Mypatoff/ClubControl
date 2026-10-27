@@ -41,6 +41,9 @@ public class PcRow
     /// <summary>Client build this PC last reported ("1.0.0+f4545fa"); empty if unknown. Lets the admin see which PCs an "Update client" has reached.</summary>
     public string ClientVersion { get; init; } = "";
 
+    /// <summary>The optional note typed when the current session was started; empty if none.</summary>
+    public string Note { get; init; } = "";
+
     /// <summary>A manual resource (offline PC, other resource) never connects, so there is nothing to shut down/restart/wake.</summary>
     public bool SupportsPowerControl => !IsManual;
 
@@ -75,6 +78,7 @@ public class PcRow
         TariffDisplay,
         AmountDisplay,
         StartDisplay != "" ? StartDisplay + (EndDisplay != "" ? " – " + EndDisplay : "") : "",
+        Note,
         ClientVersion != "" ? "v" + ClientVersion : ""
     }.Where(line => line != ""));
 
