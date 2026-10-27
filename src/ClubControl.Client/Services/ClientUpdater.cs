@@ -59,7 +59,7 @@ public static class ClientUpdater
 
             // The self-contained build is tens of megabytes; the default 100 seconds is too tight on slow Wi-Fi.
             using var http = new HttpClient { Timeout = TimeSpan.FromMinutes(10) };
-            var bytes = await http.GetByteArrayAsync($"http://{serverIp}:{port}{NetworkConstants.ClientUpdateRoute}");
+            var bytes = await DownloadWithRetryAsync(http, $"http://{serverIp}:{port}{NetworkConstants.ClientUpdateRoute}");
 
             // The zip itself came over plain HTTP; the signed hash is what makes it trustworthy.
             if (!string.Equals(ClientUpdateAuth.ComputeSha256Hex(bytes), command.UpdateSha256, StringComparison.OrdinalIgnoreCase))
@@ -96,6 +96,28 @@ public static class ClientUpdater
             // version it already has, and the admin can just try "Update client" again later.
             ClientLog.Error("ClientUpdater.ApplyUpdateAsync", ex);
             Interlocked.Exchange(ref _updateInProgress, 0);
+        }
+    }
+
+    /// <summary>
+    /// The download can fail for a passing reason - the server busy with other PCs, a Wi-Fi hiccup - so
+    /// it is tried up to three times, a little apart, before the update is given up (and logged).
+    /// </summary>
+    private static async Task<byte[]> DownloadWithRetryAsync(HttpClient http, string url)
+    {
+        const int attempts = 3;
+
+        for (var attempt = 1; ; attempt++)
+        {
+            try
+            {
+                return await http.GetByteArrayAsync(url);
+            }
+            catch (Exception ex) when (attempt < attempts)
+            {
+                ClientLog.Info("ClientUpdater.Download", $"Attempt {attempt} of {attempts} failed ({ex.GetType().Name}: {ex.Message}); trying again.");
+                await Task.Delay(TimeSpan.FromSeconds(5 * attempt));
+            }
         }
     }
 }

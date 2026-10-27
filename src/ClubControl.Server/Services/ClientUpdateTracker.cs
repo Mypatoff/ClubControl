@@ -6,6 +6,8 @@ namespace ClubControl.Server.Services;
 
 public enum ClientUpdateStatus
 {
+    /// <summary>Chosen for the update but its turn has not come yet: the PCs are sent the command one at a time.</summary>
+    Waiting,
     /// <summary>The command was sent and the PC has not reported back yet.</summary>
     Updating,
     /// <summary>The PC now reports a different client version.</summary>
@@ -51,6 +53,32 @@ public class ClientUpdateTracker
 
     private readonly object _lock = new();
     private readonly Dictionary<Guid, Entry> _entries = new();
+
+    /// <summary>Call when a PC is chosen for the update but its command is not sent yet.</summary>
+    public void Queued(Guid machineGuid, string versionBefore, DateTime nowUtc)
+    {
+        lock (_lock)
+        {
+            _entries[machineGuid] = new Entry
+            {
+                Status = ClientUpdateStatus.Waiting,
+                VersionBefore = versionBefore,
+                VersionNow = versionBefore,
+                ConnectionAtSend = "",
+                SinceUtc = nowUtc,
+            };
+        }
+    }
+
+    /// <summary>A waiting PC that will not be sent the command after all (it went offline): forget it.</summary>
+    public void Cancel(Guid machineGuid)
+    {
+        lock (_lock)
+        {
+            if (_entries.TryGetValue(machineGuid, out var entry) && entry.Status == ClientUpdateStatus.Waiting)
+                _entries.Remove(machineGuid);
+        }
+    }
 
     /// <summary>Call when the update command has just been sent to a PC over <paramref name="connectionId"/>.</summary>
     public void Started(Guid machineGuid, string versionBefore, string connectionId, DateTime nowUtc)

@@ -93,6 +93,12 @@ C# .NET 8. WPF for Server (admin panel + hosted ASP.NET Core/SignalR) and Client
       `ClientVersion` = updated, restart with the same version = unchanged, 5 minutes of nothing = no
       response (`OfflineMonitorService` checks). Shown as card state text (`PcRow.CardStateDisplay`,
       keys `UpdateCard*`) and as event-log lines (Warning for the two problem cases). No client change.
+- [x] Post-phase-6 fix: "Update client" on many PCs at once only updated one or two (all 30 PCs pulling the
+      ~65 MB zip at the same moment overload the server's network and hit the client's download time
+      limit). `PowerService.UpdateClientAsync` now sends the command one PC every `UpdateGap` (8 s); waiting
+      PCs show "Waiting" (`ClientUpdateStatus.Waiting`), and `ClientUpdater` retries a failed download 3 times.
+      The server side works with any client; the retry needs the new client build. Cause is inferred, not
+      confirmed from a client-log.txt - check one failed PC's log if it still happens.
 - [x] Post-phase-6 feature: staff unlock (Ctrl+Shift+F12) is now visible to the admin. The existing
       `ReportManualUnlock` hub call sets the PC to `PcState.ManualUnlocked` via
       `SessionService.MarkManualUnlockAsync` (only when it has no session): the card shows "Repair" (purple,

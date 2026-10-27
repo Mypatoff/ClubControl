@@ -50,6 +50,7 @@ public class PcRow
 
     private string UpdateDisplay => Update?.Status switch
     {
+        ClientUpdateStatus.Waiting => Strings.Get("UpdateCardWaiting"),
         ClientUpdateStatus.Updating => Strings.Get("UpdateCardUpdating"),
         ClientUpdateStatus.Updated => Strings.Get("UpdateCardUpdated"),
         ClientUpdateStatus.Unchanged => Strings.Get("UpdateCardSame"),

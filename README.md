@@ -85,8 +85,12 @@ Safety nets:
 - **Rollback:** the old files are backed up first. If the new build doesn't get a heartbeat through
   to the server within 90 seconds, the PC restores the old build and starts it again.
 - **Version:** hover over a PC card to see the build it runs (`v1.0.0+<git commit>`).
+- **One PC at a time:** with several PCs selected the server sends the command to one PC every 8
+  seconds (30 PCs take about 4 minutes), because every PC downloads the whole zip (about 65 MB) from the
+  server and 30 downloads at once overload its network, so only a few finished. PCs still waiting show
+  "⏳ Waiting". A failed download is retried up to 3 times by the PC (this part needs the new client build).
 - **Result on the card and in the log:** right after you click "Update client" each PC's card says
-  "⬇ Updating". Then you see, on the card and as a line in the event log:
+  "⬇ Updating" (or "⏳ Waiting" until its turn). Then you see, on the card and as a line in the event log:
   - "✔ Updated" - the PC now runs a new version (`PC #5 updated: v… -> v…`; the card text fades after 2 minutes).
   - "⚠ Same version" - the PC restarted but still reports the same version: it already had that build, or
     the update was rolled back.

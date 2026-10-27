@@ -562,4 +562,7 @@
   <data name="UpdateCardFailed" xml:space="preserve">
     <value>✖ Update failed</value>
   </data>
+  <data name="UpdateCardWaiting" xml:space="preserve">
+    <value>⏳ Waiting</value>
+  </data>
 </root>

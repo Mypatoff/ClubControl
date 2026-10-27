@@ -25,6 +25,33 @@ public class ClientUpdateTrackerTests
     }
 
     [Fact]
+    public void A_PC_waiting_for_its_turn_shows_as_waiting_and_never_times_out()
+    {
+        var tracker = new ClientUpdateTracker();
+        tracker.Queued(Pc, "1.0.0+old", T0);
+
+        Assert.Equal(ClientUpdateStatus.Waiting, tracker.Get(Pc, T0.AddMinutes(30))!.Status);
+        Assert.Empty(tracker.CheckTimeouts(T0.AddMinutes(30))); // the 5 minutes count from when the command is sent
+        Assert.Null(tracker.OnHeartbeat(Pc, "1.0.0+old", "conn-2", T0.AddMinutes(1)));
+    }
+
+    [Fact]
+    public void A_waiting_PC_starts_its_five_minutes_when_the_command_is_sent_and_can_be_cancelled()
+    {
+        var tracker = new ClientUpdateTracker();
+        tracker.Queued(Pc, "1.0.0+old", T0);
+        tracker.Started(Pc, "1.0.0+old", "conn-1", T0.AddMinutes(3));
+
+        Assert.Empty(tracker.CheckTimeouts(T0.AddMinutes(7)));   // only 4 minutes since it was sent
+        Assert.Single(tracker.CheckTimeouts(T0.AddMinutes(8)));  // 5 minutes since it was sent
+
+        var other = Guid.NewGuid();
+        tracker.Queued(other, "1.0.0+old", T0);
+        tracker.Cancel(other);
+        Assert.Null(tracker.Get(other, T0));
+    }
+
+    [Fact]
     public void A_PC_that_was_never_updated_shows_nothing()
     {
         Assert.Null(new ClientUpdateTracker().Get(Pc, T0));
