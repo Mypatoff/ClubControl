@@ -40,7 +40,7 @@ public static class ServerDiscoveryClient
                 if (response is not null)
                     return response;
             }
-            catch (Exception) when (!cancellationToken.IsCancellationRequested)
+            catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
             {
                 // The caller (MainWindow) starts this fire-and-forget and never awaits/observes
                 // the result, so letting anything escape here - e.g. NetworkInterface.GetAll-
@@ -49,6 +49,8 @@ public static class ServerDiscoveryClient
                 // and no visible error, leaving the PC stuck until something restarts the process.
                 // This loop's whole job is "keep trying until the server is found or we're told to
                 // stop" - a bad try must not end that, just this one attempt.
+                ClientLog.Error("ServerDiscoveryClient.DiscoverAsync", ex);
+
                 try
                 {
                     await Task.Delay(perTryTimeout, cancellationToken);

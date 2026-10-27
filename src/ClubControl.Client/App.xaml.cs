@@ -2,6 +2,7 @@ using System;
 using System.Threading;
 using System.Windows;
 using ClubControl.Client.Native;
+using ClubControl.Client.Services;
 
 namespace ClubControl.Client;
 
@@ -16,12 +17,19 @@ public partial class App : Application
 
     public App()
     {
-        AppDomain.CurrentDomain.UnhandledException += (_, args) => ShowFatalError(args.ExceptionObject as Exception);
+        AppDomain.CurrentDomain.UnhandledException += (_, args) =>
+        {
+            var ex = args.ExceptionObject as Exception;
+            if (ex is not null)
+                ClientLog.Error("AppDomain.UnhandledException", ex);
+            ShowFatalError(ex);
+        };
         DispatcherUnhandledException += (_, args) =>
         {
             // Keep running after an unexpected UI-thread error instead of exiting - this runs
             // unattended on a kiosk PC, so staying alive (even degraded) beats dropping the lock
             // screen and keyboard block with nobody there to notice or restart it.
+            ClientLog.Error("DispatcherUnhandledException", args.Exception);
             ShowFatalError(args.Exception);
             args.Handled = true;
         };
