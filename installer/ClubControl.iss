@@ -176,7 +176,11 @@ var
   Code: Integer;
 begin
   // Same task as scripts\install-client.ps1: starts at logon for the kiosk account with the highest
-  // privileges, restarts itself if it ever exits, and has no 72-hour limit.
+  // privileges, restarts itself if it ever exits, has no 72-hour limit, and also re-checks every
+  // 1 minute regardless of why the client isn't running - Task Scheduler's own restart-on-failure
+  // does NOT fire if someone manually ends the process (Task Manager "End Task" counts as a
+  // deliberate stop, not a failure). The client's single-instance mutex makes the 1-minute recheck
+  // a harmless no-op if it's already running.
   User := Trim(KioskPage.Values[0]);
   StringChangeEx(User, '''', '''''', True);
   Exe := ExpandConstant('{app}\Client\ClubControl.Client.exe');
@@ -184,6 +188,8 @@ begin
 
   Script := '$a = New-ScheduledTaskAction -Execute ''' + Exe + '''; ' +
     '$t = New-ScheduledTaskTrigger -AtLogOn -User ''' + User + '''; ' +
+    '$r = New-ScheduledTaskTrigger -Once -At (Get-Date) -RepetitionInterval (New-TimeSpan -Minutes 1) ' +
+    '-RepetitionDuration (New-TimeSpan -Days 3650); $t.Repetition = $r.Repetition; ' +
     '$p = New-ScheduledTaskPrincipal -UserId ''' + User + ''' -RunLevel Highest -LogonType Interactive; ' +
     '$s = New-ScheduledTaskSettingsSet -RestartCount 999 -RestartInterval (New-TimeSpan -Minutes 1) ' +
     '-ExecutionTimeLimit ([TimeSpan]::Zero) -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable; ' +

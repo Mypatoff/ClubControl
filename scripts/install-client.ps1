@@ -10,6 +10,11 @@
       - Configures it to restart automatically (up to 999 times, 1 minute apart) if the process
         ever exits unexpectedly, and removes the default 3-day execution time limit - this task is
         meant to run indefinitely, not be killed after 72 hours.
+      - Also re-checks every 1 minute regardless of why the client isn't running. Task Scheduler's
+        own restart-on-failure above does NOT fire if someone manually ends the process (e.g. Task
+        Manager "End Task") - Windows treats that as a deliberate stop, not a failure. The 1-minute
+        recheck relaunches the exe either way; the client's own single-instance mutex makes this a
+        harmless no-op if it's already running.
 
     IMPORTANT: -UserId must be the account that will actually be auto-logged-on on this PC (see
     README.md), not necessarily whichever account you're running this install script as. If you
@@ -55,6 +60,14 @@ Write-Host "Task will run as user: $UserId"
 
 $action = New-ScheduledTaskAction -Execute $ExePath
 $trigger = New-ScheduledTaskTrigger -AtLogOn -User $UserId
+
+# New-ScheduledTaskTrigger has no -RepetitionInterval for -AtLogOn, but the underlying Repetition
+# property works on any trigger type (it's what the Task Scheduler GUI's "Repeat task every"
+# checkbox sets regardless of trigger kind) - build it on a throwaway trigger and copy it over.
+$repeat = New-ScheduledTaskTrigger -Once -At (Get-Date) -RepetitionInterval (New-TimeSpan -Minutes 1) `
+    -RepetitionDuration (New-TimeSpan -Days 3650)
+$trigger.Repetition = $repeat.Repetition
+
 $principal = New-ScheduledTaskPrincipal -UserId $UserId -RunLevel Highest -LogonType Interactive
 $settings = New-ScheduledTaskSettingsSet `
     -RestartCount 999 `
@@ -68,6 +81,7 @@ Register-ScheduledTask -TaskName $TaskName -Action $action -Trigger $trigger `
     -Principal $principal -Settings $settings -Force | Out-Null
 
 Write-Host "Created scheduled task '$TaskName': starts at logon for '$UserId', highest privileges,"
-Write-Host "restarts automatically (up to 999 times, 1 minute apart) if it ever exits, no 72-hour limit."
+Write-Host "restarts automatically (up to 999 times, 1 minute apart) if it ever exits, no 72-hour limit,"
+Write-Host "and re-checks every 1 minute so a manually killed client (e.g. Task Manager) comes back too."
 Write-Host ""
 Write-Host "Done. See README.md for the one-time per-PC setup (Wake-on-LAN, Fast Startup, auto-logon)."
