@@ -62,6 +62,7 @@ public partial class MainWindow : Window
         CtxRestart.Header = Strings.Get("ToolbarRestart");
         CtxShutDown.Header = Strings.Get("ToolbarShutDown");
         CtxUpdateClient.Header = Strings.Get("ToolbarUpdateClient");
+        CtxReports.Header = "📊 " + Strings.Get("ToolbarReports");
 
         EventLogHeaderText.Text = Strings.Get("EventLogHeader");
 
@@ -771,7 +772,8 @@ public partial class MainWindow : Window
                 $"{snapshot.RemainingMoneyUzs:N0} UZS",
                 $"{Strings.Get("ColumnRemaining")}: {FormatTimeLeft(snapshot.RemainingSeconds)}",
                 Strings.Get("StopPrepayUnused"),
-                string.Join("\n", items.Select(i => $"{i.Description}: {i.AmountUzs:N0} UZS"))));
+                string.Join("\n", items.Select(i => $"{i.Description}: {i.AmountUzs:N0} UZS")),
+                Strings.Format("StopStartedFormat", TimeText.StartedAt(snapshot.StartUtc), TimeText.Duration(DateTime.UtcNow - snapshot.StartUtc))));
         }
 
         return (lines, $"{totalUzs:N0} UZS", itemsDueUzs);

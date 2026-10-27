@@ -535,4 +535,19 @@
   <data name="ReportItemsSold" xml:space="preserve">
     <value>Sotilgan mahsulotlar</value>
   </data>
+  <data name="SessionsTab" xml:space="preserve">
+    <value>Seanslar</value>
+  </data>
+  <data name="ColumnDuration" xml:space="preserve">
+    <value>Davomiyligi</value>
+  </data>
+  <data name="ColumnNote" xml:space="preserve">
+    <value>Izoh</value>
+  </data>
+  <data name="ReportStillRunning" xml:space="preserve">
+    <value>davom etmoqda</value>
+  </data>
+  <data name="StopStartedFormat" xml:space="preserve">
+    <value>Boshlanishi {0} · o&apos;tdi {1}</value>
+  </data>
 </root>

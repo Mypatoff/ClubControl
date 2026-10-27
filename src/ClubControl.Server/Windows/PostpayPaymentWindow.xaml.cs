@@ -51,12 +51,10 @@ public partial class PostpayPaymentWindow : Window
             var items = await sessionService.GetExtrasAsync(target.MachineGuid);
             total += snapshot.AmountOrCostUzs + items.Sum(i => i.AmountUzs);
 
-            // "PC #3: 10 000 UZS" then one indented line per item; a lone PC with no items needs no breakdown.
-            if (_targets.Count > 1 || items.Count > 0)
-            {
-                lines.Add($"{target.Label}: {snapshot.AmountOrCostUzs:N0} UZS");
-                lines.AddRange(items.Select(i => $"    {i.Description}: {i.AmountUzs:N0} UZS"));
-            }
+            // "PC #3: 10 000 UZS", when it started and how long it ran, then one indented line per item.
+            lines.Add($"{target.Label}: {snapshot.AmountOrCostUzs:N0} UZS");
+            lines.Add("    " + Strings.Format("StopStartedFormat", TimeText.StartedAt(snapshot.StartUtc), TimeText.Duration(DateTime.UtcNow - snapshot.StartUtc)));
+            lines.AddRange(items.Select(i => $"    {i.Description}: {i.AmountUzs:N0} UZS"));
         }
 
         BreakdownText.Text = string.Join("\n", lines);

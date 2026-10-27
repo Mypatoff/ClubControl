@@ -535,4 +535,19 @@
   <data name="ReportItemsSold" xml:space="preserve">
     <value>Продано товаров</value>
   </data>
+  <data name="SessionsTab" xml:space="preserve">
+    <value>Сессии</value>
+  </data>
+  <data name="ColumnDuration" xml:space="preserve">
+    <value>Длительность</value>
+  </data>
+  <data name="ColumnNote" xml:space="preserve">
+    <value>Заметка</value>
+  </data>
+  <data name="ReportStillRunning" xml:space="preserve">
+    <value>идёт</value>
+  </data>
+  <data name="StopStartedFormat" xml:space="preserve">
+    <value>Начало {0} · прошло {1}</value>
+  </data>
 </root>

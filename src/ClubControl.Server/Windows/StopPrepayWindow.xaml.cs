@@ -4,8 +4,8 @@ using ClubControl.Server.Resources;
 
 namespace ClubControl.Server.Windows;
 
-/// <summary>One PC in the stop dialog: its name, the unused money and the time left (already formatted for display).</summary>
-public record StopPrepayLine(string Title, string Money, string TimeLeft, string UnusedLabel, string Items = "");
+/// <summary>One PC in the stop dialog: its name, when it started and how long it ran, the unused money and the time left (already formatted for display).</summary>
+public record StopPrepayLine(string Title, string Money, string TimeLeft, string UnusedLabel, string Items = "", string Started = "");
 
 /// <summary>
 /// Confirms stopping prepay sessions early and shows how much prepaid money is still unused on each

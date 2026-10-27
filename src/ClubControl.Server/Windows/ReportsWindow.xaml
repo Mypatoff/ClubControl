@@ -1,7 +1,7 @@
 <Window x:Class="ClubControl.Server.Windows.ReportsWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Reports" Width="820" Height="620"
+        Title="Reports" Width="1000" Height="640"
         WindowStartupLocation="CenterOwner">
     <DockPanel Margin="16">
         <Border DockPanel.Dock="Top" Background="{StaticResource SurfaceBrush}" BorderBrush="{StaticResource DividerBrush}"
@@ -70,6 +70,21 @@
 
         <Border Background="{StaticResource SurfaceBrush}" BorderBrush="{StaticResource DividerBrush}" BorderThickness="1" CornerRadius="8">
             <TabControl Margin="4">
+                <TabItem x:Name="SessionsTab">
+                    <DataGrid x:Name="SessionsGrid" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False" BorderThickness="0">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn x:Name="SessionResourceColumn" Binding="{Binding ResourceLabel}" Width="110" />
+                            <DataGridTextColumn x:Name="SessionStartColumn" Binding="{Binding StartDisplay}" Width="110" />
+                            <DataGridTextColumn x:Name="SessionEndColumn" Binding="{Binding EndDisplay}" Width="110" />
+                            <DataGridTextColumn x:Name="SessionDurationColumn" Binding="{Binding DurationDisplay}" Width="90" />
+                            <DataGridTextColumn x:Name="SessionTypeColumn" Binding="{Binding TypeLabel}" Width="90" />
+                            <DataGridTextColumn x:Name="SessionTariffColumn" Binding="{Binding TariffLabel}" Width="100" />
+                            <DataGridTextColumn x:Name="SessionIncomeColumn" Binding="{Binding IncomeDisplay}" Width="110" />
+                            <DataGridTextColumn x:Name="SessionItemsColumn" Binding="{Binding ItemsDisplay}" Width="100" />
+                            <DataGridTextColumn x:Name="SessionNoteColumn" Binding="{Binding Note}" Width="*" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </TabItem>
                 <TabItem x:Name="ByPcTab">
                     <DataGrid x:Name="ByPcGrid" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False" BorderThickness="0">
                         <DataGrid.Columns>

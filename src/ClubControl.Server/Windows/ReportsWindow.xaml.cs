@@ -49,9 +49,20 @@ public partial class ReportsWindow : Window
         TotalHoursLabel.Text = Strings.Get("TotalHours");
         ExtrasLabel.Text = Strings.Get("ReportItemsSold");
 
+        SessionsTab.Header = Strings.Get("SessionsTab");
         ByPcTab.Header = Strings.Get("ByPc");
         ByTariffTab.Header = Strings.Get("ByTariff");
         ByTypeTab.Header = Strings.Get("BySessionType");
+
+        SessionResourceColumn.Header = Strings.Get("ColumnPcNumber");
+        SessionStartColumn.Header = Strings.Get("ColumnStart");
+        SessionEndColumn.Header = Strings.Get("ColumnEnd");
+        SessionDurationColumn.Header = Strings.Get("ColumnDuration");
+        SessionTypeColumn.Header = Strings.Get("ColumnType");
+        SessionTariffColumn.Header = Strings.Get("ColumnTariff");
+        SessionIncomeColumn.Header = Strings.Get("ColumnIncome");
+        SessionItemsColumn.Header = Strings.Get("ReportItemsSold");
+        SessionNoteColumn.Header = Strings.Get("ColumnNote");
 
         ByPcNumberColumn.Header = Strings.Get("ColumnPcNumber");
         ByTariffNameColumn.Header = Strings.Get("ColumnTariff");
@@ -124,6 +135,19 @@ public partial class ReportsWindow : Window
         TotalHoursValue.Text = report.Totals.TotalHours.ToString("N1");
         ExtrasValue.Text = $"{report.Totals.ExtrasUzs:N0} UZS";
 
+        SessionsGrid.ItemsSource = report.Sessions.Select(s => new
+        {
+            ResourceLabel = s.PcNumber.HasValue ? Strings.ResourceLabel(_kind, s.PcName, s.PcNumber) : "—",
+            StartDisplay = s.StartUtc.ToLocalTime().ToString(TimeFormat),
+            EndDisplay = EndText(s),
+            DurationDisplay = TimeText.Duration((s.EndUtc ?? DateTime.UtcNow) - s.StartUtc),
+            TypeLabel = Strings.SessionTypeName(s.Type, s.IsFree),
+            TariffLabel = string.IsNullOrEmpty(s.TariffName) ? "—" : s.TariffName,
+            IncomeDisplay = $"{s.AmountUzs:N0} UZS",
+            ItemsDisplay = s.ExtrasUzs > 0 ? $"{s.ExtrasUzs:N0} UZS" : "",
+            s.Note
+        }).ToList();
+
         ByPcGrid.ItemsSource = report.ByPc.Select(r => new
         {
             PcLabel = r.PcNumber.HasValue ? Strings.ResourceLabel(_kind, r.PcName, r.PcNumber) : "—",
@@ -148,6 +172,12 @@ public partial class ReportsWindow : Window
             HoursDisplay = r.Hours.ToString("N1")
         }).ToList();
     }
+
+    private const string TimeFormat = "dd.MM.yyyy HH:mm";
+
+    /// <summary>The end time, or "running" for a session that has not ended yet.</summary>
+    private static string EndText(ReportsService.SessionLine s) =>
+        s.EndUtc is { } end ? end.ToLocalTime().ToString(TimeFormat) : Strings.Get("ReportStillRunning");
 
     private void OnExport(object sender, RoutedEventArgs e)
     {
@@ -174,6 +204,16 @@ public partial class ReportsWindow : Window
         WriteRow(report.Totals.TotalIncomeUzs, report.Totals.SessionCount,
             report.Totals.TotalHours.ToString("F1", CultureInfo.InvariantCulture),
             report.Totals.ExtrasUzs);
+        sb.AppendLine();
+
+        WriteRow(Strings.Get("SessionsTab"));
+        WriteRow(Strings.Get("ColumnPcNumber"), Strings.Get("ColumnStart"), Strings.Get("ColumnEnd"), Strings.Get("ColumnDuration"),
+            Strings.Get("ColumnType"), Strings.Get("ColumnTariff"), Strings.Get("ColumnIncome"), Strings.Get("ReportItemsSold"), Strings.Get("ColumnNote"));
+        foreach (var s in report.Sessions)
+            WriteRow(s.PcNumber.HasValue ? Strings.ResourceLabel(_kind, s.PcName, s.PcNumber) : "-",
+                s.StartUtc.ToLocalTime().ToString(TimeFormat), EndText(s), TimeText.Duration((s.EndUtc ?? DateTime.UtcNow) - s.StartUtc),
+                Strings.SessionTypeName(s.Type, s.IsFree), string.IsNullOrEmpty(s.TariffName) ? "-" : s.TariffName,
+                s.AmountUzs, s.ExtrasUzs, s.Note);
         sb.AppendLine();
 
         WriteRow(Strings.Get("ByPc"));

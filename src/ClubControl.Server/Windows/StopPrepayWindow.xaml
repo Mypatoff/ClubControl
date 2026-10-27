@@ -15,6 +15,7 @@
                             <Grid>
                                 <StackPanel VerticalAlignment="Center">
                                     <TextBlock Text="{Binding Title}" FontSize="16" FontWeight="Bold" />
+                                    <TextBlock Text="{Binding Started}" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,2,0,0" />
                                     <TextBlock Text="{Binding TimeLeft}" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,2,0,0" />
                                     <TextBlock Text="{Binding Items}" Foreground="{StaticResource TextSecondaryBrush}" FontSize="11" Margin="0,2,0,0" TextWrapping="Wrap" />
                                 </StackPanel>

@@ -109,7 +109,10 @@ One club, one admin laptop (server), up to ~30 gaming PCs (clients) on the same 
 
 - Daily, weekly, monthly (date picker).
 - Total income, number of sessions, total hours.
+- Sessions list (first tab, newest first): one row per session with the PC / other resource, start, end ("running" if not ended), duration, type, tariff, amount, items and note. Also in the CSV export.
 - Breakdown per PC, per class (Standard / VIP), per session type (prepay / postpay).
+- The Reports window opens from the toolbar button (top right, next to Settings) or the right-click menu on the main panel.
+- The stop window (prepay) and the payment window (postpay) show, for each PC, when the session started and how long it has run.
 
 ## 10. Reliability
 

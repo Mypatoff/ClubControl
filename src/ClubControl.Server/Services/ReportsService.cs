@@ -28,7 +28,10 @@ public class ReportsService
     public record PcRow(int? PcNumber, string PcName, int IncomeUzs, int SessionCount, double Hours);
     public record TariffRow(string TariffName, int IncomeUzs, int SessionCount, double Hours);
     public record TypeRow(SessionType Type, int IncomeUzs, int SessionCount, double Hours);
-    public record Report(Totals Totals, List<PcRow> ByPc, List<TariffRow> ByTariff, List<TypeRow> ByType);
+    /// <summary>One session: which PC / other resource, when it started and ended (null while still running), what it cost.</summary>
+    public record SessionLine(int? PcNumber, string PcName, DateTime StartUtc, DateTime? EndUtc, SessionType Type, bool IsFree,
+        string TariffName, int AmountUzs, int ExtrasUzs, string Note);
+    public record Report(Totals Totals, List<PcRow> ByPc, List<TariffRow> ByTariff, List<TypeRow> ByType, List<SessionLine> Sessions);
 
     public async Task<Report> BuildReportAsync(DateTime startUtc, DateTime endUtc, ResourceKind kind)
     {
@@ -68,6 +71,13 @@ public class ReportsService
             .OrderBy(r => r.Type)
             .ToList();
 
-        return new Report(totals, byPc, byTariff, byType);
+        // Newest first, so the admin sees the latest sessions at the top.
+        var bySession = sessions
+            .OrderByDescending(s => s.StartUtc)
+            .Select(s => new SessionLine(s.Pc?.Number, s.Pc?.Name ?? "", s.StartUtc, s.ActualEndUtc, s.Type, s.IsFree,
+                TariffNameOf(s), s.AmountUzs, s.Extras.Sum(x => x.AmountUzs), s.Note ?? ""))
+            .ToList();
+
+        return new Report(totals, byPc, byTariff, byType, bySession);
     }
 }

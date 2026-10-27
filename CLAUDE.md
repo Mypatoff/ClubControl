@@ -74,6 +74,10 @@ C# .NET 8. WPF for Server (admin panel + hosted ASP.NET Core/SignalR) and Client
 - [x] Post-phase-6 change: main-panel card colours - red = offline, blue = connected and free,
       green = session running (prepay and postpay), orange = limit reached; no more greyed-out cards.
       Brush keys: `StateOfflineBrush` / `StateIdleBrush` / `StateRunningBrush` / `StateLimitBrush`.
+- [x] Post-phase-6 change: Reports has a "Sessions" tab (`ReportsService.SessionLine`: which PC/other, start,
+      end, duration, type, tariff, amount, items, note; also in the CSV), a Reports entry in the right-click
+      menu, and the stop / payment windows show when each session started and how long it ran
+      (`TimeText`, key `StopStartedFormat`).
 - [x] Post-phase-6 change: `ResourceKind.Billiard` is now `ResourceKind.Other` (same stored value 1) and
       every non-computer resource has an admin-chosen `Pc.Name` ("Table 3", "PS5 room"; new column +
       `AddPcName` migration). The name shows on the card, in dialogs (`PcRow.Label`/`Strings.ResourceLabel`)

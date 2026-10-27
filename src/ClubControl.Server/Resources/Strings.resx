@@ -535,4 +535,19 @@
   <data name="ReportItemsSold" xml:space="preserve">
     <value>Items sold</value>
   </data>
+  <data name="SessionsTab" xml:space="preserve">
+    <value>Sessions</value>
+  </data>
+  <data name="ColumnDuration" xml:space="preserve">
+    <value>Duration</value>
+  </data>
+  <data name="ColumnNote" xml:space="preserve">
+    <value>Note</value>
+  </data>
+  <data name="ReportStillRunning" xml:space="preserve">
+    <value>running</value>
+  </data>
+  <data name="StopStartedFormat" xml:space="preserve">
+    <value>Started {0} · played {1}</value>
+  </data>
 </root>

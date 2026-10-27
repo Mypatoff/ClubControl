@@ -147,6 +147,8 @@
                         <MenuItem x:Name="CtxRestart" Click="OnRestart" />
                         <MenuItem x:Name="CtxShutDown" Click="OnShutDown" />
                         <MenuItem x:Name="CtxUpdateClient" Click="OnUpdateClient" />
+                        <Separator />
+                        <MenuItem x:Name="CtxReports" Click="OnReports" />
                     </ContextMenu>
                 </ListBox.ContextMenu>
 
