@@ -51,7 +51,7 @@ public class UdpDiscoveryService : BackgroundService
 
             try
             {
-                var response = await BuildResponseAsync();
+                var response = await BuildResponseAsync(result.RemoteEndPoint.Address);
                 var bytes = Encoding.UTF8.GetBytes(response.ToString());
                 await udpClient.SendAsync(bytes, bytes.Length, result.RemoteEndPoint);
             }
@@ -62,7 +62,7 @@ public class UdpDiscoveryService : BackgroundService
         }
     }
 
-    private async Task<DiscoveryResponse> BuildResponseAsync()
+    private async Task<DiscoveryResponse> BuildResponseAsync(IPAddress asker)
     {
         using var scope = _scopeFactory.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ClubDbContext>();
@@ -71,7 +71,7 @@ public class UdpDiscoveryService : BackgroundService
         return new DiscoveryResponse
         {
             ServerId = setting.ServerId,
-            ServerIp = GetLocalIpAddress(),
+            ServerIp = GetLocalIpAddress(asker),
             Port = NetworkConstants.SignalRPort
         };
     }
@@ -81,25 +81,18 @@ public class UdpDiscoveryService : BackgroundService
     private const string FallbackIpAddress = "127.0.0.1";
 
     /// <summary>
-    /// Picks the address to advertise in discovery responses. Deliberately does not rely on
-    /// successfully routing to an external address (the previous implementation opened a UDP
-    /// socket "connected" to 8.8.8.8 purely to let the OS pick a local-route address) - a club LAN
-    /// with no internet uplink, or one that's temporarily down, would make every discovery
-    /// response fail even though the LAN itself works fine. Enumerates actual local interfaces
-    /// instead, same approach as ClubControl.Client.Services.MachineIdentity.GetMacAddress.
+    /// Picks the address to advertise in a discovery response: the one on the asking PC's own
+    /// subnet (see <see cref="LocalNetworkInterfaces.ChooseAddressFor"/>), so a VPN/virtual adapter
+    /// on this machine can never be handed out instead of the real LAN address. Deliberately does
+    /// not rely on routing to an external address (the original implementation "connected" a UDP
+    /// socket to 8.8.8.8 to let the OS choose) - a club LAN with no internet uplink, or one that's
+    /// temporarily down, would make every discovery response fail even though the LAN itself works.
     /// </summary>
-    private static string GetLocalIpAddress()
+    private static string GetLocalIpAddress(IPAddress asker)
     {
         try
         {
-            var address = NetworkInterface.GetAllNetworkInterfaces()
-                .Where(nic => nic.OperationalStatus == OperationalStatus.Up &&
-                              nic.NetworkInterfaceType != NetworkInterfaceType.Loopback &&
-                              nic.NetworkInterfaceType != NetworkInterfaceType.Tunnel)
-                .SelectMany(nic => nic.GetIPProperties().UnicastAddresses)
-                .Select(addr => addr.Address)
-                .FirstOrDefault(addr => addr.AddressFamily == AddressFamily.InterNetwork && !IPAddress.IsLoopback(addr));
-
+            var address = LocalNetworkInterfaces.ChooseAddressFor(asker, LocalNetworkInterfaces.GetIPv4Addresses());
             return address?.ToString() ?? FallbackIpAddress;
         }
         catch (NetworkInformationException)

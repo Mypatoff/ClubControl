@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Net.Http;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using ClubControl.Shared;
@@ -22,8 +23,17 @@ namespace ClubControl.Client.Services;
 /// </summary>
 public static class ClientUpdater
 {
+    // 1 while an update is running. A second "Update client" (the admin double-clicking, or two
+    // admins) would otherwise start a second download/extract into the same temp folders and
+    // delete the files out from under the first. Left at 1 after a successful hand-off: the client
+    // is about to exit anyway. Reset only when an attempt fails, so the admin can try again.
+    private static int _updateInProgress;
+
     public static async Task ApplyUpdateAsync(string serverIp, int port, ClientCommand command)
     {
+        if (Interlocked.CompareExchange(ref _updateInProgress, 1, 0) != 0)
+            return;
+
         try
         {
             // The command must carry a signature only the real server can make for this PC - see
@@ -84,6 +94,7 @@ public static class ClientUpdater
             // Never take the client down over a failed update attempt - it keeps running the
             // version it already has, and the admin can just try "Update client" again later.
             ClientLog.Error("ClientUpdater.ApplyUpdateAsync", ex);
+            Interlocked.Exchange(ref _updateInProgress, 0);
         }
     }
 }
