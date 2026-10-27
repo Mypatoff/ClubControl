@@ -40,8 +40,12 @@ public static class ClientUpdater
                 Directory.Delete(extractDir, recursive: true);
             ZipFile.ExtractToDirectory(zipPath, extractDir);
 
+            // Checked before anything is closed: a bad zip must fail here, while the old client is
+            // still running, not after it has already shut down.
+            var sourceDir = FindBuildFolder(extractDir, exeName);
+
             var scriptPath = Path.Combine(Path.GetTempPath(), "ClubControl.Client.Update.ps1");
-            await File.WriteAllTextAsync(scriptPath, BuildUpdateScript(Environment.ProcessId, extractDir, installDir, exeName));
+            await File.WriteAllTextAsync(scriptPath, BuildUpdateScript(Environment.ProcessId, sourceDir, extractDir, installDir, exeName));
 
             Process.Start(new ProcessStartInfo("powershell.exe",
                 $"-WindowStyle Hidden -ExecutionPolicy Bypass -File \"{scriptPath}\"")
@@ -63,18 +67,40 @@ public static class ClientUpdater
     }
 
     /// <summary>
+    /// The folder inside the extracted zip that actually holds the client exe. Normally the zip
+    /// root, but zipping the publish folder itself (instead of its contents) adds one wrapper
+    /// folder, so that is accepted too. Anything else is rejected - copying a zip that has no exe
+    /// over the install folder would "update" nothing and leave the admin guessing.
+    /// </summary>
+    private static string FindBuildFolder(string extractDir, string exeName)
+    {
+        if (File.Exists(Path.Combine(extractDir, exeName)))
+            return extractDir;
+
+        var subDirs = Directory.GetDirectories(extractDir);
+        if (subDirs.Length == 1 && File.Exists(Path.Combine(subDirs[0], exeName)))
+            return subDirs[0];
+
+        throw new InvalidDataException($"Update zip does not contain {exeName}.");
+    }
+
+    /// <summary>
     /// Waits for this process to exit (so the exe/dll files are no longer locked), copies the
     /// freshly extracted build over the install folder, then starts it again.
     /// </summary>
-    private static string BuildUpdateScript(int pid, string extractDir, string installDir, string exeName)
+    private static string BuildUpdateScript(int clientPid, string sourceDir, string extractDir, string installDir, string exeName)
     {
         var exePath = Path.Combine(installDir, exeName);
         var lines = new[]
         {
-            $"$pid = {pid}",
-            "while (Get-Process -Id $pid -ErrorAction SilentlyContinue) { Start-Sleep -Milliseconds 300 }",
+            // Not named $pid: that is a read-only built-in in PowerShell (the script's own process
+            // id), so assigning to it fails and the wait below would never end.
+            $"$clientPid = {clientPid}",
+            // Gives up after 60s instead of waiting forever; the old client is left untouched.
+            "Wait-Process -Id $clientPid -Timeout 60 -ErrorAction SilentlyContinue",
+            "if (Get-Process -Id $clientPid -ErrorAction SilentlyContinue) { exit 1 }",
             "Start-Sleep -Seconds 1",
-            $"robocopy \"{extractDir}\" \"{installDir}\" /E /IS /IT",
+            $"robocopy \"{sourceDir}\" \"{installDir}\" /E /IS /IT",
             $"Remove-Item -Recurse -Force \"{extractDir}\"",
             $"Start-Process -FilePath \"{exePath}\" -WorkingDirectory \"{installDir}\""
         };
