@@ -565,4 +565,55 @@
   <data name="UpdateCardWaiting" xml:space="preserve">
     <value>⏳ В очереди</value>
   </data>
+  <data name="ToolbarUpdateServer" xml:space="preserve">
+    <value>Обновить сервер</value>
+  </data>
+  <data name="UpdateServerTitle" xml:space="preserve">
+    <value>Обновление сервера ClubControl</value>
+  </data>
+  <data name="TitleVerifyForUpdate" xml:space="preserve">
+    <value>Введите пароль администратора, чтобы обновить ClubControl</value>
+  </data>
+  <data name="UpdateServerInstalled" xml:space="preserve">
+    <value>Установлено: {0}</value>
+  </data>
+  <data name="UpdateServerLatest" xml:space="preserve">
+    <value>Новейшая на GitHub: {0} (опубликована {1})</value>
+  </data>
+  <data name="UpdateServerChecking" xml:space="preserve">
+    <value>Проверяю GitHub на наличие новой версии...</value>
+  </data>
+  <data name="UpdateServerNewer" xml:space="preserve">
+    <value>Доступна новая версия.</value>
+  </data>
+  <data name="UpdateServerUpToDate" xml:space="preserve">
+    <value>У вас уже новейшая версия.</value>
+  </data>
+  <data name="UpdateServerButton" xml:space="preserve">
+    <value>Скачать и обновить</value>
+  </data>
+  <data name="UpdateServerButtonAnyway" xml:space="preserve">
+    <value>Всё равно обновить</value>
+  </data>
+  <data name="UpdateServerDownloading" xml:space="preserve">
+    <value>Загрузка... {0}%</value>
+  </data>
+  <data name="UpdateServerInstalling" xml:space="preserve">
+    <value>Установка. Сервер сейчас закроется и сам запустится снова примерно через 30 секунд.</value>
+  </data>
+  <data name="UpdateServerNote" xml:space="preserve">
+    <value>Также заменяется файл обновления клиентов для игровых ПК (после этого нажмите «Обновить клиент»). Сервер перезапустится: ПК продолжат свои сессии и подключатся сами. Нужно будет войти заново.</value>
+  </data>
+  <data name="UpdateServerCheckFailed" xml:space="preserve">
+    <value>Не удалось связаться с GitHub: {0}</value>
+  </data>
+  <data name="UpdateServerFailed" xml:space="preserve">
+    <value>Обновление не удалось: {0}</value>
+  </data>
+  <data name="UpdateServerProtectedFolder" xml:space="preserve">
+    <value>Сервер установлен в защищённой папке ({0}) и не может заменить сам себя. Запустите ClubControl-Setup.exe со страницы загрузки.</value>
+  </data>
+  <data name="UpdateServerOpenPage" xml:space="preserve">
+    <value>Открыть страницу загрузки</value>
+  </data>
 </root>

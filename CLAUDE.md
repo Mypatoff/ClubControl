@@ -93,6 +93,15 @@ C# .NET 8. WPF for Server (admin panel + hosted ASP.NET Core/SignalR) and Client
       `ClientVersion` = updated, restart with the same version = unchanged, 5 minutes of nothing = no
       response (`OfflineMonitorService` checks). Shown as card state text (`PcRow.CardStateDisplay`,
       keys `UpdateCard*`) and as event-log lines (Warning for the two problem cases). No client change.
+- [x] Post-phase-6 feature: "Update server" button (`ServerUpdateWindow`, `ServerUpdater`, `ServerUpdateRelease` in
+      Shared). Reads the rolling GitHub "latest" release (public repo, no token), downloads the server and
+      client zips, verifies them against `SHA256SUMS.txt` (new Build workflow step), copies the client zip
+      to `ClientUpdateFile.FilePath`, and swaps the server's own files with the same PowerShell script as
+      the client update (`ClientUpdateScript.Build`: wait for exit, back up, robocopy, start, health marker,
+      roll back). The server writes `server-healthy.flag` after the database upgrade, before the login
+      prompt. Needs a user-writable install folder (not Program Files) and the admin password
+      (`LoginMode.VerifyForUpdate`). Untested end to end: needs a release built with `SHA256SUMS.txt` and a
+      second, newer build to update to - try "Update anyway" first on a spare copy.
 - [x] Post-phase-6 fix: "Update client" on many PCs at once only updated one or two (all 30 PCs pulling the
       ~65 MB zip at the same moment overload the server's network and hit the client's download time
       limit). `PowerService.UpdateClientAsync` now sends the command one PC every `UpdateGap` (8 s); waiting

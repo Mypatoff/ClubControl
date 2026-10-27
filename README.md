@@ -57,6 +57,34 @@ publish output - copy them into the same folder as the matching `.exe` before ru
 builds are self-contained on purpose: the setup installs them without .NET, so a client updated
 with a framework-dependent build would stop starting.
 
+## Updating the server ("Update server" in the admin panel)
+
+Once a server runs a build that has this button, you never need to reinstall it by hand again:
+
+1. Click **⬆ Update server** (top right). It asks GitHub for the newest build (the "latest" release that
+   every push to `main` produces) and shows the installed and the newest version.
+2. Click **Download and update** and enter the admin password. It downloads the server zip and the client
+   zip, checks both against the published `SHA256SUMS.txt` (a download that does not match is thrown
+   away), and **replaces the client update file** (`%ProgramData%\ClubControl\ClientUpdate\ClubControl.Client.zip`)
+   with the new client zip. Then the server closes, swaps its own files and starts again by itself in
+   about 30 seconds. Log in again.
+3. To update the gaming PCs afterwards, select them and use "Update client" as described below - the zip is
+   already in place.
+
+Good to know:
+- The gaming PCs keep running their sessions while the server restarts and reconnect by themselves.
+- The old server files are backed up first. If the new server does not come up (it writes
+  `%ProgramData%\ClubControl\server-healthy.flag` once it has started) within 90 seconds, the old build
+  is put back. A database upgrade the new build already did is **not** undone - it makes its own backup
+  in `Backups` first.
+- It only works when the server runs from a folder your Windows user can write to (for example the
+  unzipped `ClubControl-Server-win-x64` folder). A server installed with `ClubControl-Setup.exe` lives in
+  `C:\Program Files`, which needs administrator rights: use the "Open download page" button and run
+  `ClubControl-Setup.exe` again instead.
+- The server needs internet access for this. Anyone who can push to the GitHub repository can ship a build
+  this way, so keep the repository's access limited.
+- The very first time you still have to put a build with this button on the server by hand.
+
 ## Updating the client later ("Update client" in the admin panel)
 
 After the first install, you do not need to walk to every PC again for a client-side bug fix:

@@ -52,6 +52,7 @@ public partial class MainWindow : Window
         UpdateClientButton.Content = "⬇ " + Strings.Get("ToolbarUpdateClient");
         SettingsButton.Content = "⚙ " + Strings.Get("ToolbarSettings");
         ReportsButton.Content = "📊 " + Strings.Get("ToolbarReports");
+        UpdateServerButton.Content = "⬆ " + Strings.Get("ToolbarUpdateServer");
 
         CtxStart.Header = Strings.Get("ToolbarStart");
         CtxStop.Header = Strings.Get("ToolbarStop");
@@ -865,6 +866,9 @@ public partial class MainWindow : Window
         else if (saved)
             await RefreshAsync();
     }
+
+    private void OnUpdateServer(object sender, RoutedEventArgs e) =>
+        new ServerUpdateWindow { Owner = this }.ShowDialog();
 
     private void OnReports(object sender, RoutedEventArgs e)
     {

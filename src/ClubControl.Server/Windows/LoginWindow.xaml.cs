@@ -13,7 +13,8 @@ public enum LoginMode
     Login,
     CreatePassword,
     ResetPassword,
-    VerifyForExit
+    VerifyForExit,
+    VerifyForUpdate
 }
 
 /// <summary>
@@ -53,6 +54,7 @@ public partial class LoginWindow : Window
             LoginMode.CreatePassword => Strings.Get("TitleCreatePassword"),
             LoginMode.ResetPassword => Strings.Get("TitleResetPassword"),
             LoginMode.VerifyForExit => Strings.Get("TitleVerifyForExit"),
+            LoginMode.VerifyForUpdate => Strings.Get("TitleVerifyForUpdate"),
             _ => Strings.Get("TitleLogin")
         };
 
@@ -73,7 +75,7 @@ public partial class LoginWindow : Window
     /// </summary>
     private void RefreshLockoutState()
     {
-        if (_mode is not (LoginMode.Login or LoginMode.VerifyForExit))
+        if (_mode is not (LoginMode.Login or LoginMode.VerifyForExit or LoginMode.VerifyForUpdate))
             return;
 
         if (LoginAttemptGuard.IsLockedOut(out var remaining))

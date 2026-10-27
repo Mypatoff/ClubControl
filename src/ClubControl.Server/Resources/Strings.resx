@@ -565,4 +565,55 @@
   <data name="UpdateCardWaiting" xml:space="preserve">
     <value>⏳ Waiting</value>
   </data>
+  <data name="ToolbarUpdateServer" xml:space="preserve">
+    <value>Update server</value>
+  </data>
+  <data name="UpdateServerTitle" xml:space="preserve">
+    <value>Update ClubControl server</value>
+  </data>
+  <data name="TitleVerifyForUpdate" xml:space="preserve">
+    <value>Enter the admin password to update ClubControl</value>
+  </data>
+  <data name="UpdateServerInstalled" xml:space="preserve">
+    <value>Installed: {0}</value>
+  </data>
+  <data name="UpdateServerLatest" xml:space="preserve">
+    <value>Newest on GitHub: {0} (published {1})</value>
+  </data>
+  <data name="UpdateServerChecking" xml:space="preserve">
+    <value>Checking GitHub for the newest version...</value>
+  </data>
+  <data name="UpdateServerNewer" xml:space="preserve">
+    <value>A newer version is available.</value>
+  </data>
+  <data name="UpdateServerUpToDate" xml:space="preserve">
+    <value>You already have the newest version.</value>
+  </data>
+  <data name="UpdateServerButton" xml:space="preserve">
+    <value>Download and update</value>
+  </data>
+  <data name="UpdateServerButtonAnyway" xml:space="preserve">
+    <value>Update anyway</value>
+  </data>
+  <data name="UpdateServerDownloading" xml:space="preserve">
+    <value>Downloading... {0}%</value>
+  </data>
+  <data name="UpdateServerInstalling" xml:space="preserve">
+    <value>Installing. The server closes now and starts again by itself in about 30 seconds.</value>
+  </data>
+  <data name="UpdateServerNote" xml:space="preserve">
+    <value>This also replaces the client update file for the gaming PCs (use Update client afterwards). The server restarts: the PCs keep running their sessions and reconnect by themselves. You will have to log in again.</value>
+  </data>
+  <data name="UpdateServerCheckFailed" xml:space="preserve">
+    <value>Could not reach GitHub: {0}</value>
+  </data>
+  <data name="UpdateServerFailed" xml:space="preserve">
+    <value>The update failed: {0}</value>
+  </data>
+  <data name="UpdateServerProtectedFolder" xml:space="preserve">
+    <value>This server is installed in a protected folder ({0}) and cannot replace itself. Run ClubControl-Setup.exe from the download page instead.</value>
+  </data>
+  <data name="UpdateServerOpenPage" xml:space="preserve">
+    <value>Open download page</value>
+  </data>
 </root>

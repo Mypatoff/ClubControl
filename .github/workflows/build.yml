@@ -72,6 +72,18 @@ jobs:
           Compress-Archive -Path publish/server/* -DestinationPath ClubControl-Server-win-x64.zip
           Compress-Archive -Path publish/client/* -DestinationPath ClubControl-Client-win-x64.zip
 
+      # "Update server" in the admin panel downloads the two zips from the latest release and checks
+      # them against this list (sha256sum format: "hash  file name") before installing anything.
+      - name: Make checksums
+        shell: pwsh
+        run: |
+          $lines = foreach ($file in 'ClubControl-Server-win-x64.zip', 'ClubControl-Client-win-x64.zip', 'dist/ClubControl-Setup.exe') {
+            $hash = (Get-FileHash -Algorithm SHA256 $file).Hash.ToLower()
+            "$hash  $(Split-Path $file -Leaf)"
+          }
+          $lines | Set-Content -Path SHA256SUMS.txt -Encoding ascii
+          Get-Content SHA256SUMS.txt
+
       # Keeps one rolling "latest" release with the newest .exe builds attached, so there is
       # always a stable download link in the repo instead of having to dig through Actions runs.
       - name: Publish "latest" release
@@ -86,3 +98,4 @@ jobs:
             dist/ClubControl-Setup.exe
             ClubControl-Server-win-x64.zip
             ClubControl-Client-win-x64.zip
+            SHA256SUMS.txt

@@ -565,4 +565,55 @@
   <data name="UpdateCardWaiting" xml:space="preserve">
     <value>⏳ Navbatda</value>
   </data>
+  <data name="ToolbarUpdateServer" xml:space="preserve">
+    <value>Serverni yangilash</value>
+  </data>
+  <data name="UpdateServerTitle" xml:space="preserve">
+    <value>ClubControl serverini yangilash</value>
+  </data>
+  <data name="TitleVerifyForUpdate" xml:space="preserve">
+    <value>ClubControl yangilash uchun administrator parolini kiriting</value>
+  </data>
+  <data name="UpdateServerInstalled" xml:space="preserve">
+    <value>Oʻrnatilgan: {0}</value>
+  </data>
+  <data name="UpdateServerLatest" xml:space="preserve">
+    <value>GitHub dagi eng yangisi: {0} (eʼlon qilingan {1})</value>
+  </data>
+  <data name="UpdateServerChecking" xml:space="preserve">
+    <value>GitHub dan yangi versiya tekshirilmoqda...</value>
+  </data>
+  <data name="UpdateServerNewer" xml:space="preserve">
+    <value>Yangi versiya mavjud.</value>
+  </data>
+  <data name="UpdateServerUpToDate" xml:space="preserve">
+    <value>Sizda allaqachon eng yangi versiya bor.</value>
+  </data>
+  <data name="UpdateServerButton" xml:space="preserve">
+    <value>Yuklab olish va yangilash</value>
+  </data>
+  <data name="UpdateServerButtonAnyway" xml:space="preserve">
+    <value>Baribir yangilash</value>
+  </data>
+  <data name="UpdateServerDownloading" xml:space="preserve">
+    <value>Yuklanmoqda... {0}%</value>
+  </data>
+  <data name="UpdateServerInstalling" xml:space="preserve">
+    <value>Oʻrnatilmoqda. Server hozir yopiladi va taxminan 30 soniyadan keyin oʻzi qayta ishga tushadi.</value>
+  </data>
+  <data name="UpdateServerNote" xml:space="preserve">
+    <value>Bu oʻyin kompyuterlari uchun mijoz yangilash faylini ham almashtiradi (keyin Mijozni yangilash tugmasini bosing). Server qayta ishga tushadi: kompyuterlar seanslarini davom ettiradi va oʻzi ulanadi. Qaytadan kirishingiz kerak boʻladi.</value>
+  </data>
+  <data name="UpdateServerCheckFailed" xml:space="preserve">
+    <value>GitHub bilan bogʻlanib boʻlmadi: {0}</value>
+  </data>
+  <data name="UpdateServerFailed" xml:space="preserve">
+    <value>Yangilash amalga oshmadi: {0}</value>
+  </data>
+  <data name="UpdateServerProtectedFolder" xml:space="preserve">
+    <value>Server himoyalangan papkada ({0}) oʻrnatilgan va oʻzini almashtira olmaydi. Yuklab olish sahifasidan ClubControl-Setup.exe ni ishga tushiring.</value>
+  </data>
+  <data name="UpdateServerOpenPage" xml:space="preserve">
+    <value>Yuklab olish sahifasini ochish</value>
+  </data>
 </root>

@@ -145,6 +145,17 @@ public partial class App : Application
             await sessionService.RestoreActiveSessionsAsync();
         }
 
+        // Database upgraded and sessions restored: this build is up. "Update server" waits for this file
+        // before it keeps the new build (and puts the old one back if it never shows up).
+        try
+        {
+            File.WriteAllText(ServerUpdateRelease.HealthMarkerPath, DateTime.UtcNow.ToString("O"));
+        }
+        catch (Exception)
+        {
+            // Only matters during an update, and then the old build is simply restored.
+        }
+
         // Best-effort (SPEC section 1/2): needs no elevation for the Run key, but firewall rules
         // need an elevated process - if this run is not elevated, netsh simply fails and the rules
         // stay missing until an admin runs ClubControl (or install-server.ps1) elevated once.
@@ -251,13 +262,21 @@ public partial class App : Application
     /// <summary>Tray "Exit" requires the admin password (SPEC section 1) - this is the only real way to quit.</summary>
     private async void RequestExit()
     {
+        if (await VerifyAdminPasswordAsync(null, LoginMode.VerifyForExit))
+            Shutdown();
+    }
+
+    /// <summary>Asks for the admin password before something that closes or replaces the server (tray Exit, Update server).</summary>
+    public async Task<bool> VerifyAdminPasswordAsync(Window? owner, LoginMode mode)
+    {
         using var scope = _host!.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ClubDbContext>();
         var setting = await SettingsHelper.GetOrCreateAsync(db);
 
-        var login = new LoginWindow(LoginMode.VerifyForExit, setting.AdminPasswordHash);
-        if (login.ShowDialog() == true)
-            Shutdown();
+        var login = new LoginWindow(mode, setting.AdminPasswordHash);
+        if (owner is not null)
+            login.Owner = owner;
+        return login.ShowDialog() == true;
     }
 
     protected override async void OnExit(ExitEventArgs e)
