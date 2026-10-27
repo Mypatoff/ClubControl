@@ -70,8 +70,8 @@
   <data name="KindComputer" xml:space="preserve">
     <value>Kompyuter</value>
   </data>
-  <data name="KindBilliard" xml:space="preserve">
-    <value>Billiard</value>
+  <data name="KindOther" xml:space="preserve">
+    <value>Boshqa</value>
   </data>
   <data name="ColumnState" xml:space="preserve">
     <value>Holat</value>
@@ -131,7 +131,7 @@
     <value>Faqat bitta kompyuterni tanlang.</value>
   </data>
   <data name="SelectAtLeastOnePc" xml:space="preserve">
-    <value>Kamida bitta kompyuter yoki billiardni tanlang.</value>
+    <value>Kamida bitta kompyuter yoki resursni tanlang.</value>
   </data>
   <data name="SelectedNotReadyToStart" xml:space="preserve">
     <value>Tanlangan elementlardan biri yoki bir nechtasi boshlashga tayyor emas (sozlanmagan yoki allaqachon sessiyasi bor).</value>
@@ -148,8 +148,8 @@
   <data name="KindComputerPlural" xml:space="preserve">
     <value>Kompyuterlar</value>
   </data>
-  <data name="KindBilliardPlural" xml:space="preserve">
-    <value>Billiardlar</value>
+  <data name="KindOtherPlural" xml:space="preserve">
+    <value>Boshqa</value>
   </data>
   <data name="MultiTargetFormat" xml:space="preserve">
     <value>{0}: {1} ({2})</value>
@@ -197,7 +197,7 @@
     <value>Tariflar</value>
   </data>
   <data name="TabResources" xml:space="preserve">
-    <value>Kompyuterlar va billiard</value>
+    <value>Kompyuterlar va boshqa</value>
   </data>
   <data name="LabelClubName" xml:space="preserve">
     <value>Klub nomi</value>
@@ -266,7 +266,7 @@
     <value>Har bir tarifning narxi 0 dan katta boʻlishi, minimal toʻlov esa maksimal toʻlovdan katta boʻlmasligi kerak.</value>
   </data>
   <data name="ComputersHint" xml:space="preserve">
-    <value>Yangi kompyuter yoki billiardga raqam va tarif belgilang. Oʻchirilgan qatorlar bloklangan holda qoladi va asosiy paneldan yoʻqoladi.</value>
+    <value>Yangi kompyuter yoki resursga raqam va tarif belgilang. Oʻchirilgan qatorlar bloklangan holda qoladi va asosiy paneldan yoʻqoladi.</value>
   </data>
   <data name="LabelNumber" xml:space="preserve">
     <value>Raqam</value>
@@ -286,8 +286,8 @@
   <data name="AddComputerTitle" xml:space="preserve">
     <value>Kompyuter qoʻshish</value>
   </data>
-  <data name="AddBilliardTitle" xml:space="preserve">
-    <value>Billiard qoʻshish</value>
+  <data name="AddOtherTitle" xml:space="preserve">
+    <value>Nomli resurs qoʻshish</value>
   </data>
   <data name="ButtonAdd" xml:space="preserve">
     <value>Qoʻshish</value>
@@ -296,13 +296,13 @@
     <value>Oʻchirish</value>
   </data>
   <data name="SelectAResourceToDelete" xml:space="preserve">
-    <value>Oʻchirish uchun kompyuter yoki billiardni tanlang.</value>
+    <value>Oʻchirish uchun kompyuter yoki resursni tanlang.</value>
   </data>
   <data name="DeleteResourceConfirm" xml:space="preserve">
-    <value>Bu kompyuter/billiard oʻchirilsinmi? Bu amalni ortga qaytarib boʻlmaydi.</value>
+    <value>Bu kompyuter/resurs oʻchirilsinmi? Bu amalni ortga qaytarib boʻlmaydi.</value>
   </data>
   <data name="CannotDeleteResourceWithHistory" xml:space="preserve">
-    <value>Bu kompyuter/billiardda sessiyalar tarixi bor, shuning uchun uni oʻchirib boʻlmaydi - bu uni oldingi hisobotlardan ham oʻchirib yuboradi. Oʻchirish oʻrniga "Yoqilgan" belgisini olib tashlang.</value>
+    <value>Bu kompyuter/resursda sessiyalar tarixi bor, shuning uchun uni oʻchirib boʻlmaydi - bu uni oldingi hisobotlardan ham oʻchirib yuboradi. Oʻchirish oʻrniga "Yoqilgan" belgisini olib tashlang.</value>
   </data>
   <data name="SelectATariffToDelete" xml:space="preserve">
     <value>Oʻchirish uchun tarifni tanlang.</value>
@@ -311,10 +311,10 @@
     <value>Bu tarif oʻchirilsinmi? Bu amalni ortga qaytarib boʻlmaydi.</value>
   </data>
   <data name="CannotDeleteTariffInUse" xml:space="preserve">
-    <value>Bu tarif kompyuter yoki billiardga tayinlangan, shuning uchun uni oʻchirib boʻlmaydi. Avval boshqa tarif tayinlang.</value>
+    <value>Bu tarif kompyuter yoki resursga tayinlangan, shuning uchun uni oʻchirib boʻlmaydi. Avval boshqa tarif tayinlang.</value>
   </data>
   <data name="TariffKindMismatch" xml:space="preserve">
-    <value>Kompyuter faqat kompyuter tarifidan, billiard esa faqat billiard tarifidan foydalanishi mumkin. "Kompyuterlar" boʻlimini tekshiring.</value>
+    <value>Kompyuter faqat kompyuter tarifidan, "Boshqa" resursi esa faqat "Boshqa" tarifidan foydalanishi mumkin. "Kompyuterlar" boʻlimini tekshiring.</value>
   </data>
   <data name="ColumnEnabled" xml:space="preserve">
     <value>Yoqilgan</value>
@@ -507,5 +507,8 @@
   </data>
   <data name="MoveSameTariffOnly" xml:space="preserve">
     <value>Sessiyani faqat bir xil turdagi va bir xil tarifli obyektlar orasida koʻchirish mumkin.</value>
+  </data>
+  <data name="EnterAName" xml:space="preserve">
+    <value>Nomini kiriting.</value>
   </data>
 </root>

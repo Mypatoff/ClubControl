@@ -36,7 +36,7 @@
     <SolidColorBrush x:Key="OnlineDotBrush" Color="#3DDC84" />
     <SolidColorBrush x:Key="OfflineDotBrush" Color="#6B7280" />
 
-    <!-- Billiards sit on their own green "felt" panel so they read as a separate zone -->
+    <!-- Other resources sit on their own green "felt" panel so they read as a separate zone -->
     <LinearGradientBrush x:Key="FeltBrush" StartPoint="0,0" EndPoint="1,1">
         <GradientStop Color="#123F2E" Offset="0" />
         <GradientStop Color="#0C2B20" Offset="1" />

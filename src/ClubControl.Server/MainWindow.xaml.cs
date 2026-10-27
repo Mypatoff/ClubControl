@@ -104,7 +104,7 @@ public partial class MainWindow : Window
         var snapshots = await sessionService.GetActiveSessionSnapshotsAsync();
 
         // Disabled resources are hidden from this operational panel entirely (SPEC section 8) -
-        // they're still locked and excluded from "all" actions, but a disabled PC/billiard has no
+        // they're still locked and excluded from "all" actions, but a disabled PC/resource has no
         // visible row here to be confused by. Settings > Computers is where they're re-enabled or
         // actually deleted. The one exception is a disabled PC that somehow still has an active
         // session (e.g. disabled mid-session) - that must stay visible, since hiding it would also
@@ -136,20 +136,20 @@ public partial class MainWindow : Window
             pcs.Count(p => p.IsOnline), pcs.Count);
     }
 
-    /// <summary>PCs first, then billiards - the list shows them as two separate sections (see MainWindow.xaml).</summary>
+    /// <summary>PCs first, then other resources - the list shows them as two separate sections (see MainWindow.xaml).</summary>
     private static ListCollectionView BuildCardView(List<PcRow> rows)
     {
         var view = new ListCollectionView(rows);
-        view.GroupDescriptions.Add(new PropertyGroupDescription(nameof(PcRow.IsBilliard)));
-        view.SortDescriptions.Add(new SortDescription(nameof(PcRow.IsBilliard), ListSortDirection.Ascending));
+        view.GroupDescriptions.Add(new PropertyGroupDescription(nameof(PcRow.IsOther)));
+        view.SortDescriptions.Add(new SortDescription(nameof(PcRow.IsOther), ListSortDirection.Ascending));
         view.SortDescriptions.Add(new SortDescription(nameof(PcRow.Number), ListSortDirection.Ascending));
         return view;
     }
 
     private void UpdateCounters(List<PcRow> rows)
     {
-        var computers = rows.Where(r => !r.IsBilliard).ToList();
-        var billiards = rows.Where(r => r.IsBilliard).ToList();
+        var computers = rows.Where(r => !r.IsOther).ToList();
+        var others = rows.Where(r => r.IsOther).ToList();
 
         var busy = computers.Count(r => r.HasActiveSession);
         var offline = computers.Count(r => r.IsDimmed && !r.HasActiveSession);
@@ -157,7 +157,7 @@ public partial class MainWindow : Window
         StatFreeText.Text = $"{computers.Count - busy - offline} {Strings.Get("StateFree")}";
         StatBusyText.Text = $"{busy} {Strings.Get("StatBusy")}";
         StatOfflineText.Text = $"{offline} {Strings.Get("StatOffline")}";
-        StatBilliardText.Text = $"{billiards.Count(r => r.HasActiveSession)}/{billiards.Count} {Strings.Get("KindBilliardPlural")}";
+        StatOtherText.Text = $"{others.Count(r => r.HasActiveSession)}/{others.Count} {Strings.Get("KindOtherPlural")}";
     }
 
     private static PcRow BuildRow(Pc pc, Dictionary<int, string> tariffNames, SessionService.ActiveSessionSnapshot? snap)
@@ -193,9 +193,10 @@ public partial class MainWindow : Window
             IsManual = pc.IsManual,
             Kind = pc.Kind,
             Number = pc.Number,
+            Name = pc.Name,
             TariffId = pc.TariffId,
             State = pc.State,
-            KindIcon = pc.Kind == ResourceKind.Billiard ? "🎱" : "🖥",
+            KindIcon = pc.Kind == ResourceKind.Other ? "📦" : "🖥",
             TariffDisplay = pc.TariffId.HasValue ? tariffNames.GetValueOrDefault(pc.TariffId.Value, "") : "",
             StateDisplay = Strings.PcStateName(pc.State, pc.IsConfigured),
             SessionTypeDisplay = sessionType,
@@ -522,7 +523,7 @@ public partial class MainWindow : Window
 
     /// <summary>
     /// Validates the current selection for Start/Free (SPEC extension: bulk-start several PCs or
-    /// billiards at once, as long as they all share one tariff - that's what makes "apply the same
+    /// resources at once, as long as they all share one tariff - that's what makes "apply the same
     /// prepay/postpay/free parameters to each" unambiguous). Shows the relevant error and returns
     /// null if the selection isn't usable.
     /// </summary>
@@ -661,7 +662,7 @@ public partial class MainWindow : Window
     }
 
     /// <summary>
-    /// Validates the current selection for Stop (SPEC extension: stop several PCs/billiards at
+    /// Validates the current selection for Stop (SPEC extension: stop several PCs/resources at
     /// once, e.g. a group finishing together). All selected must have an active session, and all
     /// must be the same kind of session - prepay (simple confirm, no refund) and postpay/limit-
     /// reached (payment collection) use different flows, so mixing them in one action isn't
@@ -754,7 +755,7 @@ public partial class MainWindow : Window
 
             totalUzs += snapshot.RemainingMoneyUzs;
             lines.Add(new StopPrepayLine(
-                Strings.Format("PcNumberFormat", target.Number!),
+                target.Label,
                 $"{snapshot.RemainingMoneyUzs:N0} UZS",
                 $"{Strings.Get("ColumnRemaining")}: {FormatTimeLeft(snapshot.RemainingSeconds)}",
                 Strings.Get("StopPrepayUnused")));

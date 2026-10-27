@@ -21,7 +21,7 @@
             <Setter Property="FontWeight" Value="SemiBold" />
         </Style>
 
-        <!-- One card per PC / billiard table. Selection and hover are drawn as a coloured outline. -->
+        <!-- One card per PC / other resource. Selection and hover are drawn as a coloured outline. -->
         <Style x:Key="CardItemStyle" TargetType="ListBoxItem">
             <Setter Property="Margin" Value="0,0,6,6" />
             <Setter Property="Background" Value="{StaticResource CardBrush}" />
@@ -49,7 +49,7 @@
                 </Setter.Value>
             </Setter>
             <Style.Triggers>
-                <DataTrigger Binding="{Binding IsBilliard}" Value="True">
+                <DataTrigger Binding="{Binding IsOther}" Value="True">
                     <Setter Property="Background" Value="{StaticResource FeltCardBrush}" />
                 </DataTrigger>
             </Style.Triggers>
@@ -90,8 +90,8 @@
                 </Border>
                 <Border Style="{StaticResource ChipStyle}" BorderBrush="{StaticResource FeltBorderBrush}">
                     <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="🎱" VerticalAlignment="Center" />
-                        <TextBlock x:Name="StatBilliardText" Style="{StaticResource ChipTextStyle}" Foreground="{StaticResource FeltTextBrush}" />
+                        <TextBlock Text="📦" VerticalAlignment="Center" />
+                        <TextBlock x:Name="StatOtherText" Style="{StaticResource ChipTextStyle}" Foreground="{StaticResource FeltTextBrush}" />
                     </StackPanel>
                 </Border>
             </StackPanel>
@@ -121,7 +121,7 @@
             </DockPanel>
         </Border>
 
-        <!-- PCs and billiards as cards, grouped into two sections (billiards on a green felt panel) -->
+        <!-- PCs and other resources as cards, grouped into two sections (the others on a green felt panel) -->
         <Border Grid.Row="2" Margin="0,12" Background="{StaticResource SurfaceBrush}" BorderBrush="{StaticResource DividerBrush}"
                 BorderThickness="1" CornerRadius="12">
             <Grid Margin="8">
@@ -158,7 +158,7 @@
 
                 <ListBox.GroupStyle>
                     <GroupStyle>
-                        <!-- ...and GroupStyle.Panel lays out the sections: PCs take the width, billiards a narrow column on the right -->
+                        <!-- ...and GroupStyle.Panel lays out the sections: PCs take the width, other resources a narrow column on the right -->
                         <GroupStyle.Panel>
                             <ItemsPanelTemplate>
                                 <Grid>
@@ -195,7 +195,7 @@
                                                 </StackPanel>
                                             </Border>
                                             <ControlTemplate.Triggers>
-                                                <!-- Group key is IsBilliard: the billiards section gets the felt look -->
+                                                <!-- Group key is IsOther: the "other" section gets the felt look -->
                                                 <DataTrigger Binding="{Binding Name}" Value="True">
                                                     <Setter TargetName="Section" Property="Background" Value="{StaticResource FeltBrush}" />
                                                     <Setter TargetName="Section" Property="BorderBrush" Value="{StaticResource FeltBorderBrush}" />
@@ -206,7 +206,7 @@
                                     </Setter.Value>
                                 </Setter>
                                 <Style.Triggers>
-                                    <!-- Group key is IsBilliard; MaxWidth keeps the billiard cards in a single column -->
+                                    <!-- Group key is IsOther; MaxWidth keeps the other-resource cards in a single column -->
                                     <DataTrigger Binding="{Binding Name}" Value="True">
                                         <Setter Property="Grid.Column" Value="1" />
                                         <Setter Property="MaxWidth" Value="172" />
@@ -222,7 +222,7 @@
                     <DataTemplate>
                         <!-- Compact on purpose: 30 PCs + 3 tables must fit on one screen. Details are in the tooltip.
                              Fixed size: 122 + the item's 4 border + 6 margin = 132 per card, so 10 fit in a row on a
-                             maximized 1600-wide window (about 1360 free next to the billiards column) and the
+                             maximized 1600-wide window (about 1360 free next to the others column) and the
                              WrapPanel only starts a new row when the window is too narrow for 10. -->
                         <Grid x:Name="CardRoot" Width="122" Height="62" ToolTip="{Binding TooltipText}">
                             <!-- state tint + coloured left edge -->
@@ -238,7 +238,8 @@
                                 <!-- The number is docked first so it always keeps its room; the state text gets what is
                                      left and is trimmed with "..." if it is too long (full text is in the tooltip). -->
                                 <DockPanel Grid.Row="0">
-                                    <TextBlock DockPanel.Dock="Left" Text="{Binding NumberDisplay}" FontSize="20" FontWeight="Bold" TextWrapping="NoWrap" />
+                                    <TextBlock DockPanel.Dock="Left" Text="{Binding CardTitle}" FontSize="20" FontWeight="Bold" TextWrapping="NoWrap"
+                                               TextTrimming="CharacterEllipsis" MaxWidth="78" />
                                     <TextBlock Text="{Binding StateDisplay}" Foreground="{Binding AccentBrush}"
                                                FontSize="10.5" FontWeight="SemiBold" VerticalAlignment="Center" Margin="6,0,0,0"
                                                TextAlignment="Right" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" />

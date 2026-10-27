@@ -49,7 +49,7 @@ public partial class PostpayPaymentWindow : Window
 
             total += snapshot.AmountOrCostUzs;
             if (_targets.Count > 1)
-                lines.Add($"{Strings.Format("PcNumberFormat", target.Number!)}: {snapshot.AmountOrCostUzs:N0} UZS");
+                lines.Add($"{target.Label}: {snapshot.AmountOrCostUzs:N0} UZS");
         }
 
         BreakdownText.Text = string.Join("\n", lines);

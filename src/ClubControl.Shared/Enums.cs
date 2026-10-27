@@ -4,7 +4,7 @@ namespace ClubControl.Shared;
 public enum ResourceKind
 {
     Computer,
-    Billiard
+    Other
 }
 
 public enum PcState

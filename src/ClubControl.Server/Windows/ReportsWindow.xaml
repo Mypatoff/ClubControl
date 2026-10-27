@@ -8,7 +8,7 @@
                 BorderThickness="1" CornerRadius="8" Padding="12,10" Margin="0,0,0,12">
             <StackPanel Orientation="Horizontal">
                 <Button x:Name="ComputersKindButton" Margin="0,0,6,0" Style="{StaticResource SecondaryButtonStyle}" Click="OnComputersKind" />
-                <Button x:Name="BilliardsKindButton" Margin="0,0,16,0" Style="{StaticResource SecondaryButtonStyle}" Click="OnBilliardsKind" />
+                <Button x:Name="OtherKindButton" Margin="0,0,16,0" Style="{StaticResource SecondaryButtonStyle}" Click="OnOtherKind" />
 
                 <Border Width="1" Background="{StaticResource DividerBrush}" Margin="0,2,16,2" />
 

@@ -20,7 +20,7 @@ public partial class ExtendSessionWindow : Window
         _pc = pc;
 
         Title = Strings.Get("ExtendSessionTitle");
-        TargetText.Text = Strings.Format("TargetPcFormat", pc.Number!, pc.TariffDisplay);
+        TargetText.Text = $"{pc.Label} ({pc.TariffDisplay})";
         MoneyRadio.Content = Strings.Get("AddMoney");
         TimeRadio.Content = Strings.Get("AddTime");
         CancelButton.Content = Strings.Get("Cancel");

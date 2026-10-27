@@ -13,7 +13,7 @@ namespace ClubControl.Server.Windows;
 
 /// <summary>
 /// Manually adds a resource with no client ever connecting to it (SPEC extension): an offline PC
-/// with no LAN connection, or a non-computer resource like a billiard table.
+/// with no LAN connection, or a non-computer resource like a billiard table or a PS5 room.
 /// </summary>
 public partial class AddResourceWindow : Window
 {
@@ -28,9 +28,16 @@ public partial class AddResourceWindow : Window
         _db = _scope.ServiceProvider.GetRequiredService<ClubDbContext>();
         _kind = kind;
 
-        Title = kind == ResourceKind.Billiard ? Strings.Get("AddBilliardTitle") : Strings.Get("AddComputerTitle");
+        Title = kind == ResourceKind.Other ? Strings.Get("AddOtherTitle") : Strings.Get("AddComputerTitle");
         HeaderText.Text = Title;
         NumberLabel.Text = Strings.Get("LabelNumber");
+        NameLabel.Text = Strings.Get("LabelName");
+        if (kind != ResourceKind.Other)
+        {
+            // Only named resources ("Table 3", "PS5 room") need a name; computers are known by number.
+            NameLabel.Visibility = Visibility.Collapsed;
+            NameBox.Visibility = Visibility.Collapsed;
+        }
         TariffLabel.Text = Strings.Get("LabelTariff");
         EnabledCheckBox.Content = Strings.Get("ColumnEnabled");
         CancelButton.Content = Strings.Get("Cancel");
@@ -59,6 +66,13 @@ public partial class AddResourceWindow : Window
             return;
         }
 
+        var name = _kind == ResourceKind.Other ? NameBox.Text.Trim() : "";
+        if (_kind == ResourceKind.Other && name == "")
+        {
+            ErrorText.Text = Strings.Get("EnterAName");
+            return;
+        }
+
         if (await _db.Pcs.AnyAsync(p => p.Number == number))
         {
             ErrorText.Text = Strings.Get("PcNumbersMustBeUnique");
@@ -77,6 +91,7 @@ public partial class AddResourceWindow : Window
             Kind = _kind,
             IsManual = true,
             Number = number,
+            Name = name,
             TariffId = tariff.Id,
             Enabled = EnabledCheckBox.IsChecked == true
         });

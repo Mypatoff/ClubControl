@@ -32,9 +32,13 @@ public static class Strings
     public static string Format(string key, params object[] args) =>
         string.Format(Get(key), args);
 
+    /// <summary>How the admin refers to one resource: its chosen name if it is a named Other resource, otherwise "PC #n".</summary>
+    public static string ResourceLabel(ResourceKind kind, string name, int? number) =>
+        kind == ResourceKind.Other && name != "" ? name : Format("PcNumberFormat", number?.ToString() ?? "–");
+
     public static string ResourceKindName(ResourceKind kind) => kind switch
     {
-        ResourceKind.Billiard => Get("KindBilliard"),
+        ResourceKind.Other => Get("KindOther"),
         _ => Get("KindComputer")
     };
 

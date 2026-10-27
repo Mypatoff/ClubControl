@@ -27,7 +27,7 @@ public abstract class SessionTestBase : IDisposable
     protected Guid Pc1 { get; } = Guid.NewGuid();
     protected Guid Pc2 { get; } = Guid.NewGuid();
     protected Guid VipPc { get; } = Guid.NewGuid();
-    protected Guid BilliardGuid { get; } = Guid.NewGuid();
+    protected Guid OtherGuid { get; } = Guid.NewGuid();
 
     protected SessionTestBase()
     {

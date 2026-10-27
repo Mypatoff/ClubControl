@@ -24,7 +24,7 @@ public partial class MoveSessionWindow : Window
         _pc = pc;
 
         Title = Strings.Get("MoveSessionTitle");
-        TargetText.Text = Strings.Format("MoveSessionHeaderFormat", pc.Number!);
+        TargetText.Text = pc.IsOther && pc.Name != "" ? $"{Strings.Get("MoveSessionTitle")}: {pc.Label}" : Strings.Format("MoveSessionHeaderFormat", pc.Number!);
         MoveToLabel.Text = Strings.Get("MoveToLabel");
         CancelButton.Content = Strings.Get("Cancel");
         MoveButton.Content = Strings.Get("ButtonMove");
@@ -48,7 +48,7 @@ public partial class MoveSessionWindow : Window
 
         TargetCombo.ItemsSource = candidates
             .Select(p => new PcOption(
-                Strings.Format("TargetPcFormat", p.Number!, p.TariffId.HasValue ? tariffNames.GetValueOrDefault(p.TariffId.Value, "") : ""),
+                $"{Strings.ResourceLabel(p.Kind, p.Name, p.Number)} ({(p.TariffId.HasValue ? tariffNames.GetValueOrDefault(p.TariffId.Value, "") : "")})",
                 p.MachineGuid))
             .ToList();
 

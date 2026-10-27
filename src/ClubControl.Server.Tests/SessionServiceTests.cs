@@ -362,7 +362,7 @@ public class SessionServiceTests : SessionTestBase
         using (var setup = NewDb())
         {
             var tariffId = (await setup.Pcs.SingleAsync(p => p.MachineGuid == Pc1)).TariffId;
-            setup.Pcs.Add(new Pc { MachineGuid = BilliardGuid, Number = 4, Kind = ResourceKind.Billiard, TariffId = tariffId });
+            setup.Pcs.Add(new Pc { MachineGuid = OtherGuid, Number = 4, Kind = ResourceKind.Other, TariffId = tariffId });
             await setup.SaveChangesAsync();
         }
 
@@ -370,7 +370,7 @@ public class SessionServiceTests : SessionTestBase
         var service = ServiceFor(db);
         await service.StartPrepayByMoneyAsync(Pc1, 5_000);
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() => service.MoveSessionAsync(Pc1, BilliardGuid));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => service.MoveSessionAsync(Pc1, OtherGuid));
     }
 
     [Fact]

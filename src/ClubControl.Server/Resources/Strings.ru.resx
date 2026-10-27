@@ -70,8 +70,8 @@
   <data name="KindComputer" xml:space="preserve">
     <value>Компьютер</value>
   </data>
-  <data name="KindBilliard" xml:space="preserve">
-    <value>Бильярд</value>
+  <data name="KindOther" xml:space="preserve">
+    <value>Другое</value>
   </data>
   <data name="ColumnState" xml:space="preserve">
     <value>Статус</value>
@@ -131,7 +131,7 @@
     <value>Выберите ровно один ПК.</value>
   </data>
   <data name="SelectAtLeastOnePc" xml:space="preserve">
-    <value>Выберите хотя бы один ПК или бильярд.</value>
+    <value>Выберите хотя бы один ПК или объект.</value>
   </data>
   <data name="SelectedNotReadyToStart" xml:space="preserve">
     <value>Один или несколько выбранных элементов не готовы к запуску (не настроены или уже имеют сессию).</value>
@@ -148,8 +148,8 @@
   <data name="KindComputerPlural" xml:space="preserve">
     <value>ПК</value>
   </data>
-  <data name="KindBilliardPlural" xml:space="preserve">
-    <value>Бильярды</value>
+  <data name="KindOtherPlural" xml:space="preserve">
+    <value>Другое</value>
   </data>
   <data name="MultiTargetFormat" xml:space="preserve">
     <value>{0}: {1} ({2})</value>
@@ -197,7 +197,7 @@
     <value>Тарифы</value>
   </data>
   <data name="TabResources" xml:space="preserve">
-    <value>Компьютеры и бильярд</value>
+    <value>Компьютеры и другое</value>
   </data>
   <data name="LabelClubName" xml:space="preserve">
     <value>Название клуба</value>
@@ -266,7 +266,7 @@
     <value>У каждого тарифа цена должна быть больше 0, а минимальная оплата не может быть больше максимальной.</value>
   </data>
   <data name="ComputersHint" xml:space="preserve">
-    <value>Назначьте номер и тариф новому ПК или бильярду, чтобы его можно было использовать. Отключённые строки остаются заблокированными и пропадают из главной панели.</value>
+    <value>Назначьте номер и тариф новому ПК или объекту, чтобы его можно было использовать. Отключённые строки остаются заблокированными и пропадают из главной панели.</value>
   </data>
   <data name="LabelNumber" xml:space="preserve">
     <value>Номер</value>
@@ -286,8 +286,8 @@
   <data name="AddComputerTitle" xml:space="preserve">
     <value>Добавить компьютер</value>
   </data>
-  <data name="AddBilliardTitle" xml:space="preserve">
-    <value>Добавить бильярд</value>
+  <data name="AddOtherTitle" xml:space="preserve">
+    <value>Добавить именованный объект</value>
   </data>
   <data name="ButtonAdd" xml:space="preserve">
     <value>Добавить</value>
@@ -296,13 +296,13 @@
     <value>Удалить</value>
   </data>
   <data name="SelectAResourceToDelete" xml:space="preserve">
-    <value>Выберите компьютер или бильярд для удаления.</value>
+    <value>Выберите компьютер или объект для удаления.</value>
   </data>
   <data name="DeleteResourceConfirm" xml:space="preserve">
-    <value>Удалить этот компьютер/бильярд? Это действие нельзя отменить.</value>
+    <value>Удалить этот компьютер/объект? Это действие нельзя отменить.</value>
   </data>
   <data name="CannotDeleteResourceWithHistory" xml:space="preserve">
-    <value>У этого компьютера/бильярда есть история сессий, поэтому его нельзя удалить - это удалило бы его и из прошлых отчётов. Снимите галочку «Включён», чтобы скрыть его вместо удаления.</value>
+    <value>У этого компьютера/объекта есть история сессий, поэтому его нельзя удалить - это удалило бы его и из прошлых отчётов. Снимите галочку «Включён», чтобы скрыть его вместо удаления.</value>
   </data>
   <data name="SelectATariffToDelete" xml:space="preserve">
     <value>Выберите тариф для удаления.</value>
@@ -311,10 +311,10 @@
     <value>Удалить этот тариф? Это действие нельзя отменить.</value>
   </data>
   <data name="CannotDeleteTariffInUse" xml:space="preserve">
-    <value>Этот тариф назначен компьютеру или бильярду, поэтому его нельзя удалить. Сначала назначьте другой тариф.</value>
+    <value>Этот тариф назначен компьютеру или объекту, поэтому его нельзя удалить. Сначала назначьте другой тариф.</value>
   </data>
   <data name="TariffKindMismatch" xml:space="preserve">
-    <value>Компьютер может использовать только тариф для компьютеров, а бильярд - только тариф для бильярда. Проверьте вкладку «Компьютеры».</value>
+    <value>Компьютер может использовать только тариф для компьютеров, а объект «Другое» - только тариф для «Другое». Проверьте вкладку «Компьютеры».</value>
   </data>
   <data name="ColumnEnabled" xml:space="preserve">
     <value>Включён</value>
@@ -507,5 +507,8 @@
   </data>
   <data name="MoveSameTariffOnly" xml:space="preserve">
     <value>Сессию можно переносить только между объектами одного типа и с одним тарифом.</value>
+  </data>
+  <data name="EnterAName" xml:space="preserve">
+    <value>Введите название.</value>
   </data>
 </root>

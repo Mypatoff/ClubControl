@@ -51,7 +51,7 @@ public partial class SettingsWindow : Window
         TariffKindColumn.ItemsSource = new[]
         {
             new ComboOption<ResourceKind>(Strings.Get("KindComputer"), ResourceKind.Computer),
-            new ComboOption<ResourceKind>(Strings.Get("KindBilliard"), ResourceKind.Billiard),
+            new ComboOption<ResourceKind>(Strings.Get("KindOther"), ResourceKind.Other),
         };
 
         Loaded += async (_, _) => await LoadAsync();
@@ -89,10 +89,11 @@ public partial class SettingsWindow : Window
 
         ComputersHintText.Text = Strings.Get("ComputersHint");
         AddComputerButton.Content = "🖥 " + Strings.Get("AddComputerTitle");
-        AddBilliardButton.Content = "🎱 " + Strings.Get("AddBilliardTitle");
+        AddOtherButton.Content = "📦 " + Strings.Get("AddOtherTitle");
         DeleteResourceButton.Content = "🗑 " + Strings.Get("ButtonDelete");
         KindColumn.Header = Strings.Get("ColumnKind");
         PcNumberColumn.Header = Strings.Get("ColumnPcNumber");
+        PcNameColumn.Header = Strings.Get("LabelName");
         TariffColumn.Header = Strings.Get("ColumnTariff");
         EnabledColumn.Header = Strings.Get("ColumnEnabled");
         HostnameColumn.Header = Strings.Get("ColumnHostname");
@@ -166,7 +167,7 @@ public partial class SettingsWindow : Window
             return;
         }
 
-        // A PC/billiard currently assigned to this tariff (including an edit made earlier in this
+        // A PC/resource currently assigned to this tariff (including an edit made earlier in this
         // same dialog, before Save) would be left pointing at a tariff that no longer exists -
         // block that and point the admin at reassigning it first, same as OnDeleteResource does
         // for session history.
@@ -187,7 +188,7 @@ public partial class SettingsWindow : Window
 
     private async void OnAddComputer(object sender, RoutedEventArgs e) => await AddResourceAsync(ResourceKind.Computer);
 
-    private async void OnAddBilliard(object sender, RoutedEventArgs e) => await AddResourceAsync(ResourceKind.Billiard);
+    private async void OnAddOther(object sender, RoutedEventArgs e) => await AddResourceAsync(ResourceKind.Other);
 
     private async Task AddResourceAsync(ResourceKind kind)
     {
@@ -210,7 +211,7 @@ public partial class SettingsWindow : Window
             return;
         }
 
-        // Deleting a PC/billiard with any billing history would cascade-delete its Sessions and
+        // Deleting a PC/resource with any billing history would cascade-delete its Sessions and
         // SessionSegments too (required FK), silently erasing past reports - block that and point
         // the admin at "Enabled" instead, which hides it without touching history.
         if (await _db.Sessions.AnyAsync(s => s.PcId == pc.Id))
@@ -257,7 +258,7 @@ public partial class SettingsWindow : Window
             return;
         }
 
-        // A computer picking a billiard tariff (or vice versa) wouldn't crash - it would just bill
+        // A computer picking an Other tariff (or vice versa) wouldn't crash - it would just bill
         // under the wrong class and quietly corrupt the per-class report breakdown (SPEC section 9).
         if (_pcs.Any(p => p.TariffId.HasValue && _tariffs.Any(t => t.Id == p.TariffId.Value && t.Kind != p.Kind)))
         {

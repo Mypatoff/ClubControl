@@ -34,7 +34,7 @@ public partial class ReportsWindow : Window
     {
         Title = Strings.Get("ReportsTitle");
         ComputersKindButton.Content = "🖥 " + Strings.ResourceKindName(ResourceKind.Computer);
-        BilliardsKindButton.Content = "🎱 " + Strings.ResourceKindName(ResourceKind.Billiard);
+        OtherKindButton.Content = "📦 " + Strings.ResourceKindName(ResourceKind.Other);
         DailyButton.Content = Strings.Get("PeriodDaily");
         WeeklyButton.Content = Strings.Get("PeriodWeekly");
         MonthlyButton.Content = Strings.Get("PeriodMonthly");
@@ -81,9 +81,9 @@ public partial class ReportsWindow : Window
         await RefreshAsync();
     }
 
-    private async void OnBilliardsKind(object sender, RoutedEventArgs e)
+    private async void OnOtherKind(object sender, RoutedEventArgs e)
     {
-        _kind = ResourceKind.Billiard;
+        _kind = ResourceKind.Other;
         await RefreshAsync();
     }
 
@@ -126,7 +126,7 @@ public partial class ReportsWindow : Window
 
         ByPcGrid.ItemsSource = report.ByPc.Select(r => new
         {
-            PcLabel = r.PcNumber.HasValue ? Strings.Format("PcNumberFormat", r.PcNumber.Value) : "—",
+            PcLabel = r.PcNumber.HasValue ? Strings.ResourceLabel(_kind, r.PcName, r.PcNumber) : "—",
             IncomeDisplay = $"{r.IncomeUzs:N0} UZS",
             r.SessionCount,
             HoursDisplay = r.Hours.ToString("N1")
@@ -179,7 +179,7 @@ public partial class ReportsWindow : Window
         WriteRow(Strings.Get("ByPc"));
         WriteRow(Strings.Get("ColumnPcNumber"), Strings.Get("ColumnIncome"), Strings.Get("TotalSessions"), Strings.Get("ColumnHours"));
         foreach (var r in report.ByPc)
-            WriteRow(r.PcNumber?.ToString() ?? "-", r.IncomeUzs, r.SessionCount, r.Hours.ToString("F1", CultureInfo.InvariantCulture));
+            WriteRow(r.PcName != "" ? r.PcName : r.PcNumber?.ToString() ?? "-", r.IncomeUzs, r.SessionCount, r.Hours.ToString("F1", CultureInfo.InvariantCulture));
         sb.AppendLine();
 
         WriteRow(Strings.Get("ByTariff"));

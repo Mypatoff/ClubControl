@@ -25,6 +25,7 @@ public class PcRow
     public required bool IsManual { get; init; }
     public required ResourceKind Kind { get; init; }
     public required int? Number { get; init; }
+    public string Name { get; init; } = "";
     public required int? TariffId { get; init; }
     public required PcState State { get; init; }
 
@@ -40,7 +41,7 @@ public class PcRow
     /// <summary>Client build this PC last reported ("1.0.0+f4545fa"); empty if unknown. Lets the admin see which PCs an "Update client" has reached.</summary>
     public string ClientVersion { get; init; } = "";
 
-    /// <summary>A manual resource (offline PC, billiard table) never connects, so there is nothing to shut down/restart/wake.</summary>
+    /// <summary>A manual resource (offline PC, other resource) never connects, so there is nothing to shut down/restart/wake.</summary>
     public bool SupportsPowerControl => !IsManual;
 
     public bool HasActiveSession => State is PcState.PrepaySession or PcState.PostpaySession or PcState.LimitReached;
@@ -48,15 +49,20 @@ public class PcRow
     private static Brush Resource(string key) =>
         Application.Current.TryFindResource(key) as Brush ?? Brushes.Transparent;
 
-    public bool IsBilliard => Kind == ResourceKind.Billiard;
+    public bool IsOther => Kind == ResourceKind.Other;
 
     /// <summary>A networked PC that is switched off / disconnected: its card is shown faded.</summary>
     public bool IsDimmed => !IsManual && !IsOnline;
 
-    /// <summary>Section heading on the main panel ("PCs" / "Billiards"); the cards are grouped by <see cref="IsBilliard"/>.</summary>
-    public string GroupTitle => Strings.Get(IsBilliard ? "KindBilliardPlural" : "KindComputerPlural");
+    /// <summary>Section heading on the main panel ("PCs" / "Other"); the cards are grouped by <see cref="IsOther"/>.</summary>
+    public string GroupTitle => Strings.Get(IsOther ? "KindOtherPlural" : "KindComputerPlural");
 
     public string NumberDisplay => Number?.ToString() ?? "–";
+
+    /// <summary>What the admin calls this resource: the chosen name for a named "Other" resource, otherwise its number.</summary>
+    public string Label => Strings.ResourceLabel(Kind, Name, Number);
+
+    public string CardTitle => IsOther && Name != "" ? Name : NumberDisplay;
 
     /// <summary>The big line on the card: time left for prepay, running cost for postpay / limit reached.</summary>
     public string PrimaryDisplay => RemainingDisplay != "" ? RemainingDisplay : AmountDisplay;
@@ -64,6 +70,7 @@ public class PcRow
     /// <summary>Everything the compact card leaves out (tariff, amount, start/end), shown on hover.</summary>
     public string TooltipText => string.Join("\n", new[]
     {
+        IsOther && Name != "" ? Name : "",
         StateDisplay, // the card is narrow, so a long state name ("Лимит достигнут") can be cut off there
         TariffDisplay,
         AmountDisplay,

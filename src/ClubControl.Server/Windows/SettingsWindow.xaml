@@ -73,13 +73,14 @@
                     <TextBlock x:Name="ComputersHintText" DockPanel.Dock="Top" Margin="0,0,0,8" TextWrapping="Wrap" />
                     <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Margin="0,8,0,0">
                         <Button x:Name="AddComputerButton" Margin="0,0,8,0" Style="{StaticResource SecondaryButtonStyle}" Click="OnAddComputer" />
-                        <Button x:Name="AddBilliardButton" Margin="0,0,8,0" Style="{StaticResource SecondaryButtonStyle}" Click="OnAddBilliard" />
+                        <Button x:Name="AddOtherButton" Margin="0,0,8,0" Style="{StaticResource SecondaryButtonStyle}" Click="OnAddOther" />
                         <Button x:Name="DeleteResourceButton" Style="{StaticResource SecondaryButtonStyle}" Click="OnDeleteResource" />
                     </StackPanel>
                     <DataGrid x:Name="PcGrid" AutoGenerateColumns="False" CanUserAddRows="False" BorderThickness="0">
                         <DataGrid.Columns>
                             <DataGridTextColumn x:Name="KindColumn" Binding="{Binding Kind}" Width="90" IsReadOnly="True" />
                             <DataGridTextColumn x:Name="PcNumberColumn" Binding="{Binding Number}" Width="60" />
+                            <DataGridTextColumn x:Name="PcNameColumn" Binding="{Binding Name}" Width="110" />
                             <DataGridComboBoxColumn x:Name="TariffColumn" SelectedValueBinding="{Binding TariffId}"
                                                      DisplayMemberPath="Name" SelectedValuePath="Id" Width="120" />
                             <DataGridCheckBoxColumn x:Name="EnabledColumn" Binding="{Binding Enabled}" Width="60" />

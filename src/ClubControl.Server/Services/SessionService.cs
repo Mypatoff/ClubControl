@@ -325,7 +325,7 @@ public class SessionService
         await SendCommandAsync(firstPc, new ClientCommand { Type = CommandType.StartSession, Session = await BuildSessionInfoAsync(firstPc, secondSession) });
     }
 
-    /// <summary>A session only moves between resources of the same kind on the same tariff (a billiard table never goes to a PC).</summary>
+    /// <summary>A session only moves between resources of the same kind on the same tariff (a named resource never goes to a PC).</summary>
     private static void RequireSameTariff(Pc a, Pc b)
     {
         if (a.Kind != b.Kind || !a.TariffId.HasValue || a.TariffId != b.TariffId)
@@ -564,7 +564,7 @@ public class SessionService
 
     /// <summary>
     /// Mints this PC's permanent auth token (ClubHub.Heartbeat) the moment the admin finishes
-    /// configuring it in Settings > Computers & Billiards, binding the token to whichever
+    /// configuring it in Settings > Computers & Other, binding the token to whichever
     /// connection is registered for this exact MachineGuid *right now* - never to "whoever
     /// heartbeats next", which would let anyone who already knows or guessed the GUID (e.g. from
     /// an earlier heartbeat sniffed on the LAN) race the real PC for its own token at any point

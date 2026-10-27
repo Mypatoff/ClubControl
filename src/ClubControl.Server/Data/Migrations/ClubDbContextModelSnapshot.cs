@@ -83,6 +83,10 @@ namespace ClubControl.Server.Data.Migrations
                     b.Property<Guid>("MachineGuid")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
                     b.Property<int?>("Number")
                         .HasColumnType("INTEGER");
 

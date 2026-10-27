@@ -46,7 +46,7 @@ C# .NET 8. WPF for Server (admin panel + hosted ASP.NET Core/SignalR) and Client
 - [x] Phase 3: settings, tariffs, billing logic
 - [x] Phase 4: admin panel UI
 - [x] Phase 5: power control, reports, backup, languages, install scripts
-- [x] Phase 6: manual/non-networked resources (offline PCs, billiards), free-form tariffs, context menus, split reports
+- [x] Phase 6: manual/non-networked resources (offline PCs, billiards - now generic named "Other" resources), free-form tariffs, context menus, split reports
 - [x] Post-phase-6 fixes: tariff delete + tariff/resource-kind mismatch guard, report CSV export,
       duplicate-MainWindow-on-login bug (stray `StartupUri` racing the manual `MainWindow` creation),
       relaxed admin password policy (no more min-length/letter+digit rule), disabled PCs/billiards
@@ -71,6 +71,7 @@ C# .NET 8. WPF for Server (admin panel + hosted ASP.NET Core/SignalR) and Client
       writes no health marker (first successful heartbeat) in time. Clients report their build in
       `HeartbeatRequest.ClientVersion`; the server keeps it in memory only (no EF column) and shows it
       in the PC card tooltip.
-- [x] Post-phase-6 fix: Move works on two selected cards - a running session moves onto the other (free)
-      card, or two running sessions swap (`SessionService.MoveSessionAsync` / `SwapSessionsAsync`). A
-      session only moves between cards of the same kind and the same tariff, so nothing is repriced.
+- [x] Post-phase-6 change: `ResourceKind.Billiard` is now `ResourceKind.Other` (same stored value 1) and
+      every non-computer resource has an admin-chosen `Pc.Name` ("Table 3", "PS5 room"; new column +
+      `AddPcName` migration). The name shows on the card, in dialogs (`PcRow.Label`/`Strings.ResourceLabel`)
+      and in reports.

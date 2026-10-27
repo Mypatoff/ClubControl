@@ -70,8 +70,8 @@
   <data name="KindComputer" xml:space="preserve">
     <value>Computer</value>
   </data>
-  <data name="KindBilliard" xml:space="preserve">
-    <value>Billiard</value>
+  <data name="KindOther" xml:space="preserve">
+    <value>Other</value>
   </data>
   <data name="ColumnState" xml:space="preserve">
     <value>State</value>
@@ -131,7 +131,7 @@
     <value>Select exactly one PC.</value>
   </data>
   <data name="SelectAtLeastOnePc" xml:space="preserve">
-    <value>Select at least one PC or billiard.</value>
+    <value>Select at least one PC or resource.</value>
   </data>
   <data name="SelectedNotReadyToStart" xml:space="preserve">
     <value>One or more selected items are not ready to start (not configured yet, or already have a session).</value>
@@ -148,8 +148,8 @@
   <data name="KindComputerPlural" xml:space="preserve">
     <value>PCs</value>
   </data>
-  <data name="KindBilliardPlural" xml:space="preserve">
-    <value>Billiards</value>
+  <data name="KindOtherPlural" xml:space="preserve">
+    <value>Other</value>
   </data>
   <data name="MultiTargetFormat" xml:space="preserve">
     <value>{0}: {1} ({2})</value>
@@ -197,7 +197,7 @@
     <value>Tariffs</value>
   </data>
   <data name="TabResources" xml:space="preserve">
-    <value>Computers &amp; Billiards</value>
+    <value>Computers &amp; Other</value>
   </data>
   <data name="LabelClubName" xml:space="preserve">
     <value>Club name</value>
@@ -266,7 +266,7 @@
     <value>Every tariff needs a price above 0, and the minimum payment cannot be greater than the maximum.</value>
   </data>
   <data name="ComputersHint" xml:space="preserve">
-    <value>Assign a number and tariff to a new PC or billiard so it can be used. Disabled rows stay locked and disappear from the main panel.</value>
+    <value>Assign a number and tariff to a new PC or resource so it can be used. Disabled rows stay locked and disappear from the main panel.</value>
   </data>
   <data name="LabelNumber" xml:space="preserve">
     <value>Number</value>
@@ -286,8 +286,8 @@
   <data name="AddComputerTitle" xml:space="preserve">
     <value>Add Computer</value>
   </data>
-  <data name="AddBilliardTitle" xml:space="preserve">
-    <value>Add Billiard</value>
+  <data name="AddOtherTitle" xml:space="preserve">
+    <value>Add Named Resource</value>
   </data>
   <data name="ButtonAdd" xml:space="preserve">
     <value>Add</value>
@@ -296,13 +296,13 @@
     <value>Delete</value>
   </data>
   <data name="SelectAResourceToDelete" xml:space="preserve">
-    <value>Select a computer or billiard to delete.</value>
+    <value>Select a computer or resource to delete.</value>
   </data>
   <data name="DeleteResourceConfirm" xml:space="preserve">
-    <value>Delete this computer/billiard? This cannot be undone.</value>
+    <value>Delete this computer/resource? This cannot be undone.</value>
   </data>
   <data name="CannotDeleteResourceWithHistory" xml:space="preserve">
-    <value>This computer/billiard has session history and can't be deleted, since that would also erase it from past reports. Uncheck "Enabled" instead to hide it.</value>
+    <value>This computer/resource has session history and can't be deleted, since that would also erase it from past reports. Uncheck "Enabled" instead to hide it.</value>
   </data>
   <data name="SelectATariffToDelete" xml:space="preserve">
     <value>Select a tariff to delete.</value>
@@ -311,10 +311,10 @@
     <value>Delete this tariff? This cannot be undone.</value>
   </data>
   <data name="CannotDeleteTariffInUse" xml:space="preserve">
-    <value>This tariff is assigned to a computer or billiard and can't be deleted. Reassign it to a different tariff first.</value>
+    <value>This tariff is assigned to a computer or resource and can't be deleted. Reassign it to a different tariff first.</value>
   </data>
   <data name="TariffKindMismatch" xml:space="preserve">
-    <value>A computer can only use a computer tariff, and a billiard can only use a billiard tariff. Check the Computers tab.</value>
+    <value>A computer can only use a computer tariff, and an Other resource can only use an Other tariff. Check the Computers tab.</value>
   </data>
   <data name="ColumnEnabled" xml:space="preserve">
     <value>Enabled</value>
@@ -507,5 +507,8 @@
   </data>
   <data name="MoveSameTariffOnly" xml:space="preserve">
     <value>A session can only be moved between resources of the same kind and tariff.</value>
+  </data>
+  <data name="EnterAName" xml:space="preserve">
+    <value>Enter a name.</value>
   </data>
 </root>

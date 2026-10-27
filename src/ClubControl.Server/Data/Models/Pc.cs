@@ -5,7 +5,7 @@ namespace ClubControl.Server.Data.Models;
 
 /// <summary>
 /// A billable thing: a networked gaming PC (auto-discovered once its client connects), an
-/// offline PC with no LAN connection, or a non-computer resource like a billiard table - the
+/// offline PC with no LAN connection, or a non-computer resource like a billiard table or a PS5 room - the
 /// latter two are created manually by the admin (<see cref="IsManual"/>) and never get a lock
 /// screen, online tracking, or power commands, since there is no client running for them.
 /// Unassigned/new PCs (Number/TariffId null) show as "New PC" in the admin panel.
@@ -19,6 +19,10 @@ public class Pc
     public bool IsManual { get; set; }
 
     public int? Number { get; set; }
+
+    /// <summary>Admin-chosen label for an Other resource ("Table 3", "PS5 room"); shown on its card and in reports. Empty for computers.</summary>
+    public string Name { get; set; } = "";
+
     public int? TariffId { get; set; }
     public bool Enabled { get; set; } = true;
 

@@ -96,13 +96,13 @@ keyboard, will not work.
    kiosk account from step 4, not whichever account happened to run this script.
 6. Log off and back on (or reboot) to confirm the client starts automatically and finds the
    server. The first time, it appears as "New PC" in the admin panel - assign it a number and
-   tariff under Settings > Computers & Billiards.
+   tariff under Settings > Computers & Other.
 
-## PCs with no LAN connection, and billiard tables
+## PCs with no LAN connection, and named resources (billiard table, PS5 room, ...)
 
 Not everything billable runs `ClubControl.Client`: a PC with no network cable/Wi-Fi, or a
-billiard table, has nothing to install software on. For those, use the **"Add Computer" /
-"Add Billiard"** buttons under Settings > Computers & Billiards instead of waiting for
+billiard table or a PS5 room, has nothing to install software on. For those, use the **"Add Computer" /
+"Add Named Resource"** buttons under Settings > Computers & Other instead of waiting for
 auto-discovery:
 
 - Pick a number, pick a tariff (create one first under Settings > Tariffs if you need a new price
@@ -127,11 +127,11 @@ auto-discovery:
   make sure the admin laptop and the PC are on the same subnet/VLAN.
 - **Shutdown / Restart**: with a client online, select it (or several, or none for "all"), click
   "Shut down" or "Restart". If any target has an active session you are asked to confirm first.
-- **Reports**: open Reports, switch between the Computers/Billiards buttons, try Daily/Weekly/
+- **Reports**: open Reports, switch between the Computers/Other buttons, try Daily/Weekly/
   Monthly and the manual date pickers after running a few test sessions (prepay, postpay, free) on
   both kinds. Check totals and the per-PC/per-tariff/per-type breakdowns match what you started,
-  and that a billiard session never shows up in the Computers report or vice versa.
-- **Manual resources**: click "Add Computer" and "Add Billiard", confirm both appear in the main
+  and that an "Other" session never shows up in the Computers report or vice versa.
+- **Manual resources**: click "Add Computer" and "Add Named Resource" (it asks for a name, e.g. "Table 3"), confirm both appear in the main
   table with the right icon, can Start/Extend/Stop/Move a session, and never go "offline" or
   respond to Turn on/Restart/Shut down.
 - **Tariffs**: Settings > Tariffs - add a new tariff, rename an existing one, save, and confirm
@@ -151,7 +151,7 @@ auto-discovery:
   **not** shut down while "Limit reached" (waiting for payment) or mid-session. If you're
   upgrading an existing installation rather than starting fresh, this is **disabled (0)** by
   default on your existing settings row - set it explicitly in Settings if you want it.
-- **Bulk start**: select several PCs (or billiards) that share one tariff (Ctrl/Shift-click or
+- **Bulk start**: select several PCs (or named resources) that share one tariff (Ctrl/Shift-click or
   drag), click Start (or right-click > Free) - one dialog should start identical sessions on all
   of them. Try mixing PCs with different tariffs selected together - it should refuse with a clear
   message instead of guessing. Try it with one of the selected PCs already mid-session - it should
@@ -197,7 +197,7 @@ migration requires actually building the WPF project.
   put the server behind a LAN-only reverse proxy/VPN or revisit this before relying on it.
 - **Per-PC identity.** A gaming PC's `MachineGuid` alone is no longer enough to speak for it.
   The first time a PC heartbeats *after* you give it a number and tariff (Settings > Computers &
-  Billiards), the server mints a random secret token for it, sends it once, and the client stores
+  Other), the server mints a random secret token for it, sends it once, and the client stores
   it locally (`%ProgramData%\ClubControl\client-token.dat`). Every heartbeat after that must
   include the matching token, or the server ignores it outright (logged as a rejected-heartbeat
   event) - so a second machine that merely learns or guesses a real PC's GUID can no longer take
@@ -205,7 +205,7 @@ migration requires actually building the WPF project.
   is still trusted at face value the moment it first appears as "New PC" (same as before) - that
   bootstrap moment is unavoidable without a separate out-of-band provisioning step, and is no
   weaker than today's "recognise it by hostname/IP in the list" process.
-- **Revoking/rotating a PC's token:** clear its **Number** in Settings > Computers & Billiards and
+- **Revoking/rotating a PC's token:** clear its **Number** in Settings > Computers & Other and
   Save. That wipes its stored token; the next heartbeat (from whatever machine next claims that
   GUID) re-provisions a fresh one the moment you reassign a number. Use this if a PC is replaced,
   reimaged, or you suspect its token leaked.
