@@ -78,7 +78,7 @@
                 </Border>
                 <Border Style="{StaticResource ChipStyle}">
                     <StackPanel Orientation="Horizontal">
-                        <Ellipse Width="9" Height="9" Fill="{StaticResource StatePrepayBrush}" />
+                        <Ellipse Width="9" Height="9" Fill="{StaticResource StateRunningBrush}" />
                         <TextBlock x:Name="StatBusyText" Style="{StaticResource ChipTextStyle}" />
                     </StackPanel>
                 </Border>
@@ -250,11 +250,6 @@
                                            TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" MinHeight="20" />
                             </Grid>
                         </Grid>
-                        <DataTemplate.Triggers>
-                            <DataTrigger Binding="{Binding IsDimmed}" Value="True">
-                                <Setter TargetName="CardRoot" Property="Opacity" Value="0.7" />
-                            </DataTrigger>
-                        </DataTemplate.Triggers>
                     </DataTemplate>
                 </ListBox.ItemTemplate>
             </ListBox>

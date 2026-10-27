@@ -28,11 +28,11 @@
 
     <!-- Main-panel resource cards: the card's accent colour follows its state (SPEC 7) -->
     <SolidColorBrush x:Key="CardBrush" Color="#FFFFFF" />
-    <SolidColorBrush x:Key="StateIdleBrush" Color="#8A94A6" />
-    <SolidColorBrush x:Key="StatePrepayBrush" Color="#1E9E52" />
-    <SolidColorBrush x:Key="StatePostpayBrush" Color="#2F6FED" />
+    <!-- blue = connected and free, green = session running, red = switched off / not connected -->
+    <SolidColorBrush x:Key="StateIdleBrush" Color="#2F6FED" />
+    <SolidColorBrush x:Key="StateRunningBrush" Color="#1E9E52" />
     <SolidColorBrush x:Key="StateLimitBrush" Color="#E8890C" />
-    <SolidColorBrush x:Key="StateOfflineBrush" Color="#B4BAC6" />
+    <SolidColorBrush x:Key="StateOfflineBrush" Color="#D93838" />
     <SolidColorBrush x:Key="OnlineDotBrush" Color="#1E9E52" />
     <SolidColorBrush x:Key="OfflineDotBrush" Color="#9AA1AC" />
 

@@ -153,7 +153,7 @@ public partial class MainWindow : Window
         var others = rows.Where(r => r.IsOther).ToList();
 
         var busy = computers.Count(r => r.HasActiveSession);
-        var offline = computers.Count(r => r.IsDimmed && !r.HasActiveSession);
+        var offline = computers.Count(r => r.IsOffline && !r.HasActiveSession);
 
         StatFreeText.Text = $"{computers.Count - busy - offline} {Strings.Get("StateFree")}";
         StatBusyText.Text = $"{busy} {Strings.Get("StatBusy")}";

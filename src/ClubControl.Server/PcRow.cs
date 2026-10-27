@@ -57,8 +57,8 @@ public class PcRow
 
     public bool IsOther => Kind == ResourceKind.Other;
 
-    /// <summary>A networked PC that is switched off / disconnected: its card is shown faded.</summary>
-    public bool IsDimmed => !IsManual && !IsOnline;
+    /// <summary>A networked PC that is switched off / disconnected: its card is red.</summary>
+    public bool IsOffline => !IsManual && !IsOnline;
 
     /// <summary>Section heading on the main panel ("PCs" / "Other"); the cards are grouped by <see cref="IsOther"/>.</summary>
     public string GroupTitle => Strings.Get(IsOther ? "KindOtherPlural" : "KindComputerPlural");
@@ -86,13 +86,12 @@ public class PcRow
         ClientVersion != "" ? "v" + ClientVersion : ""
     }.Where(line => line != ""));
 
-    /// <summary>Card accent colour (SPEC 7): offline overrides everything else for networked PCs; manual resources are never "offline".</summary>
-    public Brush AccentBrush => IsDimmed
+    /// <summary>Card accent colour (SPEC 7): red = offline (overrides everything else for networked PCs; manual resources are never "offline"), green = session running, blue = free.</summary>
+    public Brush AccentBrush => IsOffline
         ? Resource("StateOfflineBrush")
         : State switch
         {
-            PcState.PrepaySession => Resource("StatePrepayBrush"),
-            PcState.PostpaySession => Resource("StatePostpayBrush"),
+            PcState.PrepaySession or PcState.PostpaySession => Resource("StateRunningBrush"),
             PcState.LimitReached => Resource("StateLimitBrush"),
             _ => Resource("StateIdleBrush")
         };

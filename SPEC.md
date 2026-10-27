@@ -95,7 +95,7 @@ One club, one admin laptop (server), up to ~30 gaming PCs (clients) on the same 
 - **Main window = one screen, GameClass style:**
   - Toolbar: Start, Extend, Stop, Move | Turn on, Restart, Shut down (each with "selected / all").
   - Table, one row per PC, multi-select. Columns: connection dot (green online / grey offline), PC number, class, state, session type, amount (paid or current cost), start, end, remaining.
-  - Row colours: free = white, prepay = light green, postpay = light blue, limit reached = orange, offline = grey.
+  - Card colours: offline (switched off / not connected) = red, connected and free = blue, session running (prepay or postpay) = green, limit reached = orange. Offline overrides the others; nothing is greyed out.
   - Event log panel at the bottom (PC connected/disconnected, session started/ended/extended/moved, warnings, limit reached, manual unlock, power commands). Events are also saved in the database.
 - Separate windows: Start session, Extend, Move, Postpay payment, Settings, Reports.
 

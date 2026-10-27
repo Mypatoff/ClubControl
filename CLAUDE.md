@@ -71,6 +71,9 @@ C# .NET 8. WPF for Server (admin panel + hosted ASP.NET Core/SignalR) and Client
       writes no health marker (first successful heartbeat) in time. Clients report their build in
       `HeartbeatRequest.ClientVersion`; the server keeps it in memory only (no EF column) and shows it
       in the PC card tooltip.
+- [x] Post-phase-6 change: main-panel card colours - red = offline, blue = connected and free,
+      green = session running (prepay and postpay), orange = limit reached; no more greyed-out cards.
+      Brush keys: `StateOfflineBrush` / `StateIdleBrush` / `StateRunningBrush` / `StateLimitBrush`.
 - [x] Post-phase-6 change: `ResourceKind.Billiard` is now `ResourceKind.Other` (same stored value 1) and
       every non-computer resource has an admin-chosen `Pc.Name` ("Table 3", "PS5 room"; new column +
       `AddPcName` migration). The name shows on the card, in dialogs (`PcRow.Label`/`Strings.ResourceLabel`)
