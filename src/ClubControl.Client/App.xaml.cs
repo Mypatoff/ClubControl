@@ -62,6 +62,9 @@ public partial class App : Application
 
         MainWindow = new MainWindow();
 
+        // After the single-instance check, so the 1-minute relaunches that exit right away do not each start PowerShell.
+        StartupTaskRepair.RunInBackground();
+
 #if DEBUG
         // Test-only escape hatch: the lock screen blocks Alt+F4 and friends, so without this a
         // tester can get stuck behind it. Ctrl+Shift+F11 just exits the client; never built into Release.

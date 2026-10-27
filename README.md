@@ -69,7 +69,10 @@ After the first install, you do not need to walk to every PC again for a client-
 3. In the admin panel, select the PC(s) to update (or none, to update every enabled PC) and click
    "Update client" (or right-click > "Update client"). Each selected online PC downloads the zip
    from the server, swaps its own files, and restarts itself - no manual copying, no reinstalling
-   the Task Scheduler task.
+   the Task Scheduler task. (Each start of the client also checks that task and, if it was made by an
+   older install, adds the "re-launch every minute" repetition that brings back a client ended in
+   Task Manager. It only touches the trigger of the task called `ClubControl Client`, and logs
+   to `%ProgramData%\ClubControl\client-log.txt` when it changed something.)
 
 Only online PCs receive the command, same as Shutdown/Restart. Roll out to one or two PCs first
 and confirm they come back up correctly before updating the rest - there is no automatic version

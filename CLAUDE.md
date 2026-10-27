@@ -78,6 +78,12 @@ C# .NET 8. WPF for Server (admin panel + hosted ASP.NET Core/SignalR) and Client
       end, duration, type, tariff, amount, items, note; also in the CSV), a Reports entry in the right-click
       menu, and the stop / payment windows show when each session started and how long it ran
       (`TimeText`, key `StopStartedFormat`).
+- [x] Post-phase-6 fix: the "re-launch every 1 minute" scheduled-task trigger (survives Task Manager "End
+      Task") now also reaches PCs installed before it existed: every client start runs `StartupTaskRepair`
+      (script from `ClientTaskRepair` in Shared), which adds the repetition to the existing
+      `ClubControl Client` task's logon trigger if missing. It lives in the new client build, not in
+      `ClientUpdateScript`, because the update script is written by the OLD client being replaced.
+      Not exercised against a real Task Scheduler task yet - check on one PC after the first update.
 - [x] Post-phase-6 change: `ResourceKind.Billiard` is now `ResourceKind.Other` (same stored value 1) and
       every non-computer resource has an admin-chosen `Pc.Name` ("Table 3", "PS5 room"; new column +
       `AddPcName` migration). The name shows on the card, in dialogs (`PcRow.Label`/`Strings.ResourceLabel`)

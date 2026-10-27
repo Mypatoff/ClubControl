@@ -17,14 +17,18 @@ public static class ClientLog
 
     private static readonly object WriteLock = new();
 
-    public static void Error(string context, Exception ex)
+    public static void Error(string context, Exception ex) => Append(context, ex.ToString());
+
+    public static void Info(string context, string message) => Append(context, message);
+
+    private static void Append(string context, string text)
     {
         try
         {
             lock (WriteLock)
             {
                 Directory.CreateDirectory(Path.GetDirectoryName(FilePath)!);
-                File.AppendAllText(FilePath, $"{DateTime.Now:yyyy-MM-dd HH:mm:ss} [{context}] {ex}{Environment.NewLine}{Environment.NewLine}");
+                File.AppendAllText(FilePath, $"{DateTime.Now:yyyy-MM-dd HH:mm:ss} [{context}] {text}{Environment.NewLine}{Environment.NewLine}");
             }
         }
         catch
