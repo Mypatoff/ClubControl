@@ -117,7 +117,7 @@ public class AppController
                 break;
             case CommandType.UpdateClient:
                 if (_connection is not null)
-                    _ = ClientUpdater.ApplyUpdateAsync(_connection.ServerIp, _connection.Port);
+                    _ = ClientUpdater.ApplyUpdateAsync(_connection.ServerIp, _connection.Port, command);
                 break;
             case CommandType.ApplySettings:
                 if (command.Settings is not null)

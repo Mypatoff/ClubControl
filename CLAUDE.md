@@ -65,4 +65,9 @@ C# .NET 8. WPF for Server (admin panel + hosted ASP.NET Core/SignalR) and Client
       (`NetworkConstants.ClientUpdateRoute`); a selected online PC downloads it, extracts to a temp
       folder, and hands the actual file swap + restart to a short PowerShell script (a running .exe
       can't overwrite its own files) before exiting. No automatic polling/version check by design -
-      see README "Updating the client later".
+      see README "Updating the client later". The command is signed per PC (`ClientUpdateAuth`, key =
+      the PC's token hash) and the client checks signature + zip hash; the script (`ClientUpdateScript`
+      in Shared, so it is unit-tested) backs up the install folder and rolls back if the new build
+      writes no health marker (first successful heartbeat) in time. Clients report their build in
+      `HeartbeatRequest.ClientVersion`; the server keeps it in memory only (no EF column) and shows it
+      in the PC card tooltip.

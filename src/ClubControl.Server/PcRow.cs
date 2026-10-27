@@ -37,6 +37,9 @@ public class PcRow
     public required string EndDisplay { get; init; }
     public required string RemainingDisplay { get; init; }
 
+    /// <summary>Client build this PC last reported ("1.0.0+f4545fa"); empty if unknown. Lets the admin see which PCs an "Update client" has reached.</summary>
+    public string ClientVersion { get; init; } = "";
+
     /// <summary>A manual resource (offline PC, billiard table) never connects, so there is nothing to shut down/restart/wake.</summary>
     public bool SupportsPowerControl => !IsManual;
 
@@ -63,7 +66,8 @@ public class PcRow
     {
         TariffDisplay,
         AmountDisplay,
-        StartDisplay != "" ? StartDisplay + (EndDisplay != "" ? " – " + EndDisplay : "") : ""
+        StartDisplay != "" ? StartDisplay + (EndDisplay != "" ? " – " + EndDisplay : "") : "",
+        ClientVersion != "" ? "v" + ClientVersion : ""
     }.Where(line => line != ""));
 
     /// <summary>Card accent colour (SPEC 7): offline overrides everything else for networked PCs; manual resources are never "offline".</summary>

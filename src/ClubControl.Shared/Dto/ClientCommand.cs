@@ -9,4 +9,6 @@ public class ClientCommand
     public SessionInfo? Session { get; set; }     // StartSession, UpdateSession
     public ClientSettingsDto? Settings { get; set; } // ApplySettings
     public string? AuthToken { get; set; }        // ProvisionToken
+    public string? UpdateSha256 { get; set; }     // UpdateClient: hex SHA-256 of the staged zip
+    public string? UpdateSignature { get; set; }  // UpdateClient: ClientUpdateAuth.Sign of that hash, for this PC
 }
