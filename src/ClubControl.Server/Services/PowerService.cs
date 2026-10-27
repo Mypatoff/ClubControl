@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
@@ -9,6 +10,7 @@ using ClubControl.Server.Data.Models;
 using ClubControl.Server.Hubs;
 using ClubControl.Shared;
 using ClubControl.Shared.Dto;
+using ClubControl.Shared.Security;
 using Microsoft.AspNetCore.SignalR;
 
 namespace ClubControl.Server.Services;
@@ -44,14 +46,40 @@ public class PowerService
         return sent;
     }
 
-    public Task<int> ShutdownAsync(IEnumerable<Pc> pcs) => SendCommandToOnlineAsync(pcs, CommandType.Shutdown, "Shutdown");
+    public Task<int> ShutdownAsync(IEnumerable<Pc> pcs) =>
+        SendCommandToOnlineAsync(pcs, _ => new ClientCommand { Type = CommandType.Shutdown }, "Shutdown");
 
-    public Task<int> RestartAsync(IEnumerable<Pc> pcs) => SendCommandToOnlineAsync(pcs, CommandType.Restart, "Restart");
+    public Task<int> RestartAsync(IEnumerable<Pc> pcs) =>
+        SendCommandToOnlineAsync(pcs, _ => new ClientCommand { Type = CommandType.Restart }, "Restart");
 
-    /// <summary>Tells each online PC to pull and install whatever build is currently staged at ClientUpdateFile.</summary>
-    public Task<int> UpdateClientAsync(IEnumerable<Pc> pcs) => SendCommandToOnlineAsync(pcs, CommandType.UpdateClient, "Update client");
+    /// <summary>
+    /// Tells each online PC to pull and install whatever build is currently staged at ClientUpdateFile.
+    /// The command carries the zip's SHA-256 signed for that one PC (see ClientUpdateAuth), so a PC
+    /// only installs what this server staged. A PC that has no auth token yet cannot be sent a
+    /// verifiable command and is skipped.
+    /// </summary>
+    public async Task<int> UpdateClientAsync(IEnumerable<Pc> pcs)
+    {
+        if (!File.Exists(ClientUpdateFile.FilePath))
+        {
+            await LogEventAsync($"Update client: no build staged at {ClientUpdateFile.FilePath}");
+            return 0;
+        }
 
-    private async Task<int> SendCommandToOnlineAsync(IEnumerable<Pc> pcs, CommandType type, string actionName)
+        var sha256 = ClientUpdateAuth.ComputeSha256Hex(await File.ReadAllBytesAsync(ClientUpdateFile.FilePath));
+
+        return await SendCommandToOnlineAsync(pcs, pc => pc.AuthTokenHash is null
+            ? null
+            : new ClientCommand
+            {
+                Type = CommandType.UpdateClient,
+                UpdateSha256 = sha256,
+                UpdateSignature = ClientUpdateAuth.Sign(pc.AuthTokenHash, sha256),
+            }, "Update client");
+    }
+
+    /// <summary>Sends one command per online PC; <paramref name="buildCommand"/> returning null skips that PC.</summary>
+    private async Task<int> SendCommandToOnlineAsync(IEnumerable<Pc> pcs, Func<Pc, ClientCommand?> buildCommand, string actionName)
     {
         var sent = 0;
         foreach (var pc in pcs.Where(p => p.IsOnline))
@@ -59,7 +87,11 @@ public class PowerService
             if (!ClubHub.TryGetConnectionId(pc.MachineGuid, out var connectionId))
                 continue;
 
-            await _hub.Clients.Client(connectionId).SendAsync(HubMethodNames.ReceiveCommand, new ClientCommand { Type = type });
+            var command = buildCommand(pc);
+            if (command is null)
+                continue;
+
+            await _hub.Clients.Client(connectionId).SendAsync(HubMethodNames.ReceiveCommand, command);
             sent++;
         }
 

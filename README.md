@@ -36,6 +36,15 @@ Only online PCs receive the command, same as Shutdown/Restart. Roll out to one o
 and confirm they come back up correctly before updating the rest - there is no automatic version
 check or staged rollout, "Update client" always sends whatever is currently zipped at that path.
 
+Safety nets:
+- **Signed:** the server signs the zip's hash for each PC with that PC's own token, and the PC
+  refuses anything that doesn't match. A PC that was never configured/provisioned (no token yet)
+  is skipped - configure it once in Settings and reinstall its client by hand that first time.
+- **Rollback:** the old files are backed up first. If the new build doesn't get a heartbeat through
+  to the server within 90 seconds, the PC restores the old build and starts it again.
+- **Version:** hover over a PC card to see the build it runs (`v1.0.0+<git commit>`). After an update,
+  check that it changed - if it didn't, the PC rolled back; see `%ProgramData%\ClubControl\client-log.txt`.
+
 ## One-time setup per PC
 
 ### Admin laptop (server)

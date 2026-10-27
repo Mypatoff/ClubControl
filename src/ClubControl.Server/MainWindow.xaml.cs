@@ -10,6 +10,7 @@ using System.Windows.Media;
 using System.Windows.Threading;
 using ClubControl.Server.Data;
 using ClubControl.Server.Data.Models;
+using ClubControl.Server.Hubs;
 using ClubControl.Server.Resources;
 using ClubControl.Server.Services;
 using ClubControl.Server.Windows;
@@ -201,7 +202,8 @@ public partial class MainWindow : Window
             AmountDisplay = amount,
             StartDisplay = start,
             EndDisplay = end,
-            RemainingDisplay = remaining
+            RemainingDisplay = remaining,
+            ClientVersion = pc.IsOnline ? ClubHub.GetClientVersion(pc.MachineGuid) : ""
         };
     }
 

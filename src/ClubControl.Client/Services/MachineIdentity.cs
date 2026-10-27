@@ -3,6 +3,7 @@ using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
+using System.Reflection;
 using Microsoft.Win32;
 
 namespace ClubControl.Client.Services;
@@ -20,6 +21,20 @@ public static class MachineIdentity
     }
 
     public static string GetHostname() => Dns.GetHostName();
+
+    /// <summary>
+    /// "1.0.0+f4545fa": the assembly version plus the git commit it was built from (the SDK adds the
+    /// commit automatically), cut to 7 characters. The commit is what tells two builds apart - nobody
+    /// bumps the version number by hand for every fix.
+    /// </summary>
+    public static string GetClientVersion()
+    {
+        var info = typeof(MachineIdentity).Assembly
+            .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion ?? "";
+
+        var plus = info.IndexOf('+');
+        return plus >= 0 && info.Length > plus + 8 ? info[..(plus + 8)] : info;
+    }
 
     public static string GetLocalIpAddress()
     {

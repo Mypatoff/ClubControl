@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Threading.Tasks;
 using ClubControl.Server.Data;
 using ClubControl.Server.Data.Models;
@@ -16,6 +17,10 @@ public class ClubHub : Hub
     // Single live connection per PC, with reconnect/disconnect kept consistent even when a fast
     // reconnect races ahead of the old connection's disconnect event - see ConnectionRegistry.
     private static readonly ConnectionRegistry<Guid> Connections = new();
+
+    // Which client build each PC last reported. Memory only, on purpose: it is only meaningful
+    // while the PC is connected, and a database column would need an EF migration for no benefit.
+    private static readonly ConcurrentDictionary<Guid, string> ClientVersions = new();
 
     private readonly ClubDbContext _db;
     private readonly SessionService _sessionService;
@@ -54,6 +59,7 @@ public class ClubHub : Hub
         // retires the old one, so it can never again be addressed by a command and its eventual
         // disconnect event cannot evict this new, correct mapping.
         Connections.Register(request.MachineGuid, Context.ConnectionId);
+        ClientVersions[request.MachineGuid] = request.ClientVersion;
 
         var isNew = pc is null;
 
@@ -145,6 +151,10 @@ public class ClubHub : Hub
     // that made every one of them callable, with no authorization at all, by any terminal on the
     // club's network. Do not re-add them here - if a command needs to reach a client, route it
     // through SessionService's own SendCommandAsync (private, server-side only).
+
+    /// <summary>The client build this PC last reported, or "" if it never has (older client, or not connected since the server started).</summary>
+    public static string GetClientVersion(Guid machineGuid) =>
+        ClientVersions.TryGetValue(machineGuid, out var version) ? version : "";
 
     /// <summary>Lets session logic (SessionService) find a connected client's SignalR connection by its machine GUID.</summary>
     public static bool TryGetConnectionId(Guid machineGuid, out string connectionId) =>

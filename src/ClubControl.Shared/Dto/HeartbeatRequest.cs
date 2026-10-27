@@ -8,6 +8,9 @@ public class HeartbeatRequest
     public string MacAddress { get; set; } = "";
     public string Hostname { get; set; } = "";
 
+    /// <summary>Build of the client that sent this, shown in the admin panel so "did the update land?" has an answer. Empty from older clients.</summary>
+    public string ClientVersion { get; set; } = "";
+
     /// <summary>
     /// This PC's auth token (see Pc.AuthTokenHash), once the server has provisioned one. Null for
     /// a PC that has never been configured yet, or that is heartbeating for the very first time

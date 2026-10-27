@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using ClubControl.Shared;
@@ -111,13 +112,39 @@ public class ServerConnection : IAsyncDisposable
                 IpAddress = MachineIdentity.GetLocalIpAddress(),
                 MacAddress = MachineIdentity.GetMacAddress(),
                 Hostname = MachineIdentity.GetHostname(),
+                ClientVersion = MachineIdentity.GetClientVersion(),
                 AuthToken = _authToken,
             }, cancellationToken);
+
+            // This build started and got a heartbeat through to the server: that is all a
+            // just-installed update has to do to count as healthy (see ClientUpdateScript.Build).
+            MarkHealthyOnce();
         }
         catch (Exception)
         {
             // auto-reconnect will restore the connection; the next tick (or the next Reconnected
             // event) tries again.
+        }
+    }
+
+    private bool _markedHealthy;
+
+    private void MarkHealthyOnce()
+    {
+        if (_markedHealthy)
+            return;
+
+        try
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(ClientUpdateScript.HealthMarkerPath)!);
+            File.WriteAllText(ClientUpdateScript.HealthMarkerPath, DateTime.UtcNow.ToString("O"));
+            _markedHealthy = true;
+        }
+        catch (Exception ex)
+        {
+            // Without the marker an update just in progress would be rolled back, but the client
+            // itself is fine - log it and try again on the next heartbeat.
+            ClientLog.Error("ServerConnection.MarkHealthyOnce", ex);
         }
     }
 

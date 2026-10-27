@@ -6,34 +6,54 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using System.Windows;
 using ClubControl.Shared;
+using ClubControl.Shared.Dto;
+using ClubControl.Shared.Security;
 
 namespace ClubControl.Client.Services;
 
 /// <summary>
 /// Handles CommandType.UpdateClient - an admin-triggered pull update, not automatic polling (see
 /// the admin panel's "Update client" action). Downloads the build the admin staged on the server
-/// (ClientUpdateFile there), hands the actual file swap to a short PowerShell script since a
-/// running .exe cannot overwrite its own files, then exits so the script - and, as a safety net,
-/// the Task Scheduler restart policy - can bring the updated build back up. The App-level
-/// single-instance mutex (see App.xaml.cs) makes it harmless if both end up trying to start it.
+/// (ClientUpdateFile there), checks it is really the build the server signed for this PC, hands
+/// the actual file swap to a short PowerShell script since a running .exe cannot overwrite its own
+/// files, then exits so the script can bring the updated build back up (or restore the old one if
+/// it does not come up healthy - see ClientUpdateScript.Build). The App-level single-instance
+/// mutex (see App.xaml.cs) makes it harmless if the Task Scheduler restart policy also relaunches it.
 /// </summary>
 public static class ClientUpdater
 {
-    public static async Task ApplyUpdateAsync(string serverIp, int port)
+    public static async Task ApplyUpdateAsync(string serverIp, int port, ClientCommand command)
     {
         try
         {
-            // Trimmed: a trailing "\" right before the closing quote in the script below would be
+            // The command must carry a signature only the real server can make for this PC - see
+            // ClientUpdateAuth. A PC with no token yet (never provisioned) cannot check one, so it
+            // refuses rather than trust whoever answered discovery.
+            var token = TokenStore.Load();
+            if (token is null)
+                throw new InvalidOperationException("This PC has no auth token yet, so it cannot verify an update.");
+
+            if (command.UpdateSha256 is null || !ClientUpdateAuth.Verify(token, command.UpdateSha256, command.UpdateSignature))
+                throw new InvalidOperationException("Update command is not signed by this PC's server - ignored.");
+
+            // Trimmed: a trailing "\" right before the closing quote in the script would be
             // read as an escaped quote once PowerShell hands the argument to the native robocopy.exe,
             // not as a literal backslash - a classic Windows argument-quoting trap.
             var installDir = AppContext.BaseDirectory.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
             var exeName = Path.GetFileName(Environment.ProcessPath ?? "ClubControl.Client.exe");
 
-            var zipPath = Path.Combine(Path.GetTempPath(), "ClubControl.Client.Update.zip");
-            var extractDir = Path.Combine(Path.GetTempPath(), "ClubControl.Client.Update");
+            var tempDir = Path.GetTempPath();
+            var zipPath = Path.Combine(tempDir, "ClubControl.Client.Update.zip");
+            var extractDir = Path.Combine(tempDir, "ClubControl.Client.Update");
+            var backupDir = Path.Combine(tempDir, "ClubControl.Client.Backup");
 
             using var http = new HttpClient();
             var bytes = await http.GetByteArrayAsync($"http://{serverIp}:{port}{NetworkConstants.ClientUpdateRoute}");
+
+            // The zip itself came over plain HTTP; the signed hash is what makes it trustworthy.
+            if (!string.Equals(ClientUpdateAuth.ComputeSha256Hex(bytes), command.UpdateSha256, StringComparison.OrdinalIgnoreCase))
+                throw new InvalidDataException("Downloaded update does not match the signed hash - discarded.");
+
             await File.WriteAllBytesAsync(zipPath, bytes);
 
             if (Directory.Exists(extractDir))
@@ -42,10 +62,11 @@ public static class ClientUpdater
 
             // Checked before anything is closed: a bad zip must fail here, while the old client is
             // still running, not after it has already shut down.
-            var sourceDir = FindBuildFolder(extractDir, exeName);
+            var sourceDir = ClientUpdateScript.FindBuildFolder(extractDir, exeName);
 
-            var scriptPath = Path.Combine(Path.GetTempPath(), "ClubControl.Client.Update.ps1");
-            await File.WriteAllTextAsync(scriptPath, BuildUpdateScript(Environment.ProcessId, sourceDir, extractDir, installDir, exeName));
+            var scriptPath = Path.Combine(tempDir, "ClubControl.Client.Update.ps1");
+            await File.WriteAllTextAsync(scriptPath, ClientUpdateScript.Build(
+                Environment.ProcessId, sourceDir, extractDir, installDir, exeName, backupDir, ClientUpdateScript.HealthMarkerPath));
 
             Process.Start(new ProcessStartInfo("powershell.exe",
                 $"-WindowStyle Hidden -ExecutionPolicy Bypass -File \"{scriptPath}\"")
@@ -64,47 +85,5 @@ public static class ClientUpdater
             // version it already has, and the admin can just try "Update client" again later.
             ClientLog.Error("ClientUpdater.ApplyUpdateAsync", ex);
         }
-    }
-
-    /// <summary>
-    /// The folder inside the extracted zip that actually holds the client exe. Normally the zip
-    /// root, but zipping the publish folder itself (instead of its contents) adds one wrapper
-    /// folder, so that is accepted too. Anything else is rejected - copying a zip that has no exe
-    /// over the install folder would "update" nothing and leave the admin guessing.
-    /// </summary>
-    private static string FindBuildFolder(string extractDir, string exeName)
-    {
-        if (File.Exists(Path.Combine(extractDir, exeName)))
-            return extractDir;
-
-        var subDirs = Directory.GetDirectories(extractDir);
-        if (subDirs.Length == 1 && File.Exists(Path.Combine(subDirs[0], exeName)))
-            return subDirs[0];
-
-        throw new InvalidDataException($"Update zip does not contain {exeName}.");
-    }
-
-    /// <summary>
-    /// Waits for this process to exit (so the exe/dll files are no longer locked), copies the
-    /// freshly extracted build over the install folder, then starts it again.
-    /// </summary>
-    private static string BuildUpdateScript(int clientPid, string sourceDir, string extractDir, string installDir, string exeName)
-    {
-        var exePath = Path.Combine(installDir, exeName);
-        var lines = new[]
-        {
-            // Not named $pid: that is a read-only built-in in PowerShell (the script's own process
-            // id), so assigning to it fails and the wait below would never end.
-            $"$clientPid = {clientPid}",
-            // Gives up after 60s instead of waiting forever; the old client is left untouched.
-            "Wait-Process -Id $clientPid -Timeout 60 -ErrorAction SilentlyContinue",
-            "if (Get-Process -Id $clientPid -ErrorAction SilentlyContinue) { exit 1 }",
-            "Start-Sleep -Seconds 1",
-            $"robocopy \"{sourceDir}\" \"{installDir}\" /E /IS /IT",
-            $"Remove-Item -Recurse -Force \"{extractDir}\"",
-            $"Start-Process -FilePath \"{exePath}\" -WorkingDirectory \"{installDir}\""
-        };
-
-        return string.Join(Environment.NewLine, lines);
     }
 }
