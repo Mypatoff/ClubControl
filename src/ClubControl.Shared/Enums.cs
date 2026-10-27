@@ -43,7 +43,8 @@ public enum EventType
     OfflineUnlock,
     PowerCommand,
     AuthRejected,
-    ManualUnlock
+    ManualUnlock,
+    ItemAdded
 }
 
 public enum LockScreenLanguage

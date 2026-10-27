@@ -1,0 +1,47 @@
+<Window x:Class="ClubControl.Server.Windows.AddItemWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Add item" Width="440" SizeToContent="Height"
+        WindowStartupLocation="CenterOwner" ResizeMode="NoResize" ShowInTaskbar="False">
+    <StackPanel Margin="24">
+        <TextBlock x:Name="TargetText" FontSize="16" FontWeight="Bold" Margin="0,0,0,12" TextWrapping="Wrap" />
+
+        <!-- Items already added to this session, each removable in case of a mistake -->
+        <StackPanel x:Name="AddedPanel" Margin="0,0,0,12">
+            <TextBlock x:Name="AddedLabel" Foreground="{StaticResource TextSecondaryBrush}" FontWeight="SemiBold" Margin="0,0,0,4" />
+            <ScrollViewer MaxHeight="140" VerticalScrollBarVisibility="Auto">
+                <ItemsControl x:Name="ItemsList">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Grid Margin="0,2">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="{Binding Description}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+                                <TextBlock Grid.Column="1" Text="{Binding AmountDisplay}" FontWeight="SemiBold" Margin="10,0" VerticalAlignment="Center" />
+                                <Button Grid.Column="2" Content="✕" Width="28" Height="26" Padding="0"
+                                        Style="{StaticResource SecondaryButtonStyle}" Tag="{Binding Id}" Click="OnRemove" />
+                            </Grid>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+            <TextBlock x:Name="AddedTotalText" FontWeight="Bold" HorizontalAlignment="Right" Margin="0,4,0,0" />
+        </StackPanel>
+
+        <TextBlock x:Name="NameLabel" Margin="0,0,0,2" />
+        <TextBox x:Name="NameBox" MaxLength="60" Margin="0,0,0,10" />
+
+        <TextBlock x:Name="AmountLabel" Margin="0,0,0,2" />
+        <TextBox x:Name="AmountBox" Margin="0,0,0,10" />
+
+        <TextBlock x:Name="ErrorText" Foreground="{StaticResource ErrorBrush}" TextWrapping="Wrap" />
+
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
+            <Button x:Name="CloseButton" Width="110" Height="38" Margin="0,0,10,0" Style="{StaticResource SecondaryButtonStyle}" Click="OnClose" IsCancel="True" />
+            <Button x:Name="AddButton" Width="110" Height="38" IsDefault="True" Click="OnAdd" />
+        </StackPanel>
+    </StackPanel>
+</Window>

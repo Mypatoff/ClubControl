@@ -24,7 +24,7 @@ public class ReportsService
         _db = db;
     }
 
-    public record Totals(int TotalIncomeUzs, int SessionCount, double TotalHours);
+    public record Totals(int TotalIncomeUzs, int SessionCount, double TotalHours, int ExtrasUzs);
     public record PcRow(int? PcNumber, string PcName, int IncomeUzs, int SessionCount, double Hours);
     public record TariffRow(string TariffName, int IncomeUzs, int SessionCount, double Hours);
     public record TypeRow(SessionType Type, int IncomeUzs, int SessionCount, double Hours);
@@ -34,6 +34,7 @@ public class ReportsService
     {
         var sessions = await _db.Sessions
             .Include(s => s.Pc)
+            .Include(s => s.Extras)
             .Where(s => s.StartUtc >= startUtc && s.StartUtc < endUtc && s.Pc!.Kind == kind)
             .ToListAsync();
 
@@ -46,7 +47,8 @@ public class ReportsService
         var totals = new Totals(
             TotalIncomeUzs: sessions.Sum(s => s.AmountUzs),
             SessionCount: sessions.Count,
-            TotalHours: sessions.Sum(HoursOf));
+            TotalHours: sessions.Sum(HoursOf),
+            ExtrasUzs: sessions.Sum(s => s.Extras.Sum(x => x.AmountUzs)));
 
         var byPc = sessions
             .GroupBy(s => (Number: s.Pc?.Number, Name: s.Pc?.Name ?? ""))

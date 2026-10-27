@@ -74,6 +74,7 @@ One club, one admin laptop (server), up to ~30 gaming PCs (clients) on the same 
   - Open session, counts up. Current cost = started minutes × price/60, never below min.
   - When cost reaches the tariff maximum → client goes to "Limit reached" (locked), session waits for the admin.
   - Admin ends it → payment window shows amount due → admin clicks "Paid" → session closed, PC locked.
+- **Items:** during a running session the admin can add things the client bought (name + price) from the Add item button / right-click menu; they are listed with the time charge and added to the total in the stop and payment windows. Items never change the time charge, the prepaid time or the tariff limits, follow the session if it is moved, and are totalled separately in Reports (Items sold).
 - **Note:** the start dialog has an optional note (e.g. "birthday group"); it is saved with the session and shown in the card tooltip and the event log. There is no free-time option any more (older free sessions still show in reports).
 - **Move:** select two cards of the same kind and tariff and press Move: a running session moves onto a free card, or two running sessions swap. A session is stored as segments (PC, price per hour, start, end).
   - Prepay: the remaining time is unchanged (same tariff, so the price is the same).

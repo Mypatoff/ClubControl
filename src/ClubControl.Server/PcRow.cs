@@ -44,6 +44,9 @@ public class PcRow
     /// <summary>The optional note typed when the current session was started; empty if none.</summary>
     public string Note { get; init; } = "";
 
+    /// <summary>Total of the items (drinks, snacks) added to the current session; 0 if none.</summary>
+    public int ExtrasUzs { get; init; }
+
     /// <summary>A manual resource (offline PC, other resource) never connects, so there is nothing to shut down/restart/wake.</summary>
     public bool SupportsPowerControl => !IsManual;
 
@@ -79,6 +82,7 @@ public class PcRow
         AmountDisplay,
         StartDisplay != "" ? StartDisplay + (EndDisplay != "" ? " – " + EndDisplay : "") : "",
         Note,
+        ExtrasUzs > 0 ? Strings.Format("ItemsTooltipFormat", ExtrasUzs.ToString("N0")) : "",
         ClientVersion != "" ? "v" + ClientVersion : ""
     }.Where(line => line != ""));
 

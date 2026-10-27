@@ -35,6 +35,7 @@
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
 
             <Border Grid.Column="0" Background="{StaticResource SurfaceBrush}" BorderBrush="{StaticResource DividerBrush}"
@@ -52,10 +53,17 @@
                 </StackPanel>
             </Border>
             <Border Grid.Column="2" Background="{StaticResource SurfaceBrush}" BorderBrush="{StaticResource DividerBrush}"
-                    BorderThickness="1" CornerRadius="8" Margin="6,0,0,0" Padding="14,10">
+                    BorderThickness="1" CornerRadius="8" Margin="6,0,6,0" Padding="14,10">
                 <StackPanel>
                     <TextBlock x:Name="TotalHoursLabel" Foreground="{StaticResource TextSecondaryBrush}" FontWeight="SemiBold" />
                     <TextBlock x:Name="TotalHoursValue" FontSize="20" FontWeight="SemiBold" />
+                </StackPanel>
+            </Border>
+            <Border Grid.Column="3" Background="{StaticResource SurfaceBrush}" BorderBrush="{StaticResource DividerBrush}"
+                    BorderThickness="1" CornerRadius="8" Margin="6,0,0,0" Padding="14,10">
+                <StackPanel>
+                    <TextBlock x:Name="ExtrasLabel" Foreground="{StaticResource TextSecondaryBrush}" FontWeight="SemiBold" />
+                    <TextBlock x:Name="ExtrasValue" FontSize="20" FontWeight="SemiBold" />
                 </StackPanel>
             </Border>
         </Grid>

@@ -111,7 +111,8 @@
                     <Button x:Name="StartButton" Margin="0,0,6,0" Style="{StaticResource SuccessButtonStyle}" Click="OnStart" />
                     <Button x:Name="StopButton" Margin="0,0,6,0" Style="{StaticResource DangerButtonStyle}" Click="OnStop" />
                     <Button x:Name="MoveButton" Margin="0,0,6,0" Style="{StaticResource SecondaryButtonStyle}" Click="OnMove" />
-                    <Button x:Name="ExtendButton" Margin="0,0,14,0" Style="{StaticResource SecondaryButtonStyle}" Click="OnExtend" />
+                    <Button x:Name="ExtendButton" Margin="0,0,6,0" Style="{StaticResource SecondaryButtonStyle}" Click="OnExtend" />
+                    <Button x:Name="AddItemButton" Margin="0,0,14,0" Style="{StaticResource SecondaryButtonStyle}" Click="OnAddItem" />
                     <Border Width="1" Background="{StaticResource DividerBrush}" Margin="0,2,14,2" />
                     <Button x:Name="TurnOnButton" Margin="0,0,6,0" Style="{StaticResource SecondaryButtonStyle}" Click="OnTurnOn" />
                     <Button x:Name="RestartButton" Margin="0,0,6,0" Style="{StaticResource SecondaryButtonStyle}" Click="OnRestart" />
@@ -140,6 +141,7 @@
                         <MenuItem x:Name="CtxStop" InputGestureText="Delete" Click="OnStop" />
                         <MenuItem x:Name="CtxMove" Click="OnMove" />
                         <MenuItem x:Name="CtxExtend" Click="OnExtend" />
+                        <MenuItem x:Name="CtxAddItem" Click="OnAddItem" />
                         <Separator />
                         <MenuItem x:Name="CtxTurnOn" Click="OnTurnOn" />
                         <MenuItem x:Name="CtxRestart" Click="OnRestart" />

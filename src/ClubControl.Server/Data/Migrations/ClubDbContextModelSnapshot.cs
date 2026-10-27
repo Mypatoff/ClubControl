@@ -147,6 +147,32 @@ namespace ClubControl.Server.Data.Migrations
                     b.ToTable("Sessions");
                 });
 
+            modelBuilder.Entity("ClubControl.Server.Data.Models.SessionExtra", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("AmountUzs")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("SessionId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SessionId");
+
+                    b.ToTable("SessionExtras");
+                });
+
             modelBuilder.Entity("ClubControl.Server.Data.Models.SessionSegment", b =>
                 {
                     b.Property<int>("Id")
@@ -274,6 +300,17 @@ namespace ClubControl.Server.Data.Migrations
                     b.Navigation("Pc");
                 });
 
+            modelBuilder.Entity("ClubControl.Server.Data.Models.SessionExtra", b =>
+                {
+                    b.HasOne("ClubControl.Server.Data.Models.Session", "Session")
+                        .WithMany("Extras")
+                        .HasForeignKey("SessionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Session");
+                });
+
             modelBuilder.Entity("ClubControl.Server.Data.Models.SessionSegment", b =>
                 {
                     b.HasOne("ClubControl.Server.Data.Models.Pc", "Pc")
@@ -295,6 +332,8 @@ namespace ClubControl.Server.Data.Migrations
 
             modelBuilder.Entity("ClubControl.Server.Data.Models.Session", b =>
                 {
+                    b.Navigation("Extras");
+
                     b.Navigation("Segments");
                 });
 #pragma warning restore 612, 618

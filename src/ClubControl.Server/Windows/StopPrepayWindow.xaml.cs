@@ -5,7 +5,7 @@ using ClubControl.Server.Resources;
 namespace ClubControl.Server.Windows;
 
 /// <summary>One PC in the stop dialog: its name, the unused money and the time left (already formatted for display).</summary>
-public record StopPrepayLine(string Title, string Money, string TimeLeft, string UnusedLabel);
+public record StopPrepayLine(string Title, string Money, string TimeLeft, string UnusedLabel, string Items = "");
 
 /// <summary>
 /// Confirms stopping prepay sessions early and shows how much prepaid money is still unused on each
@@ -14,7 +14,7 @@ public record StopPrepayLine(string Title, string Money, string TimeLeft, string
 /// </summary>
 public partial class StopPrepayWindow : Window
 {
-    public StopPrepayWindow(List<StopPrepayLine> lines, string totalMoney)
+    public StopPrepayWindow(List<StopPrepayLine> lines, string totalMoney, int itemsDueUzs = 0)
     {
         InitializeComponent();
 
@@ -25,6 +25,11 @@ public partial class StopPrepayWindow : Window
         TotalLabel.Text = Strings.Get("StopPrepayTotal");
         TotalText.Text = totalMoney;
         TotalCard.Visibility = lines.Count > 1 ? Visibility.Visible : Visibility.Collapsed;
+
+        // Items added during the session are not covered by the prepayment: the admin collects them now.
+        ItemsDueLabel.Text = Strings.Get("ItemsDueLabel");
+        ItemsDueText.Text = $"{itemsDueUzs:N0} UZS";
+        ItemsDueCard.Visibility = itemsDueUzs > 0 ? Visibility.Visible : Visibility.Collapsed;
 
         NoteText.Text = Strings.Get("StopPrepayNoRefund");
         CancelButton.Content = Strings.Get("Cancel");

@@ -505,4 +505,34 @@
   <data name="EnterAName" xml:space="preserve">
     <value>Введите название.</value>
   </data>
+  <data name="AddItemTitle" xml:space="preserve">
+    <value>Добавить товар</value>
+  </data>
+  <data name="LabelItemName" xml:space="preserve">
+    <value>Товар (например, Кола)</value>
+  </data>
+  <data name="LabelItemPrice" xml:space="preserve">
+    <value>Цена (UZS)</value>
+  </data>
+  <data name="ItemsAddedLabel" xml:space="preserve">
+    <value>Добавлено в эту сессию</value>
+  </data>
+  <data name="EnterItemName" xml:space="preserve">
+    <value>Введите, что куплено.</value>
+  </data>
+  <data name="EnterItemPrice" xml:space="preserve">
+    <value>Введите цену больше 0.</value>
+  </data>
+  <data name="ItemsOnlyActiveSession" xml:space="preserve">
+    <value>Товары можно добавлять только в активную сессию.</value>
+  </data>
+  <data name="ItemsDueLabel" xml:space="preserve">
+    <value>Товары к оплате сейчас</value>
+  </data>
+  <data name="ItemsTooltipFormat" xml:space="preserve">
+    <value>Товары: {0} UZS</value>
+  </data>
+  <data name="ReportItemsSold" xml:space="preserve">
+    <value>Продано товаров</value>
+  </data>
 </root>

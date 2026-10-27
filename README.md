@@ -151,6 +151,10 @@ auto-discovery:
   **not** shut down while "Limit reached" (waiting for payment) or mid-session. If you're
   upgrading an existing installation rather than starting fresh, this is **disabled (0)** by
   default on your existing settings row - set it explicitly in Settings if you want it.
+- **Items**: start a session, select its card and click "Add item" (or right-click > Add item), enter
+  a name and a price, repeat for a second item and Close. Hover the card to see the items total, then
+  Stop: the payment window (postpay) lists the time charge, each item and the total; for prepay the
+  stop window shows "Items to collect now". Reports show an "Items sold" box.
 - **Bulk start**: select several PCs (or named resources) that share one tariff (Ctrl/Shift-click or
   drag), click Start - one dialog should start identical sessions on all
   of them. Try mixing PCs with different tariffs selected together - it should refuse with a clear

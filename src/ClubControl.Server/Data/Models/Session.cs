@@ -29,4 +29,5 @@ public class Session
     public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
 
     public List<SessionSegment> Segments { get; set; } = new();
+    public List<SessionExtra> Extras { get; set; } = new();
 }

@@ -81,3 +81,8 @@ C# .NET 8. WPF for Server (admin panel + hosted ASP.NET Core/SignalR) and Client
 - [x] Post-phase-6 fix: startup upgrades the database through `DatabaseUpgrade` (full copy to
       `Backups/club_before-upgrade_*.db` before pending migrations, clear message for a pre-migrations
       club.db instead of a crash), covered by `DatabaseUpgradeTests`.
+- [x] Post-phase-6 feature: items bought during a session (`SessionExtra` table + `AddSessionExtras`
+      migration; `SessionService.AddExtraAsync` / `RemoveExtraAsync` / `GetExtrasAsync`, `AddItemWindow`).
+      Listed with the total in the postpay payment window and the prepay stop window, shown in the card
+      tooltip, kept apart from `Session.AmountUzs` (so tariff min/max and prepaid time are unaffected) and
+      totalled separately in Reports ("Items sold").

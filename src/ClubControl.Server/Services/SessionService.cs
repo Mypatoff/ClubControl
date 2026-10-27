@@ -208,6 +208,57 @@ public class SessionService
         await CloseSessionAsync(session, now, reason);
     }
 
+    // ---- items bought during a session ----
+
+    /// <summary>One thing the client bought, as shown in the add-item and stop dialogs.</summary>
+    public record ExtraLine(int Id, string Description, int AmountUzs);
+
+    /// <summary>
+    /// Adds something the client bought to the PC's running session (any time before it is stopped).
+    /// It is paid on top of the time charge when the session ends and does not affect the tariff's
+    /// minimum, maximum or the prepaid time.
+    /// </summary>
+    public async Task AddExtraAsync(Guid machineGuid, string description, int amountUzs)
+    {
+        description = description?.Trim() ?? "";
+        if (description == "")
+            throw new InvalidOperationException("Enter the item name.");
+        if (amountUzs <= 0 || amountUzs > MaxExtraUzs)
+            throw new InvalidOperationException($"The price must be between 1 and {MaxExtraUzs} UZS.");
+
+        var pc = await GetPcAsync(machineGuid);
+        var session = await GetActiveSessionAsync(pc.Id)
+            ?? throw new InvalidOperationException("Items can only be added to a running session.");
+
+        _db.SessionExtras.Add(new SessionExtra { SessionId = session.Id, Description = description, AmountUzs = amountUzs });
+        LogEvent(EventType.ItemAdded, pc.Id, session.Id, $"Item added: {description}, {amountUzs} UZS");
+        await _db.SaveChangesAsync(); // the item and its event log entry are saved together
+    }
+
+    /// <summary>Removes an item added by mistake. Only while its session is still running - after that it is part of the bill.</summary>
+    public async Task RemoveExtraAsync(int extraId)
+    {
+        var extra = await _db.SessionExtras.Include(x => x.Session).FirstOrDefaultAsync(x => x.Id == extraId)
+            ?? throw new InvalidOperationException("That item no longer exists.");
+        if (extra.Session!.Status != SessionStatus.Active)
+            throw new InvalidOperationException("The session has already ended.");
+
+        _db.SessionExtras.Remove(extra);
+        LogEvent(EventType.ItemAdded, extra.Session.PcId, extra.SessionId, $"Item removed: {extra.Description}, {extra.AmountUzs} UZS");
+        await _db.SaveChangesAsync();
+    }
+
+    public async Task<List<ExtraLine>> GetExtrasAsync(Guid machineGuid)
+    {
+        var pc = await GetPcAsync(machineGuid);
+        var session = await GetActiveSessionAsync(pc.Id);
+        return session is null
+            ? new List<ExtraLine>()
+            : session.Extras.OrderBy(x => x.Id).Select(x => new ExtraLine(x.Id, x.Description, x.AmountUzs)).ToList();
+    }
+
+    private const int MaxExtraUzs = 100_000_000;
+
     // ---- move ----
 
     public async Task MoveSessionAsync(Guid fromMachineGuid, Guid toMachineGuid)
@@ -432,12 +483,13 @@ public class SessionService
     /// prepay payment (0 for other sessions) - shown when the admin stops a prepay session early.
     /// </summary>
     public record ActiveSessionSnapshot(int SessionId, SessionType Type, DateTime StartUtc, DateTime? PlannedEndUtc,
-        int AmountOrCostUzs, int RemainingSeconds, bool IsFree, int ConsumedUzs, int CapUzs, int RemainingMoneyUzs = 0, string? Note = null);
+        int AmountOrCostUzs, int RemainingSeconds, bool IsFree, int ConsumedUzs, int CapUzs, int RemainingMoneyUzs = 0, string? Note = null, int ExtrasUzs = 0);
 
     public async Task<Dictionary<int, ActiveSessionSnapshot>> GetActiveSessionSnapshotsAsync()
     {
         var sessions = await _db.Sessions
             .Include(s => s.Segments)
+            .Include(s => s.Extras)
             .Include(s => s.Pc)
             .Where(s => s.Status == SessionStatus.Active)
             .ToListAsync();
@@ -498,7 +550,7 @@ public class SessionService
         }
 
         return new ActiveSessionSnapshot(session.Id, session.Type, session.StartUtc, session.PlannedEndUtc,
-            amountOrCost, info.RemainingSeconds, session.IsFree, consumedUzs, capUzs, remainingMoneyUzs, session.Note);
+            amountOrCost, info.RemainingSeconds, session.IsFree, consumedUzs, capUzs, remainingMoneyUzs, session.Note, session.Extras.Sum(x => x.AmountUzs));
     }
 
     /// <summary>The ApplySettings command carrying the current General settings; sent on connect and whenever settings are saved.</summary>
@@ -599,7 +651,7 @@ public class SessionService
     }
 
     private Task<Session?> GetActiveSessionAsync(int pcId) =>
-        _db.Sessions.Include(s => s.Segments)
+        _db.Sessions.Include(s => s.Segments).Include(s => s.Extras)
             .Where(s => s.PcId == pcId && s.Status == SessionStatus.Active)
             .OrderByDescending(s => s.Id)
             .FirstOrDefaultAsync();

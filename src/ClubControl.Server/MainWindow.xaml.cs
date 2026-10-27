@@ -45,6 +45,7 @@ public partial class MainWindow : Window
         StopButton.ToolTip = Strings.Get("TooltipStop");
         MoveButton.Content = "↔ " + Strings.Get("ToolbarMove");
         ExtendButton.Content = "⏱ " + Strings.Get("ToolbarExtend");
+        AddItemButton.Content = "🛒 " + Strings.Get("AddItemTitle");
         TurnOnButton.Content = "⚡ " + Strings.Get("ToolbarTurnOn");
         RestartButton.Content = "🔁 " + Strings.Get("ToolbarRestart");
         ShutDownButton.Content = "⏻ " + Strings.Get("ToolbarShutDown");
@@ -56,6 +57,7 @@ public partial class MainWindow : Window
         CtxStop.Header = Strings.Get("ToolbarStop");
         CtxMove.Header = Strings.Get("ToolbarMove");
         CtxExtend.Header = Strings.Get("ToolbarExtend");
+        CtxAddItem.Header = Strings.Get("AddItemTitle");
         CtxTurnOn.Header = Strings.Get("ToolbarTurnOn");
         CtxRestart.Header = Strings.Get("ToolbarRestart");
         CtxShutDown.Header = Strings.Get("ToolbarShutDown");
@@ -204,6 +206,7 @@ public partial class MainWindow : Window
             EndDisplay = end,
             RemainingDisplay = remaining,
             Note = snap?.Note ?? "",
+            ExtrasUzs = snap?.ExtrasUzs ?? 0,
             ClientVersion = pc.IsOnline ? ClubHub.GetClientVersion(pc.MachineGuid) : ""
         };
     }
@@ -583,6 +586,23 @@ public partial class MainWindow : Window
             await RefreshAsync();
     }
 
+    private async void OnAddItem(object sender, RoutedEventArgs e)
+    {
+        var pc = GetSingleSelectedPc();
+        if (pc is null)
+            return;
+
+        if (!pc.HasActiveSession)
+        {
+            MessageBox.Show(Strings.Get("ItemsOnlyActiveSession"), Strings.Get("ConfirmTitle"),
+                MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        new AddItemWindow(Services, pc) { Owner = this }.ShowDialog();
+        await RefreshAsync();
+    }
+
     private async void OnMove(object sender, RoutedEventArgs e)
     {
         var selected = PcList.SelectedItems.Cast<PcRow>().ToList();
@@ -696,8 +716,8 @@ public partial class MainWindow : Window
             using var scope = Services.CreateScope();
             var sessionService = scope.ServiceProvider.GetRequiredService<SessionService>();
 
-            var (lines, totalMoney) = await BuildStopPrepayLinesAsync(sessionService, targets);
-            if (new StopPrepayWindow(lines, totalMoney) { Owner = this }.ShowDialog() != true)
+            var (lines, totalMoney, itemsDueUzs) = await BuildStopPrepayLinesAsync(sessionService, targets);
+            if (new StopPrepayWindow(lines, totalMoney, itemsDueUzs) { Owner = this }.ShowDialog() != true)
                 return;
 
             var failures = new List<string>();
@@ -730,11 +750,12 @@ public partial class MainWindow : Window
     /// What the stop dialog shows for prepay: for each PC, how much of its prepaid money is still unused
     /// and how much time that is, plus the total. The stop itself still gives no refund (SPEC 5).
     /// </summary>
-    private static async Task<(List<StopPrepayLine> Lines, string TotalMoney)> BuildStopPrepayLinesAsync(
+    private static async Task<(List<StopPrepayLine> Lines, string TotalMoney, int ItemsDueUzs)> BuildStopPrepayLinesAsync(
         SessionService sessionService, List<PcRow> targets)
     {
         var lines = new List<StopPrepayLine>();
         var totalUzs = 0;
+        var itemsDueUzs = 0;
 
         foreach (var target in targets)
         {
@@ -742,15 +763,18 @@ public partial class MainWindow : Window
             if (snapshot is null)
                 continue;
 
+            var items = await sessionService.GetExtrasAsync(target.MachineGuid);
+            itemsDueUzs += items.Sum(i => i.AmountUzs);
             totalUzs += snapshot.RemainingMoneyUzs;
             lines.Add(new StopPrepayLine(
                 target.Label,
                 $"{snapshot.RemainingMoneyUzs:N0} UZS",
                 $"{Strings.Get("ColumnRemaining")}: {FormatTimeLeft(snapshot.RemainingSeconds)}",
-                Strings.Get("StopPrepayUnused")));
+                Strings.Get("StopPrepayUnused"),
+                string.Join("\n", items.Select(i => $"{i.Description}: {i.AmountUzs:N0} UZS"))));
         }
 
-        return (lines, $"{totalUzs:N0} UZS");
+        return (lines, $"{totalUzs:N0} UZS", itemsDueUzs);
     }
 
     /// <summary>mm:ss under an hour, h:mm:ss from an hour up (a plain mm:ss would show 90 minutes as 30:00).</summary>

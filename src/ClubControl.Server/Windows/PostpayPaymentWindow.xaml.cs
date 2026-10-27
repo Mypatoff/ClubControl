@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using ClubControl.Server.Resources;
@@ -47,9 +48,15 @@ public partial class PostpayPaymentWindow : Window
             if (snapshot is null)
                 continue;
 
-            total += snapshot.AmountOrCostUzs;
-            if (_targets.Count > 1)
+            var items = await sessionService.GetExtrasAsync(target.MachineGuid);
+            total += snapshot.AmountOrCostUzs + items.Sum(i => i.AmountUzs);
+
+            // "PC #3: 10 000 UZS" then one indented line per item; a lone PC with no items needs no breakdown.
+            if (_targets.Count > 1 || items.Count > 0)
+            {
                 lines.Add($"{target.Label}: {snapshot.AmountOrCostUzs:N0} UZS");
+                lines.AddRange(items.Select(i => $"    {i.Description}: {i.AmountUzs:N0} UZS"));
+            }
         }
 
         BreakdownText.Text = string.Join("\n", lines);

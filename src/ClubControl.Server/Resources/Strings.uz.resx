@@ -505,4 +505,34 @@
   <data name="EnterAName" xml:space="preserve">
     <value>Nomini kiriting.</value>
   </data>
+  <data name="AddItemTitle" xml:space="preserve">
+    <value>Mahsulot qoʻshish</value>
+  </data>
+  <data name="LabelItemName" xml:space="preserve">
+    <value>Mahsulot (masalan, Kola)</value>
+  </data>
+  <data name="LabelItemPrice" xml:space="preserve">
+    <value>Narxi (UZS)</value>
+  </data>
+  <data name="ItemsAddedLabel" xml:space="preserve">
+    <value>Ushbu sessiyaga qoʻshilgan</value>
+  </data>
+  <data name="EnterItemName" xml:space="preserve">
+    <value>Nima sotib olinganini kiriting.</value>
+  </data>
+  <data name="EnterItemPrice" xml:space="preserve">
+    <value>0 dan katta narx kiriting.</value>
+  </data>
+  <data name="ItemsOnlyActiveSession" xml:space="preserve">
+    <value>Mahsulotni faqat faol sessiyaga qoʻshish mumkin.</value>
+  </data>
+  <data name="ItemsDueLabel" xml:space="preserve">
+    <value>Hozir toʻlanadigan mahsulotlar</value>
+  </data>
+  <data name="ItemsTooltipFormat" xml:space="preserve">
+    <value>Mahsulotlar: {0} UZS</value>
+  </data>
+  <data name="ReportItemsSold" xml:space="preserve">
+    <value>Sotilgan mahsulotlar</value>
+  </data>
 </root>

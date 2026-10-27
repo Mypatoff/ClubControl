@@ -505,4 +505,34 @@
   <data name="EnterAName" xml:space="preserve">
     <value>Enter a name.</value>
   </data>
+  <data name="AddItemTitle" xml:space="preserve">
+    <value>Add item</value>
+  </data>
+  <data name="LabelItemName" xml:space="preserve">
+    <value>Item (e.g. Cola)</value>
+  </data>
+  <data name="LabelItemPrice" xml:space="preserve">
+    <value>Price (UZS)</value>
+  </data>
+  <data name="ItemsAddedLabel" xml:space="preserve">
+    <value>Added to this session</value>
+  </data>
+  <data name="EnterItemName" xml:space="preserve">
+    <value>Enter what was bought.</value>
+  </data>
+  <data name="EnterItemPrice" xml:space="preserve">
+    <value>Enter a price above 0.</value>
+  </data>
+  <data name="ItemsOnlyActiveSession" xml:space="preserve">
+    <value>Items can only be added to a running session.</value>
+  </data>
+  <data name="ItemsDueLabel" xml:space="preserve">
+    <value>Items to collect now</value>
+  </data>
+  <data name="ItemsTooltipFormat" xml:space="preserve">
+    <value>Items: {0} UZS</value>
+  </data>
+  <data name="ReportItemsSold" xml:space="preserve">
+    <value>Items sold</value>
+  </data>
 </root>
