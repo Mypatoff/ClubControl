@@ -24,19 +24,41 @@ public static class ServerDiscoveryClient
 
         while (!cancellationToken.IsCancellationRequested)
         {
-            // Re-enumerated on every try, not just once before the loop - a NIC that is still
-            // coming up (DHCP not finished, slow link negotiation) when the client starts at logon
-            // would otherwise be missed forever, since the interface snapshot taken on the very
-            // first try would never be retaken once that NIC actually comes up.
-            using var sockets = new BroadcastSockets();
-            await sockets.SendAsync(requestBytes);
+            try
+            {
+                // Re-enumerated on every try, not just once before the loop - a NIC that is still
+                // coming up (DHCP not finished, slow link negotiation) when the client starts at
+                // logon would otherwise be missed forever, since the interface snapshot taken on
+                // the very first try would never be retaken once that NIC actually comes up.
+                using var sockets = new BroadcastSockets();
+                await sockets.SendAsync(requestBytes);
 
-            using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-            timeoutCts.CancelAfter(perTryTimeout);
+                using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+                timeoutCts.CancelAfter(perTryTimeout);
 
-            var response = await sockets.ReceiveOneAsync(timeoutCts.Token);
-            if (response is not null)
-                return response;
+                var response = await sockets.ReceiveOneAsync(timeoutCts.Token);
+                if (response is not null)
+                    return response;
+            }
+            catch (Exception) when (!cancellationToken.IsCancellationRequested)
+            {
+                // The caller (MainWindow) starts this fire-and-forget and never awaits/observes
+                // the result, so letting anything escape here - e.g. NetworkInterface.GetAll-
+                // NetworkInterfaces() throwing during a transient adapter state change (a VPN
+                // adapter coming up/down) - would silently kill discovery forever with no retry
+                // and no visible error, leaving the PC stuck until something restarts the process.
+                // This loop's whole job is "keep trying until the server is found or we're told to
+                // stop" - a bad try must not end that, just this one attempt.
+                try
+                {
+                    await Task.Delay(perTryTimeout, cancellationToken);
+                }
+                catch (OperationCanceledException)
+                {
+                    // Caller cancelled while we were waiting to retry - fine, the outer loop's
+                    // condition check handles exiting cleanly.
+                }
+            }
         }
 
         return null;
