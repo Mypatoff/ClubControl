@@ -86,3 +86,9 @@ C# .NET 8. WPF for Server (admin panel + hosted ASP.NET Core/SignalR) and Client
       Listed with the total in the postpay payment window and the prepay stop window, shown in the card
       tooltip, kept apart from `Session.AmountUzs` (so tariff min/max and prepaid time are unaffected) and
       totalled separately in Reports ("Items sold").
+- [x] Post-phase-6 feature: `ClubControl-Setup.exe` (Inno Setup, `installer/ClubControl.iss`, built by
+      `installer/build-installer.ps1` and the Build workflow): one installer with a Server/Client choice,
+      firewall rules / kiosk startup task / uninstall cleanup, app icon `assets/ClubControl.ico` (also the
+      exe and tray icon). Both apps are now published self-contained (the installer bundles .NET), so the
+      "Update client" zip must be self-contained too. Tested here (silent): server and client install,
+      upgrade over an existing install and uninstall all clean; setup is about 100 MB.

@@ -30,11 +30,25 @@ jobs:
       - name: Run session tests (server, Windows only)
         run: dotnet test src/ClubControl.Server.Tests/ClubControl.Server.Tests.csproj -c Release --no-restore
 
+      # Self-contained: the PCs need no separate .NET install. The client's "Update client" zip is
+      # made from this same build, so an updated PC keeps working without the runtime too.
       - name: Publish server
-        run: dotnet publish src/ClubControl.Server/ClubControl.Server.csproj -c Release -r win-x64 --self-contained false -o publish/server
+        run: dotnet publish src/ClubControl.Server/ClubControl.Server.csproj -c Release -r win-x64 --self-contained true -o publish/server
 
       - name: Publish client
-        run: dotnet publish src/ClubControl.Client/ClubControl.Client.csproj -c Release -r win-x64 --self-contained false -o publish/client
+        run: dotnet publish src/ClubControl.Client/ClubControl.Client.csproj -c Release -r win-x64 --self-contained true -o publish/client
+
+      - name: Install Inno Setup
+        run: choco install innosetup -y --no-progress
+
+      - name: Build the installer (ClubControl-Setup.exe)
+        run: '& "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" "/DAppVersion=1.0.${{ github.run_number }}" installer\ClubControl.iss'
+
+      - name: Upload installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: ClubControl-Setup
+          path: dist/ClubControl-Setup.exe
 
       - name: Copy install scripts
         run: |
@@ -69,5 +83,6 @@ jobs:
           body: Automatically built from the latest commit on main (${{ github.sha }}). Not a stability guarantee - just the newest build.
           prerelease: true
           files: |
+            dist/ClubControl-Setup.exe
             ClubControl-Server-win-x64.zip
             ClubControl-Client-win-x64.zip

@@ -208,7 +208,9 @@ public partial class App : Application
 
         _trayIcon = new System.Windows.Forms.NotifyIcon
         {
-            Icon = System.Drawing.SystemIcons.Application,
+            // The exe's own icon (assets/ClubControl.ico); the generic one only if it cannot be read.
+            Icon = (Environment.ProcessPath is { } exePath ? System.Drawing.Icon.ExtractAssociatedIcon(exePath) : null)
+                   ?? System.Drawing.SystemIcons.Application,
             Text = "ClubControl",
             Visible = true,
             ContextMenuStrip = menu

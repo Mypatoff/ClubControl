@@ -57,7 +57,8 @@ public static class ClientUpdater
             var extractDir = Path.Combine(tempDir, "ClubControl.Client.Update");
             var backupDir = Path.Combine(tempDir, "ClubControl.Client.Backup");
 
-            using var http = new HttpClient();
+            // The self-contained build is tens of megabytes; the default 100 seconds is too tight on slow Wi-Fi.
+            using var http = new HttpClient { Timeout = TimeSpan.FromMinutes(10) };
             var bytes = await http.GetByteArrayAsync($"http://{serverIp}:{port}{NetworkConstants.ClientUpdateRoute}");
 
             // The zip itself came over plain HTTP; the signed hash is what makes it trustworthy.

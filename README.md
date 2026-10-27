@@ -6,23 +6,62 @@ and `CLAUDE.md` for the project rules.
 One admin laptop runs **ClubControl.Server** (server + admin panel). Every gaming PC runs
 **ClubControl.Client**. Both must be on the same local network.
 
-## Building
+## Installing with ClubControl-Setup.exe (recommended)
+
+One setup file installs either program. Download `ClubControl-Setup.exe` from the "latest" release
+on GitHub (or build it, see below) and copy it to each PC. It needs nothing else installed - .NET is
+bundled - and asks for Administrator rights once.
+
+1. Run it and choose the setup type:
+   - **Server** - on the admin laptop. Installs to `C:\Program Files\ClubControl\Server`, adds the
+     Start menu entry (and an optional desktop shortcut) named "ClubControl Server", opens the two
+     firewall ports (TCP 5050, UDP 5051, **Private network profile only**) and offers to start it.
+   - **Client** - on each gaming PC. Installs to `C:\Program Files\ClubControl\Client` and asks which
+     Windows account logs on automatically on that PC (the kiosk account from "Configure Windows
+     auto-logon" below). It creates the "ClubControl Client" startup task for that account, the same
+     one `install-client.ps1` makes, and starts it.
+2. The per-PC Windows settings below (Wake-on-LAN, Fast Startup, auto-logon) are still done by hand.
+3. To update, run a newer `ClubControl-Setup.exe` over the old install with the same type. It stops
+   the running program first and keeps the database. (Clients can also be updated from the admin
+   panel, see below.)
+4. Uninstall from Windows "Apps & features" (or the Start menu entry). It removes the program, the
+   startup task and the firewall rules, and **leaves `%ProgramData%\ClubControl` (database, backups,
+   logs) untouched**.
+
+For unattended installs the setup accepts the usual Inno Setup switches plus two of its own:
+`ClubControl-Setup.exe /VERYSILENT /TYPE=client /KioskUser="ClubPC1"` installs the client for that
+auto-logon account without any questions (add `/NoStart=1` to not start it right away), and
+`/TYPE=server` installs the server.
+
+To build the setup yourself you need [Inno Setup 6](https://jrsoftware.org/isdl.php) installed, then:
 
 ```
-dotnet publish src/ClubControl.Server/ClubControl.Server.csproj -c Release -r win-x64 --self-contained false -o publish/server
-dotnet publish src/ClubControl.Client/ClubControl.Client.csproj -c Release -r win-x64 --self-contained false -o publish/client
+powershell -ExecutionPolicy Bypass -File installer\build-installer.ps1
+```
+
+It publishes both programs self-contained and writes `dist\ClubControl-Setup.exe` (about 100 MB:
+it contains the .NET runtime twice). The installer script is `installer/ClubControl.iss`; the
+product name and version are at its top, the icon is `assets/ClubControl.ico`.
+
+## Building without the setup
+
+```
+dotnet publish src/ClubControl.Server/ClubControl.Server.csproj -c Release -r win-x64 --self-contained true -o publish/server
+dotnet publish src/ClubControl.Client/ClubControl.Client.csproj -c Release -r win-x64 --self-contained true -o publish/client
 ```
 
 Copy `publish/server` to the admin laptop and `publish/client` to every gaming PC (e.g. with a
 USB stick or a shared folder). `scripts/install-server.ps1` / `scripts/install-client.ps1` (and their
 double-click launchers `install-server.bat` / `install-client.bat`) are not included in a local
-publish output - copy them into the same folder as the matching `.exe` before running them.
+publish output - copy them into the same folder as the matching `.exe` before running them. The
+builds are self-contained on purpose: the setup installs them without .NET, so a client updated
+with a framework-dependent build would stop starting.
 
 ## Updating the client later ("Update client" in the admin panel)
 
 After the first install, you do not need to walk to every PC again for a client-side bug fix:
 
-1. Publish the client as above, zip the **contents** of `publish/client` (not the folder itself -
+1. Publish the client as above (self-contained, so the zip is about 65 MB), zip the **contents** of `publish/client` (not the folder itself -
    `ClubControl.Client.exe` must be at the top level of the zip), and save it as
    `ClubControl.Client.zip`.
 2. On the admin laptop, copy that zip to
@@ -46,6 +85,8 @@ Safety nets:
   check that it changed - if it didn't, the PC rolled back; see `%ProgramData%\ClubControl\client-log.txt`.
 
 ## One-time setup per PC
+
+> Installed with `ClubControl-Setup.exe`? Then the `install-server` / `install-client` steps below (firewall rules, startup entry/task) are already done - do only the Windows settings (Wake-on-LAN, Fast Startup, auto-logon) and the first-run steps.
 
 ### Admin laptop (server)
 

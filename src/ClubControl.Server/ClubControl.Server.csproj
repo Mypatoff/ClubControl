@@ -7,6 +7,10 @@
     <UseWPF>true</UseWPF>
     <UseWindowsForms>true</UseWindowsForms>
     <RootNamespace>ClubControl.Server</RootNamespace>
+    <ApplicationIcon>..\..\assets\ClubControl.ico</ApplicationIcon>
+    <Product>ClubControl</Product>
+    <SatelliteResourceLanguages>en;ru;uz</SatelliteResourceLanguages>
+    <AssemblyTitle>ClubControl Server</AssemblyTitle>
   </PropertyGroup>
 
   <ItemGroup>
