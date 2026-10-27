@@ -21,10 +21,14 @@ public static class ServerDiscoveryClient
             perTryTimeout = TimeSpan.FromSeconds(2);
 
         var requestBytes = Encoding.UTF8.GetBytes(NetworkConstants.DiscoveryRequestText);
-        using var sockets = new BroadcastSockets();
 
         while (!cancellationToken.IsCancellationRequested)
         {
+            // Re-enumerated on every try, not just once before the loop - a NIC that is still
+            // coming up (DHCP not finished, slow link negotiation) when the client starts at logon
+            // would otherwise be missed forever, since the interface snapshot taken on the very
+            // first try would never be retaken once that NIC actually comes up.
+            using var sockets = new BroadcastSockets();
             await sockets.SendAsync(requestBytes);
 
             using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
