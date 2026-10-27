@@ -177,6 +177,10 @@ The server now uses real EF Core migrations (`src/ClubControl.Server/Data/Migrat
 start it applies any migration it hasn't applied yet - **your data survives future updates**;
 you never need to delete `club.db` again after this point.
 
+Before it applies a migration to a database that already has data, the server saves a full copy as
+`%ProgramData%\ClubControl\Backups\club_before-upgrade_<date>_<time>.db` (kept until you delete it).
+If an upgrade ever fails, the server shows the reason and does not start; restore that copy to go back.
+
 **One-time exception:** if your `club.db` was created before this change (anything up through the
 Phase 6 build that still used `EnsureCreatedAsync`), delete it once more
 (`%ProgramData%\ClubControl\club.db`) before running this build - after that, upgrades are safe.

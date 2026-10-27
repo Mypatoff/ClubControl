@@ -78,3 +78,6 @@ C# .NET 8. WPF for Server (admin panel + hosted ASP.NET Core/SignalR) and Client
 - [x] Post-phase-6 change: free sessions removed (no Free menu item/window, no "Free minutes" in reports;
       `SessionType.Free` and `Session.IsFree` stay so old rows still display). Starting a prepay/postpay
       session now takes an optional note (`Session.Note`, shown in the card tooltip and event log).
+- [x] Post-phase-6 fix: startup upgrades the database through `DatabaseUpgrade` (full copy to
+      `Backups/club_before-upgrade_*.db` before pending migrations, clear message for a pre-migrations
+      club.db instead of a crash), covered by `DatabaseUpgradeTests`.

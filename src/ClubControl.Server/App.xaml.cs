@@ -118,7 +118,18 @@ public partial class App : Application
             // Creates the database if it doesn't exist, or upgrades an existing one by applying
             // any migrations it is missing - this is what keeps schema changes from requiring a
             // wipe (see Data/Migrations; add a new migration via the "Add EF Migration" workflow).
-            await db.Database.MigrateAsync();
+            try
+            {
+                await DatabaseUpgrade.MigrateAsync(db, DbPaths.BackupDirectory);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"The database could not be upgraded.\nБазу данных не удалось обновить.\n\n{ex.Message}",
+                    "ClubControl", MessageBoxButton.OK, MessageBoxImage.Error);
+                Shutdown();
+                return;
+            }
+
             var setting = await SettingsHelper.GetOrCreateAsync(db);
             await TariffsHelper.EnsureDefaultsAsync(db);
 
