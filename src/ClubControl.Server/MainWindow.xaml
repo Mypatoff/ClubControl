@@ -220,23 +220,28 @@
 
                 <ListBox.ItemTemplate>
                     <DataTemplate>
-                        <!-- Compact on purpose: 30 PCs + 3 tables must fit on one screen. Details are in the tooltip. -->
-                        <Grid x:Name="CardRoot" Width="136" Height="62" ToolTip="{Binding TooltipText}">
+                        <!-- Compact on purpose: 30 PCs + 3 tables must fit on one screen. Details are in the tooltip.
+                             Fixed size: 122 + the item's 4 border + 6 margin = 132 per card, so 10 fit in a row on a
+                             maximized 1600-wide window (about 1360 free next to the billiards column) and the
+                             WrapPanel only starts a new row when the window is too narrow for 10. -->
+                        <Grid x:Name="CardRoot" Width="122" Height="62" ToolTip="{Binding TooltipText}">
                             <!-- state tint + coloured left edge -->
                             <Border Background="{Binding AccentBrush}" Opacity="0.12" CornerRadius="10" />
                             <Border Width="4" HorizontalAlignment="Left" Background="{Binding AccentBrush}" CornerRadius="10,0,0,10" />
 
-                            <Grid Margin="14,5,8,5">
+                            <Grid Margin="12,5,6,5">
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto" />
                                     <RowDefinition Height="Auto" />
                                 </Grid.RowDefinitions>
 
+                                <!-- The number is docked first so it always keeps its room; the state text gets what is
+                                     left and is trimmed with "..." if it is too long (full text is in the tooltip). -->
                                 <DockPanel Grid.Row="0">
-                                    <TextBlock DockPanel.Dock="Right" Text="{Binding StateDisplay}" Foreground="{Binding AccentBrush}"
+                                    <TextBlock DockPanel.Dock="Left" Text="{Binding NumberDisplay}" FontSize="20" FontWeight="Bold" TextWrapping="NoWrap" />
+                                    <TextBlock Text="{Binding StateDisplay}" Foreground="{Binding AccentBrush}"
                                                FontSize="10.5" FontWeight="SemiBold" VerticalAlignment="Center" Margin="6,0,0,0"
-                                               TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" />
-                                    <TextBlock Text="{Binding NumberDisplay}" FontSize="20" FontWeight="Bold" TextWrapping="NoWrap" />
+                                               TextAlignment="Right" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" />
                                 </DockPanel>
 
                                 <TextBlock Grid.Row="1" Text="{Binding PrimaryDisplay}" FontSize="15" FontWeight="Bold"

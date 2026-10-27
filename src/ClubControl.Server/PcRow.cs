@@ -64,6 +64,7 @@ public class PcRow
     /// <summary>Everything the compact card leaves out (tariff, amount, start/end), shown on hover.</summary>
     public string TooltipText => string.Join("\n", new[]
     {
+        StateDisplay, // the card is narrow, so a long state name ("Лимит достигнут") can be cut off there
         TariffDisplay,
         AmountDisplay,
         StartDisplay != "" ? StartDisplay + (EndDisplay != "" ? " – " + EndDisplay : "") : "",
