@@ -5,11 +5,13 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using ClubControl.Server.Data;
+using ClubControl.Server.Data.Models;
 using ClubControl.Shared;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 namespace ClubControl.Server.Services;
 
@@ -23,10 +25,17 @@ public class BackupService : BackgroundService
     private static readonly TimeSpan CheckInterval = TimeSpan.FromHours(1);
 
     private readonly IServiceScopeFactory _scopeFactory;
+    private readonly ILogger<BackupService> _logger;
 
-    public BackupService(IServiceScopeFactory scopeFactory)
+    // The check retries every hour, so a backup that keeps failing (disk full, folder not writable)
+    // would add 24 event-log lines a day. Report the first failure in a row and stay quiet until
+    // a backup has worked again.
+    private bool _failureReported;
+
+    public BackupService(IServiceScopeFactory scopeFactory, ILogger<BackupService> logger)
     {
         _scopeFactory = scopeFactory;
+        _logger = logger;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -36,13 +45,41 @@ public class BackupService : BackgroundService
             try
             {
                 await BackupIfDueAsync();
+                _failureReported = false;
             }
-            catch (Exception)
+            catch (Exception ex) when (!stoppingToken.IsCancellationRequested)
             {
                 // A missed backup should never take the server down; the next hourly check tries again.
+                _logger.LogError(ex, "Daily database backup failed; will retry at the next hourly check.");
+                await ReportFailureOnceAsync(ex);
             }
 
             await Task.Delay(CheckInterval, stoppingToken);
+        }
+    }
+
+    /// <summary>Puts a visible line in the admin panel's event log - nobody reads the server's console output.</summary>
+    private async Task ReportFailureOnceAsync(Exception ex)
+    {
+        if (_failureReported)
+            return;
+
+        try
+        {
+            using var scope = _scopeFactory.CreateScope();
+            var db = scope.ServiceProvider.GetRequiredService<ClubDbContext>();
+            db.EventLogEntries.Add(new EventLogEntry
+            {
+                Type = EventType.Warning,
+                Message = $"Daily database backup failed: {ex.Message}",
+            });
+            await db.SaveChangesAsync();
+            _failureReported = true;
+        }
+        catch (Exception)
+        {
+            // If even the event log cannot be written (the same disk problem, most likely) there is
+            // nowhere left to report to; the ILogger line above still has it.
         }
     }
 
@@ -67,12 +104,15 @@ public class BackupService : BackgroundService
         if (wasClosed)
             await source.OpenAsync();
 
-        using var destination = new SqliteConnection($"Data Source={destinationPath}");
-        destination.Open();
-        source.BackupDatabase(destination);
-
-        if (wasClosed)
-            await source.CloseAsync();
+        try
+        {
+            DatabaseBackup.CopyTo(source, destinationPath);
+        }
+        finally
+        {
+            if (wasClosed)
+                await source.CloseAsync();
+        }
     }
 
     private static void DeleteOldBackups()
