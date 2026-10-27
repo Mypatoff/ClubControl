@@ -47,6 +47,7 @@ public partial class MainWindow : Window
         TurnOnButton.Content = "⚡ " + Strings.Get("ToolbarTurnOn");
         RestartButton.Content = "🔁 " + Strings.Get("ToolbarRestart");
         ShutDownButton.Content = "⏻ " + Strings.Get("ToolbarShutDown");
+        UpdateClientButton.Content = "⬇ " + Strings.Get("ToolbarUpdateClient");
         SettingsButton.Content = "⚙ " + Strings.Get("ToolbarSettings");
         ReportsButton.Content = "📊 " + Strings.Get("ToolbarReports");
 
@@ -58,6 +59,7 @@ public partial class MainWindow : Window
         CtxTurnOn.Header = Strings.Get("ToolbarTurnOn");
         CtxRestart.Header = Strings.Get("ToolbarRestart");
         CtxShutDown.Header = Strings.Get("ToolbarShutDown");
+        CtxUpdateClient.Header = Strings.Get("ToolbarUpdateClient");
 
         EventLogHeaderText.Text = Strings.Get("EventLogHeader");
 
@@ -727,6 +729,11 @@ public partial class MainWindow : Window
 
     private async void OnShutDown(object sender, RoutedEventArgs e) =>
         await RunPowerActionAsync((power, pcs) => power.ShutdownAsync(pcs), checkActiveSessions: true);
+
+    // The client briefly drops its lock screen while it swaps files and restarts itself - treat it
+    // like Restart/Shutdown and ask first if a PC is mid-session.
+    private async void OnUpdateClient(object sender, RoutedEventArgs e) =>
+        await RunPowerActionAsync((power, pcs) => power.UpdateClientAsync(pcs), checkActiveSessions: true);
 
     private async Task RunPowerActionAsync(Func<PowerService, List<Pc>, Task<int>> action, bool checkActiveSessions)
     {

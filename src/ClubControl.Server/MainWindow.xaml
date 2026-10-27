@@ -115,7 +115,8 @@
                     <Border Width="1" Background="{StaticResource DividerBrush}" Margin="0,2,14,2" />
                     <Button x:Name="TurnOnButton" Margin="0,0,6,0" Style="{StaticResource SecondaryButtonStyle}" Click="OnTurnOn" />
                     <Button x:Name="RestartButton" Margin="0,0,6,0" Style="{StaticResource SecondaryButtonStyle}" Click="OnRestart" />
-                    <Button x:Name="ShutDownButton" Style="{StaticResource SecondaryButtonStyle}" Click="OnShutDown" />
+                    <Button x:Name="ShutDownButton" Margin="0,0,6,0" Style="{StaticResource SecondaryButtonStyle}" Click="OnShutDown" />
+                    <Button x:Name="UpdateClientButton" Style="{StaticResource SecondaryButtonStyle}" Click="OnUpdateClient" />
                 </StackPanel>
             </DockPanel>
         </Border>
@@ -144,6 +145,7 @@
                         <MenuItem x:Name="CtxTurnOn" Click="OnTurnOn" />
                         <MenuItem x:Name="CtxRestart" Click="OnRestart" />
                         <MenuItem x:Name="CtxShutDown" Click="OnShutDown" />
+                        <MenuItem x:Name="CtxUpdateClient" Click="OnUpdateClient" />
                     </ContextMenu>
                 </ListBox.ContextMenu>
 

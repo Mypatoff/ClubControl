@@ -13,6 +13,7 @@ using ClubControl.Server.Windows;
 using ClubControl.Shared;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -80,6 +81,7 @@ public partial class App : Application
         ShutdownMode = ShutdownMode.OnExplicitShutdown;
 
         Directory.CreateDirectory(DbPaths.DataDirectory);
+        Directory.CreateDirectory(Path.GetDirectoryName(ClientUpdateFile.FilePath)!);
 
         var builder = WebApplication.CreateBuilder();
         builder.WebHost.UseUrls($"http://0.0.0.0:{NetworkConstants.SignalRPort}");
@@ -102,6 +104,13 @@ public partial class App : Application
 
         _host = builder.Build();
         _host.MapHub<ClubHub>(NetworkConstants.HubRoute);
+
+        // Plain HTTP download for "Update client" (PowerService.UpdateClientAsync) - see
+        // ClientUpdateFile for where the admin stages the build this serves.
+        _host.MapGet(NetworkConstants.ClientUpdateRoute, () =>
+            File.Exists(ClientUpdateFile.FilePath)
+                ? Results.File(ClientUpdateFile.FilePath, "application/zip")
+                : Results.NotFound());
 
         using (var scope = _host.Services.CreateScope())
         {

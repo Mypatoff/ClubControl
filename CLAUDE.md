@@ -55,3 +55,14 @@ C# .NET 8. WPF for Server (admin panel + hosted ASP.NET Core/SignalR) and Client
       prompt on locked PCs (works with or without the server; new `Setting.ClientUnlockPasswordHash` +
       migration; `Setting.OfflineUnlockWaitSeconds` column is now unused but kept). Clicking empty space in
       the main panel now deselects. Debug-build client exit hook moved to Ctrl+Shift+F11.
+- [x] Post-phase-6 fixes: client single-instance guard (`App.xaml.cs`), discovery retry loop now
+      re-enumerates interfaces per try and survives exceptions instead of dying silently, and both
+      app-wide unhandled-exception handlers plus that retry loop now log to
+      `%ProgramData%\ClubControl\client-log.txt` (`ClientLog`) so unattended failures leave a trace.
+- [x] Post-phase-6 feature: admin-triggered "Update client" (`CommandType.UpdateClient`,
+      `PowerService.UpdateClientAsync`, `ClientUpdater` on the client). The server serves whatever
+      build is zipped at `ClientUpdateFile.FilePath` over a plain HTTP GET
+      (`NetworkConstants.ClientUpdateRoute`); a selected online PC downloads it, extracts to a temp
+      folder, and hands the actual file swap + restart to a short PowerShell script (a running .exe
+      can't overwrite its own files) before exiting. No automatic polling/version check by design -
+      see README "Updating the client later".

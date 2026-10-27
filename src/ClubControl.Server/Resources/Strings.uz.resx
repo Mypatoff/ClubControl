@@ -37,6 +37,9 @@
   <data name="ToolbarRestart" xml:space="preserve">
     <value>Qayta yuklash</value>
   </data>
+  <data name="ToolbarUpdateClient" xml:space="preserve">
+    <value>Klientni yangilash</value>
+  </data>
   <data name="ToolbarShutDown" xml:space="preserve">
     <value>Oʻchirish</value>
   </data>

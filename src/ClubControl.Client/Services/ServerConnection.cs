@@ -22,8 +22,14 @@ public class ServerConnection : IAsyncDisposable
 
     public HubConnectionState State => _connection.State;
 
+    /// <summary>Where this connection reached the server - ClientUpdater needs these to build the download URL.</summary>
+    public string ServerIp { get; }
+    public int Port { get; }
+
     public ServerConnection(string serverIp, int port, Guid machineGuid)
     {
+        ServerIp = serverIp;
+        Port = port;
         _machineGuid = machineGuid;
         _connection = new HubConnectionBuilder()
             .WithUrl($"http://{serverIp}:{port}{NetworkConstants.HubRoute}")

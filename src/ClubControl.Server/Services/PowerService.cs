@@ -48,6 +48,9 @@ public class PowerService
 
     public Task<int> RestartAsync(IEnumerable<Pc> pcs) => SendCommandToOnlineAsync(pcs, CommandType.Restart, "Restart");
 
+    /// <summary>Tells each online PC to pull and install whatever build is currently staged at ClientUpdateFile.</summary>
+    public Task<int> UpdateClientAsync(IEnumerable<Pc> pcs) => SendCommandToOnlineAsync(pcs, CommandType.UpdateClient, "Update client");
+
     private async Task<int> SendCommandToOnlineAsync(IEnumerable<Pc> pcs, CommandType type, string actionName)
     {
         var sent = 0;

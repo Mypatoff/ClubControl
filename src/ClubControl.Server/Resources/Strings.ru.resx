@@ -37,6 +37,9 @@
   <data name="ToolbarRestart" xml:space="preserve">
     <value>Перезагрузить</value>
   </data>
+  <data name="ToolbarUpdateClient" xml:space="preserve">
+    <value>Обновить клиент</value>
+  </data>
   <data name="ToolbarShutDown" xml:space="preserve">
     <value>Выключить</value>
   </data>

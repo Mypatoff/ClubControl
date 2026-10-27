@@ -18,6 +18,24 @@ USB stick or a shared folder). `scripts/install-server.ps1` / `scripts/install-c
 double-click launchers `install-server.bat` / `install-client.bat`) are not included in a local
 publish output - copy them into the same folder as the matching `.exe` before running them.
 
+## Updating the client later ("Update client" in the admin panel)
+
+After the first install, you do not need to walk to every PC again for a client-side bug fix:
+
+1. Publish the client as above, zip the **contents** of `publish/client` (not the folder itself -
+   `ClubControl.Client.exe` must be at the top level of the zip), and save it as
+   `ClubControl.Client.zip`.
+2. On the admin laptop, copy that zip to
+   `%ProgramData%\ClubControl\ClientUpdate\ClubControl.Client.zip`, overwriting whatever was there.
+3. In the admin panel, select the PC(s) to update (or none, to update every enabled PC) and click
+   "Update client" (or right-click > "Update client"). Each selected online PC downloads the zip
+   from the server, swaps its own files, and restarts itself - no manual copying, no reinstalling
+   the Task Scheduler task.
+
+Only online PCs receive the command, same as Shutdown/Restart. Roll out to one or two PCs first
+and confirm they come back up correctly before updating the rest - there is no automatic version
+check or staged rollout, "Update client" always sends whatever is currently zipped at that path.
+
 ## One-time setup per PC
 
 ### Admin laptop (server)
