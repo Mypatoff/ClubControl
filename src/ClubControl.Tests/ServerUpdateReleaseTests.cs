@@ -20,7 +20,7 @@ public class ServerUpdateReleaseTests : IDisposable
           "published_at": "2026-10-27T21:03:24Z",
           "body": "Automatically built from the latest commit on main ({{Sha}}). Not a stability guarantee.",
           "assets": [
-            { "name": "ClubControl-Server-win-x64.zip", "browser_download_url": "https://example.test/server.zip", "size": 81543882 },
+            { "name": "ClubControl-Server-win-x64.zip", "browser_download_url": "https://example.test/server.zip", "size": 81543882, "updated_at": "2026-10-28T09:15:00Z" },
             { "name": "ClubControl-Client-win-x64.zip", "browser_download_url": "https://example.test/client.zip", "size": 67371020 },
             { "name": "SHA256SUMS.txt", "browser_download_url": "https://example.test/sums.txt", "size": 300 }
           ]
@@ -35,7 +35,8 @@ public class ServerUpdateReleaseTests : IDisposable
         var release = ServerUpdateRelease.Parse(ReleaseJson);
 
         Assert.Equal(Sha, release.CommitSha);
-        Assert.Equal(new DateTime(2026, 10, 27, 21, 3, 24, DateTimeKind.Utc), release.PublishedUtc);
+        // The server zip's upload date, not the release's creation date: the release is reused for every build.
+        Assert.Equal(new DateTime(2026, 10, 28, 9, 15, 0, DateTimeKind.Utc), release.PublishedUtc);
         Assert.Equal(3, release.Assets.Count);
         Assert.Equal("https://example.test/client.zip", release.Asset(ServerUpdateRelease.ClientZip)!.DownloadUrl);
         Assert.Equal(81543882, release.Asset(ServerUpdateRelease.ServerZip)!.Size);

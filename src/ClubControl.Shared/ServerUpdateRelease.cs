@@ -63,7 +63,14 @@ public static class ServerUpdateRelease
                 var name = asset.GetProperty("name").GetString();
                 var url = asset.GetProperty("browser_download_url").GetString();
                 if (name is not null && url is not null)
+                {
                     assets.Add(new ReleaseAsset(name, url, asset.TryGetProperty("size", out var size) ? size.GetInt64() : 0));
+
+                    // The release itself was created once and is reused, so its own date is the day of the
+                    // first build; the date the server zip was last uploaded is when the newest build came out.
+                    if (name == ServerZip && asset.TryGetProperty("updated_at", out var updatedElement) && updatedElement.TryGetDateTime(out var updated))
+                        published = updated.ToUniversalTime();
+                }
             }
         }
 
