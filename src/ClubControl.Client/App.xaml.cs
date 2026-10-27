@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using System.Windows;
 using ClubControl.Client.Native;
 
@@ -6,6 +7,13 @@ namespace ClubControl.Client;
 
 public partial class App : Application
 {
+    // "Global\" (not per-session) so this still catches a second copy started under the same kiosk
+    // account from a different login session - e.g. RDP or fast user switching, not just a stray
+    // double-launch in the same session.
+    private const string SingleInstanceMutexName = "Global\\ClubControl.Client.SingleInstance";
+    private Mutex? _singleInstanceMutex;
+    private bool _ownsSingleInstanceMutex;
+
     public App()
     {
         AppDomain.CurrentDomain.UnhandledException += (_, args) => ShowFatalError(args.ExceptionObject as Exception);
@@ -26,6 +34,17 @@ public partial class App : Application
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
+
+        _singleInstanceMutex = new Mutex(initiallyOwned: true, SingleInstanceMutexName, out _ownsSingleInstanceMutex);
+        if (!_ownsSingleInstanceMutex)
+        {
+            // A second copy would fight the running one for the lock windows, the keyboard hook and
+            // the unlock prompt, and only one of them ever gets commands from the server (see
+            // ConnectionRegistry on the server side) - there is nothing useful for it to do. Exit
+            // quietly; the first instance already owns the lock screen.
+            Shutdown();
+            return;
+        }
 
         // There is no visible UI by design (SPEC: the lock screen is the only UI) - closing or
         // losing the bootstrap window must never end the process. Without this, WPF's default
@@ -53,11 +72,16 @@ public partial class App : Application
 #if DEBUG
     private const int VkF11 = 0x7A;
     private NativeKeyboardHook? _debugExitHook;
+#endif
 
     protected override void OnExit(ExitEventArgs e)
     {
+#if DEBUG
         _debugExitHook?.Dispose();
+#endif
+        if (_ownsSingleInstanceMutex)
+            _singleInstanceMutex!.ReleaseMutex();
+
         base.OnExit(e);
     }
-#endif
 }
