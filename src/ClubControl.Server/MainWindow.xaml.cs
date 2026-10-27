@@ -156,10 +156,15 @@ public partial class MainWindow : Window
 
         var busy = computers.Count(r => r.HasActiveSession);
         var offline = computers.Count(r => r.IsOffline && !r.HasActiveSession);
+        var repair = computers.Count(r => r.IsRepair && !r.IsOffline);
 
-        StatFreeText.Text = $"{computers.Count - busy - offline} {Strings.Get("StateFree")}";
+        StatFreeText.Text = $"{computers.Count - busy - offline - repair} {Strings.Get("StateFree")}";
         StatBusyText.Text = $"{busy} {Strings.Get("StatBusy")}";
         StatOfflineText.Text = $"{offline} {Strings.Get("StatOffline")}";
+
+        // Only shown while a PC is in repair, so the usual bar stays as short as it was.
+        RepairChip.Visibility = repair > 0 ? Visibility.Visible : Visibility.Collapsed;
+        StatRepairText.Text = $"{repair} {Strings.Get("StateManualUnlocked")}";
         StatOtherText.Text = $"{others.Count(r => r.HasActiveSession)}/{others.Count} {Strings.Get("KindOtherPlural")}";
     }
 
@@ -170,6 +175,10 @@ public partial class MainWindow : Window
         var end = "";
         var remaining = "";
         var sessionType = "";
+
+        // A PC opened by staff (repair) bills nothing: say so on the card instead of leaving the line empty.
+        if (pc.State == PcState.ManualUnlocked)
+            amount = "0 UZS";
 
         if (snap is not null)
         {

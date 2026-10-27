@@ -33,6 +33,8 @@
     <SolidColorBrush x:Key="StateRunningBrush" Color="#2ECC71" />
     <SolidColorBrush x:Key="StateLimitBrush" Color="#FFA02E" />
     <SolidColorBrush x:Key="StateOfflineBrush" Color="#FF5A5F" />
+    <!-- purple = opened by staff with the unlock password (repair) -->
+    <SolidColorBrush x:Key="StateRepairBrush" Color="#B07CFF" />
     <SolidColorBrush x:Key="OnlineDotBrush" Color="#3DDC84" />
     <SolidColorBrush x:Key="OfflineDotBrush" Color="#6B7280" />
 

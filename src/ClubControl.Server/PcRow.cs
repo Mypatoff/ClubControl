@@ -103,13 +103,17 @@ public class PcRow
         ClientVersion != "" ? "v" + ClientVersion : ""
     }.Where(line => line != ""));
 
-    /// <summary>Card accent colour (SPEC 7): red = offline (overrides everything else for networked PCs; manual resources are never "offline"), green = session running, blue = free.</summary>
+    /// <summary>Opened by staff with the unlock password and not billing: shown as "Repair".</summary>
+    public bool IsRepair => State == PcState.ManualUnlocked;
+
+    /// <summary>Card accent colour (SPEC 7): red = offline (overrides everything else for networked PCs; manual resources are never "offline"), green = session running, blue = free, purple = repair.</summary>
     public Brush AccentBrush => IsOffline
         ? Resource("StateOfflineBrush")
         : State switch
         {
             PcState.PrepaySession or PcState.PostpaySession => Resource("StateRunningBrush"),
             PcState.LimitReached => Resource("StateLimitBrush"),
+            PcState.ManualUnlocked => Resource("StateRepairBrush"),
             _ => Resource("StateIdleBrush")
         };
 

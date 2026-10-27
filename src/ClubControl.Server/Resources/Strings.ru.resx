@@ -119,7 +119,7 @@
     <value>Лимит достигнут</value>
   </data>
   <data name="StateManualUnlocked" xml:space="preserve">
-    <value>Разблокирован вручную</value>
+    <value>Ремонт</value>
   </data>
   <data name="StateNewPc" xml:space="preserve">
     <value>Новый ПК</value>

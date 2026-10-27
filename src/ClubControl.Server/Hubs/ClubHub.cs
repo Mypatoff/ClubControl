@@ -145,11 +145,13 @@ public class ClubHub : Hub
         if (pc is null || !PcTokenHasher.IsHeartbeatAuthorized(pc.AuthTokenHash, authToken))
             return;
 
+        var markedAsRepair = await _sessionService.MarkManualUnlockAsync(machineGuid);
+
         _db.EventLogEntries.Add(new EventLogEntry
         {
             Type = EventType.ManualUnlock,
             PcId = pc.Id,
-            Message = $"PC #{pc.Number?.ToString() ?? "?"} unlocked manually with the unlock password",
+            Message = $"PC #{pc.Number?.ToString() ?? "?"} unlocked manually with the unlock password" + (markedAsRepair ? " - now in Repair" : ""),
         });
         await _db.SaveChangesAsync();
     }

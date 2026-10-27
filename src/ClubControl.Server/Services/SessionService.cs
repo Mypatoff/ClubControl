@@ -220,6 +220,25 @@ public class SessionService
         await CloseSessionAsync(session, now, reason);
     }
 
+    // ---- staff unlock (Ctrl+Shift+F12 on the PC) ----
+
+    /// <summary>
+    /// Staff opened this PC with the unlock password: it is marked as being in repair (state
+    /// ManualUnlocked, shown as "Repair" with 0 UZS) so the admin can see it. Only a PC with no session
+    /// changes: one that is locked at its cost limit still has a session waiting to be paid, which must
+    /// stay visible. The mark ends when a session is started, or when the PC reconnects and is locked again.
+    /// </summary>
+    public async Task<bool> MarkManualUnlockAsync(Guid machineGuid)
+    {
+        var pc = await GetPcAsync(machineGuid);
+        if (pc.State is not (PcState.Locked or PcState.Free))
+            return false;
+
+        pc.State = PcState.ManualUnlocked;
+        await _db.SaveChangesAsync();
+        return true;
+    }
+
     // ---- items bought during a session ----
 
     /// <summary>One thing the client bought, as shown in the add-item and stop dialogs.</summary>
@@ -461,6 +480,13 @@ public class SessionService
     {
         if (!pc.IsConfigured)
             return null;
+
+        // It went offline and came back (or was rebooted): the client locks itself again, so the repair is over.
+        if (pc.State == PcState.ManualUnlocked)
+        {
+            pc.State = PcState.Locked;
+            await _db.SaveChangesAsync();
+        }
 
         switch (pc.State)
         {

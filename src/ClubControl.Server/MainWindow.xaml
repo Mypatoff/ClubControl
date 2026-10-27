@@ -88,6 +88,12 @@
                         <TextBlock x:Name="StatOfflineText" Style="{StaticResource ChipTextStyle}" />
                     </StackPanel>
                 </Border>
+                <Border x:Name="RepairChip" Style="{StaticResource ChipStyle}" Visibility="Collapsed">
+                    <StackPanel Orientation="Horizontal">
+                        <Ellipse Width="9" Height="9" Fill="{StaticResource StateRepairBrush}" />
+                        <TextBlock x:Name="StatRepairText" Style="{StaticResource ChipTextStyle}" />
+                    </StackPanel>
+                </Border>
                 <Border Style="{StaticResource ChipStyle}" BorderBrush="{StaticResource FeltBorderBrush}">
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Text="📦" VerticalAlignment="Center" />

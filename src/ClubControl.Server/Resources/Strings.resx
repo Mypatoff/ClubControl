@@ -119,7 +119,7 @@
     <value>Limit reached</value>
   </data>
   <data name="StateManualUnlocked" xml:space="preserve">
-    <value>Unlocked manually</value>
+    <value>Repair</value>
   </data>
   <data name="StateNewPc" xml:space="preserve">
     <value>New PC</value>

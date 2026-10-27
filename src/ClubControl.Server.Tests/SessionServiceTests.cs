@@ -268,6 +268,59 @@ public class SessionServiceTests : SessionTestBase
         Assert.Equal(PcState.Locked, (await GetPcAsync(Pc1)).State);
     }
 
+    // ---- staff unlock (Ctrl+Shift+F12) puts the PC in Repair ----
+
+    [Fact]
+    public async Task A_PC_opened_with_the_unlock_password_is_marked_as_repair()
+    {
+        using var db = NewDb();
+
+        var marked = await ServiceFor(db).MarkManualUnlockAsync(Pc1);
+
+        Assert.True(marked);
+        Assert.Equal(PcState.ManualUnlocked, (await GetPcAsync(Pc1)).State);
+    }
+
+    [Fact]
+    public async Task Unlocking_a_PC_that_is_waiting_for_payment_does_not_hide_its_session()
+    {
+        await StartPostpayThenBackdateAsync(Pc1, TimeSpan.FromHours(6));
+        using (var db = NewDb())
+            await ServiceFor(db).TickPostpayCostsAsync(); // reaches the maximum: LimitReached
+
+        using var db2 = NewDb();
+        var marked = await ServiceFor(db2).MarkManualUnlockAsync(Pc1);
+
+        Assert.False(marked);
+        Assert.Equal(PcState.LimitReached, (await GetPcAsync(Pc1)).State);
+        Assert.Equal(SessionStatus.Active, (await GetOnlySessionAsync()).Status);
+    }
+
+    [Fact]
+    public async Task A_PC_in_repair_is_locked_again_when_it_reconnects()
+    {
+        using (var db = NewDb())
+            await ServiceFor(db).MarkManualUnlockAsync(Pc1);
+
+        using var db2 = NewDb();
+        var command = await ServiceFor(db2).BuildCurrentCommandAsync(await db2.Pcs.FirstAsync(p => p.MachineGuid == Pc1));
+
+        Assert.Equal(CommandType.Lock, command!.Type);
+        Assert.Equal(PcState.Locked, (await GetPcAsync(Pc1)).State);
+    }
+
+    [Fact]
+    public async Task A_session_can_be_started_on_a_PC_in_repair()
+    {
+        using (var db = NewDb())
+            await ServiceFor(db).MarkManualUnlockAsync(Pc1);
+
+        using var db2 = NewDb();
+        await ServiceFor(db2).StartPrepayByMoneyAsync(Pc1, 5_000);
+
+        Assert.Equal(PcState.PrepaySession, (await GetPcAsync(Pc1)).State);
+    }
+
     [Fact]
     public async Task Postpay_is_never_charged_below_the_tariff_minimum()
     {
