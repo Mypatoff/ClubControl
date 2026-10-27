@@ -306,44 +306,115 @@ public class SessionServiceTests : SessionTestBase
     // ---- move ----
 
     [Fact]
-    public async Task Moving_a_prepay_session_converts_the_remaining_money_at_the_new_price()
+    public async Task Moving_a_prepay_session_keeps_the_remaining_time()
     {
         using (var before = NewDb())
             await ServiceFor(before).StartPrepayByMoneyAsync(Pc1, 10_000); // 60 min at 10 000/h
-        await BackdateSessionAsync(TimeSpan.FromMinutes(30));              // 30 min left = 5 000 UZS
+        await BackdateSessionAsync(TimeSpan.FromMinutes(30));              // 30 min left
 
         using var db = NewDb();
-        await ServiceFor(db).MoveSessionAsync(Pc1, VipPc);
+        await ServiceFor(db).MoveSessionAsync(Pc1, Pc2);
 
-        // 5 000 UZS at 15 000/h is 20 minutes (19 if a fraction of a second has already passed).
+        // Same tariff, so the time left is untouched by the move.
         var session = await GetOnlySessionAsync();
         var minutesLeft = (session.PlannedEndUtc!.Value - DateTime.UtcNow).TotalMinutes;
-        Assert.InRange(minutesLeft, 18.9, 20.1);
+        Assert.InRange(minutesLeft, 29.0, 30.1);
         Assert.Equal(10_000, session.AmountUzs);
 
         Assert.Equal(2, session.Segments.Count);
-        var closed = session.Segments.Single(s => s.EndUtc != null);
-        var open = session.Segments.Single(s => s.EndUtc == null);
-        Assert.Equal(StandardPrice, closed.PricePerHourUzs);
-        Assert.Equal(VipPrice, open.PricePerHourUzs);
+        Assert.Equal(StandardPrice, session.Segments.Single(s => s.EndUtc != null).PricePerHourUzs);
+        Assert.Equal(StandardPrice, session.Segments.Single(s => s.EndUtc == null).PricePerHourUzs);
 
         Assert.Equal(PcState.Locked, (await GetPcAsync(Pc1)).State);
-        Assert.Equal(PcState.PrepaySession, (await GetPcAsync(VipPc)).State);
-        Assert.Equal((await GetPcAsync(VipPc)).Id, session.PcId);
+        Assert.Equal(PcState.PrepaySession, (await GetPcAsync(Pc2)).State);
+        Assert.Equal((await GetPcAsync(Pc2)).Id, session.PcId);
     }
 
     [Fact]
     public async Task Moving_a_postpay_session_keeps_the_cost_so_far()
     {
-        await StartPostpayThenBackdateAsync(Pc1, AlmostThirtyMinutes); // 5 000 UZS at the old price
+        await StartPostpayThenBackdateAsync(Pc1, AlmostThirtyMinutes); // 5 000 UZS
 
         using (var db = NewDb())
-            await ServiceFor(db).MoveSessionAsync(Pc1, VipPc);
+            await ServiceFor(db).MoveSessionAsync(Pc1, Pc2);
         using var db2 = NewDb();
-        await ServiceFor(db2).EndSessionEarlyAsync(VipPc);
+        await ServiceFor(db2).EndSessionEarlyAsync(Pc2);
 
-        // Nothing has been added at the new price yet, and nothing already run up was lost.
         Assert.Equal(5_000, (await GetOnlySessionAsync()).AmountUzs);
+    }
+
+    [Fact]
+    public async Task A_session_cannot_be_moved_to_a_different_tariff()
+    {
+        using var db = NewDb();
+        var service = ServiceFor(db);
+        await service.StartPrepayByMoneyAsync(Pc1, 5_000);
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => service.MoveSessionAsync(Pc1, VipPc));
+
+        Assert.Equal(PcState.PrepaySession, (await GetPcAsync(Pc1)).State);
+        Assert.Equal(PcState.Free, (await GetPcAsync(VipPc)).State);
+    }
+
+    [Fact]
+    public async Task A_session_cannot_be_moved_to_a_different_kind_of_resource()
+    {
+        using (var setup = NewDb())
+        {
+            var tariffId = (await setup.Pcs.SingleAsync(p => p.MachineGuid == Pc1)).TariffId;
+            setup.Pcs.Add(new Pc { MachineGuid = BilliardGuid, Number = 4, Kind = ResourceKind.Billiard, TariffId = tariffId });
+            await setup.SaveChangesAsync();
+        }
+
+        using var db = NewDb();
+        var service = ServiceFor(db);
+        await service.StartPrepayByMoneyAsync(Pc1, 5_000);
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => service.MoveSessionAsync(Pc1, BilliardGuid));
+    }
+
+    [Fact]
+    public async Task Two_running_sessions_can_be_swapped()
+    {
+        using (var db = NewDb())
+        {
+            var service = ServiceFor(db);
+            await service.StartPrepayByMoneyAsync(Pc1, 10_000);
+            await service.StartPostpayAsync(Pc2);
+        }
+
+        using (var db = NewDb())
+            await ServiceFor(db).SwapSessionsAsync(Pc1, Pc2);
+
+        using var check = NewDb();
+        var pc1 = await check.Pcs.SingleAsync(p => p.MachineGuid == Pc1);
+        var pc2 = await check.Pcs.SingleAsync(p => p.MachineGuid == Pc2);
+        var sessions = await check.Sessions.Include(s => s.Segments).ToListAsync();
+        var prepay = sessions.Single(s => s.Type == SessionType.Prepay);
+        var postpay = sessions.Single(s => s.Type == SessionType.Postpay);
+
+        // The prepay session now sits on PC 2 and the postpay one on PC 1, each with a new open segment there.
+        Assert.Equal(pc2.Id, prepay.PcId);
+        Assert.Equal(pc1.Id, postpay.PcId);
+        Assert.Equal(PcState.PrepaySession, pc2.State);
+        Assert.Equal(PcState.PostpaySession, pc1.State);
+        Assert.Equal(pc2.Id, prepay.Segments.Single(s => s.EndUtc == null).PcId);
+        Assert.Equal(pc1.Id, postpay.Segments.Single(s => s.EndUtc == null).PcId);
+        Assert.Equal(SessionStatus.Active, prepay.Status);
+        Assert.Equal(SessionStatus.Active, postpay.Status);
+    }
+
+    [Fact]
+    public async Task Swapping_needs_both_pcs_to_be_running_and_on_the_same_tariff()
+    {
+        using var db = NewDb();
+        var service = ServiceFor(db);
+        await service.StartPrepayByMoneyAsync(Pc1, 5_000);
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => service.SwapSessionsAsync(Pc1, Pc2));   // Pc2 is idle
+
+        await service.StartPostpayAsync(VipPc);
+        await Assert.ThrowsAsync<InvalidOperationException>(() => service.SwapSessionsAsync(Pc1, VipPc)); // different tariff
     }
 
     [Fact]

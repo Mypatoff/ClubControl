@@ -39,6 +39,7 @@ public partial class MoveSessionWindow : Window
 
         var candidates = await db.Pcs.AsNoTracking()
             .Where(p => p.Id != _pc.Id && p.Enabled && p.Number != null
+                        && p.Kind == _pc.Kind && p.TariffId == _pc.TariffId // same kind and tariff only
                         && (p.State == PcState.Free || p.State == PcState.Locked))
             .OrderBy(p => p.Number)
             .ToListAsync();

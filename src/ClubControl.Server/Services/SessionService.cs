@@ -252,27 +252,17 @@ public class SessionService
             throw new InvalidOperationException("Target PC is not available.");
         if (toPc.State is not (PcState.Free or PcState.Locked))
             throw new InvalidOperationException("Target PC is not free.");
+        RequireSameTariff(fromPc, toPc);
 
         var session = await GetActiveSessionAsync(fromPc.Id)
             ?? throw new InvalidOperationException("No active session found on the source PC.");
 
         var now = DateTime.UtcNow;
-        var oldSegment = session.Segments.First(s => s.EndUtc == null);
-        oldSegment.EndUtc = now;
-
-        var toTariff = await GetTariffAsync(toPc.TariffId!.Value);
-        session.Segments.Add(new SessionSegment { PcId = toPc.Id, PricePerHourUzs = toTariff.PricePerHourUzs, StartUtc = now });
-        session.PcId = toPc.Id;
-
-        if (session.Type == SessionType.Prepay)
-        {
-            var remainingSeconds = Math.Max(0, (int)(session.PlannedEndUtc!.Value - now).TotalSeconds);
-            var newMinutes = BillingCalculator.RecalculateMinutesForMove(remainingSeconds, oldSegment.PricePerHourUzs, toTariff.PricePerHourUzs);
-            session.PlannedEndUtc = now.AddMinutes(newMinutes);
-        }
+        var sessionState = StateFor(session);
+        ReassignSession(session, toPc, now);
 
         fromPc.State = PcState.Locked;
-        toPc.State = session.Type == SessionType.Prepay ? PcState.PrepaySession : PcState.PostpaySession;
+        toPc.State = sessionState;
 
         await using (var transaction = await _db.Database.BeginTransactionAsync())
         {
@@ -287,6 +277,71 @@ public class SessionService
 
         var sessionInfo = await BuildSessionInfoAsync(toPc, session);
         await SendCommandAsync(toPc, new ClientCommand { Type = CommandType.StartSession, Session = sessionInfo });
+    }
+
+    /// <summary>
+    /// Both PCs are in a running session: the two sessions trade places. Same tariff only, so
+    /// neither session's price changes and no time or money needs recalculating.
+    /// </summary>
+    public async Task SwapSessionsAsync(Guid firstMachineGuid, Guid secondMachineGuid)
+    {
+        var firstPc = await GetPcAsync(firstMachineGuid);
+        var secondPc = await GetPcAsync(secondMachineGuid);
+        if (firstPc.Id == secondPc.Id)
+            throw new InvalidOperationException("Cannot swap a PC with itself.");
+
+        foreach (var pc in new[] { firstPc, secondPc })
+        {
+            if (pc.State is not (PcState.PrepaySession or PcState.PostpaySession))
+                throw new InvalidOperationException($"PC #{pc.Number} has no running session to swap.");
+        }
+        RequireSameTariff(firstPc, secondPc);
+
+        var firstSession = await GetActiveSessionAsync(firstPc.Id)
+            ?? throw new InvalidOperationException($"No active session found on PC #{firstPc.Number}.");
+        var secondSession = await GetActiveSessionAsync(secondPc.Id)
+            ?? throw new InvalidOperationException($"No active session found on PC #{secondPc.Number}.");
+
+        var now = DateTime.UtcNow;
+        var firstState = StateFor(firstSession);
+        var secondState = StateFor(secondSession);
+
+        ReassignSession(firstSession, secondPc, now);
+        ReassignSession(secondSession, firstPc, now);
+        firstPc.State = secondState;
+        secondPc.State = firstState;
+
+        await using (var transaction = await _db.Database.BeginTransactionAsync())
+        {
+            await _db.SaveChangesAsync();
+            LogEvent(EventType.SessionMoved, secondPc.Id, firstSession.Id, $"Swapped: moved from PC #{firstPc.Number} to PC #{secondPc.Number}");
+            LogEvent(EventType.SessionMoved, firstPc.Id, secondSession.Id, $"Swapped: moved from PC #{secondPc.Number} to PC #{firstPc.Number}");
+            await _db.SaveChangesAsync();
+            await transaction.CommitAsync();
+        }
+
+        // StartSession on a PC that is already in a session simply replaces what its timer shows.
+        await SendCommandAsync(secondPc, new ClientCommand { Type = CommandType.StartSession, Session = await BuildSessionInfoAsync(secondPc, firstSession) });
+        await SendCommandAsync(firstPc, new ClientCommand { Type = CommandType.StartSession, Session = await BuildSessionInfoAsync(firstPc, secondSession) });
+    }
+
+    /// <summary>A session only moves between resources of the same kind on the same tariff (a billiard table never goes to a PC).</summary>
+    private static void RequireSameTariff(Pc a, Pc b)
+    {
+        if (a.Kind != b.Kind || !a.TariffId.HasValue || a.TariffId != b.TariffId)
+            throw new InvalidOperationException("A session can only be moved between resources of the same kind and tariff.");
+    }
+
+    private static PcState StateFor(Session session) =>
+        session.Type == SessionType.Prepay ? PcState.PrepaySession : PcState.PostpaySession;
+
+    /// <summary>Closes the session's current segment and opens a new one, at the same price, on <paramref name="toPc"/>.</summary>
+    private static void ReassignSession(Session session, Pc toPc, DateTime now)
+    {
+        var oldSegment = session.Segments.First(s => s.EndUtc == null);
+        oldSegment.EndUtc = now;
+        session.Segments.Add(new SessionSegment { PcId = toPc.Id, PricePerHourUzs = oldSegment.PricePerHourUzs, StartUtc = now });
+        session.PcId = toPc.Id;
     }
 
     // ---- background ticks (called by SessionMonitorService) and startup restore ----

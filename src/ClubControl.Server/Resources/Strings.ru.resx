@@ -502,4 +502,10 @@
   <data name="Export" xml:space="preserve">
     <value>Экспорт</value>
   </data>
+  <data name="MoveSelectOneOrTwo" xml:space="preserve">
+    <value>Выберите один объект или два, чтобы перенести/поменять их местами.</value>
+  </data>
+  <data name="MoveSameTariffOnly" xml:space="preserve">
+    <value>Сессию можно переносить только между объектами одного типа и с одним тарифом.</value>
+  </data>
 </root>

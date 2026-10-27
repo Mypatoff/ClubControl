@@ -502,4 +502,10 @@
   <data name="Export" xml:space="preserve">
     <value>Eksport</value>
   </data>
+  <data name="MoveSelectOneOrTwo" xml:space="preserve">
+    <value>Bitta obyektni yoki ikkitasini (oʻrin almashtirish uchun) tanlang.</value>
+  </data>
+  <data name="MoveSameTariffOnly" xml:space="preserve">
+    <value>Sessiyani faqat bir xil turdagi va bir xil tarifli obyektlar orasida koʻchirish mumkin.</value>
+  </data>
 </root>

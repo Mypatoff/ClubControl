@@ -46,20 +46,20 @@ public class ClientSettingsCommandTests : SessionTestBase
     }
 
     [Fact]
-    public async Task PostpayResyncCommand_AfterAMove_KeepsTheOldSegmentsCostAndUsesTheNewPrice()
+    public async Task PostpayResyncCommand_AfterAMove_KeepsTheOldSegmentsCostAndTheSamePrice()
     {
         using (var db = NewDb())
             await ServiceFor(db).StartPostpayAsync(Pc1);
-        await BackdateSessionAsync(TimeSpan.FromSeconds(29 * 60 + 30)); // 5 000 at the old price
+        await BackdateSessionAsync(TimeSpan.FromSeconds(29 * 60 + 30)); // 5 000 so far
         using (var db = NewDb())
-            await ServiceFor(db).MoveSessionAsync(Pc1, VipPc);
+            await ServiceFor(db).MoveSessionAsync(Pc1, Pc2);
 
         using var readDb = NewDb();
-        var pc = await readDb.Pcs.SingleAsync(p => p.MachineGuid == VipPc);
+        var pc = await readDb.Pcs.SingleAsync(p => p.MachineGuid == Pc2);
         var session = (await ServiceFor(readDb).BuildCurrentCommandAsync(pc))!.Session!;
 
         Assert.Equal(5_000, session.ClosedSegmentsCostUzs);
-        Assert.Equal(VipPrice, session.PricePerHourUzs);
+        Assert.Equal(StandardPrice, session.PricePerHourUzs);
     }
 
     [Fact]

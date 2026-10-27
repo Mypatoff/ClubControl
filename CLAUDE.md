@@ -71,3 +71,6 @@ C# .NET 8. WPF for Server (admin panel + hosted ASP.NET Core/SignalR) and Client
       writes no health marker (first successful heartbeat) in time. Clients report their build in
       `HeartbeatRequest.ClientVersion`; the server keeps it in memory only (no EF column) and shows it
       in the PC card tooltip.
+- [x] Post-phase-6 fix: Move works on two selected cards - a running session moves onto the other (free)
+      card, or two running sessions swap (`SessionService.MoveSessionAsync` / `SwapSessionsAsync`). A
+      session only moves between cards of the same kind and the same tariff, so nothing is repriced.

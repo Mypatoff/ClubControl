@@ -595,10 +595,20 @@ public partial class MainWindow : Window
 
     private async void OnMove(object sender, RoutedEventArgs e)
     {
-        var pc = GetSingleSelectedPc();
-        if (pc is null)
+        var selected = PcList.SelectedItems.Cast<PcRow>().ToList();
+        if (selected.Count == 2)
+        {
+            await MoveBetweenAsync(selected[0], selected[1]);
             return;
+        }
 
+        if (selected.Count != 1)
+        {
+            MessageBox.Show(Strings.Get("MoveSelectOneOrTwo"), Strings.Get("ConfirmTitle"), MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        var pc = selected[0];
         if (pc.State is not (PcState.PrepaySession or PcState.PostpaySession))
         {
             MessageBox.Show(Strings.Get("MoveOnlyActiveSession"), Strings.Get("ConfirmTitle"),
@@ -609,6 +619,45 @@ public partial class MainWindow : Window
         var window = new MoveSessionWindow(Services, pc) { Owner = this };
         if (window.ShowDialog() == true)
             await RefreshAsync();
+    }
+
+    /// <summary>
+    /// Move with two cards selected: they trade places. If only one of them is running a session it
+    /// moves onto the other (free) one; if both are running, the two sessions swap. Same kind and
+    /// tariff only - SessionService enforces it too, this just gives the admin a clear message first.
+    /// </summary>
+    private async Task MoveBetweenAsync(PcRow a, PcRow b)
+    {
+        if (a.Kind != b.Kind || !a.TariffId.HasValue || a.TariffId != b.TariffId)
+        {
+            MessageBox.Show(Strings.Get("MoveSameTariffOnly"), Strings.Get("ConfirmTitle"), MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        static bool Running(PcRow p) => p.State is PcState.PrepaySession or PcState.PostpaySession;
+        if (!Running(a) && !Running(b))
+        {
+            MessageBox.Show(Strings.Get("MoveOnlyActiveSession"), Strings.Get("ConfirmTitle"), MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        try
+        {
+            using var scope = Services.CreateScope();
+            var sessionService = scope.ServiceProvider.GetRequiredService<SessionService>();
+            if (Running(a) && Running(b))
+                await sessionService.SwapSessionsAsync(a.MachineGuid, b.MachineGuid);
+            else if (Running(a))
+                await sessionService.MoveSessionAsync(a.MachineGuid, b.MachineGuid);
+            else
+                await sessionService.MoveSessionAsync(b.MachineGuid, a.MachineGuid);
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(ex.Message, Strings.Get("ConfirmTitle"), MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
+
+        await RefreshAsync();
     }
 
     /// <summary>

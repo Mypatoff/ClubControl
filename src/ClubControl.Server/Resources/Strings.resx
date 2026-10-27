@@ -502,4 +502,10 @@
   <data name="Export" xml:space="preserve">
     <value>Export</value>
   </data>
+  <data name="MoveSelectOneOrTwo" xml:space="preserve">
+    <value>Select one resource, or two to swap/move between them.</value>
+  </data>
+  <data name="MoveSameTariffOnly" xml:space="preserve">
+    <value>A session can only be moved between resources of the same kind and tariff.</value>
+  </data>
 </root>
