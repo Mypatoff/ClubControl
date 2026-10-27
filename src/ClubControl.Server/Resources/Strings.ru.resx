@@ -550,4 +550,16 @@
   <data name="StopStartedFormat" xml:space="preserve">
     <value>Начало {0} · прошло {1}</value>
   </data>
+  <data name="UpdateCardUpdating" xml:space="preserve">
+    <value>⬇ Обновление</value>
+  </data>
+  <data name="UpdateCardUpdated" xml:space="preserve">
+    <value>✔ Обновлён</value>
+  </data>
+  <data name="UpdateCardSame" xml:space="preserve">
+    <value>⚠ Та же версия</value>
+  </data>
+  <data name="UpdateCardFailed" xml:space="preserve">
+    <value>✖ Не обновлён</value>
+  </data>
 </root>

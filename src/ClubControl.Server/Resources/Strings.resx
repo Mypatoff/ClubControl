@@ -550,4 +550,16 @@
   <data name="StopStartedFormat" xml:space="preserve">
     <value>Started {0} · played {1}</value>
   </data>
+  <data name="UpdateCardUpdating" xml:space="preserve">
+    <value>⬇ Updating</value>
+  </data>
+  <data name="UpdateCardUpdated" xml:space="preserve">
+    <value>✔ Updated</value>
+  </data>
+  <data name="UpdateCardSame" xml:space="preserve">
+    <value>⚠ Same version</value>
+  </data>
+  <data name="UpdateCardFailed" xml:space="preserve">
+    <value>✖ Update failed</value>
+  </data>
 </root>

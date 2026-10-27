@@ -100,7 +100,20 @@ public class OfflineMonitorService : BackgroundService
             ClubHub.ForgetMachine(pc.MachineGuid);
         }
 
-        if (onlinePcs.Count > 0)
+        // "Update client" that got no answer in time (no restart, no new version): say so in the log.
+        var updates = scope.ServiceProvider.GetRequiredService<ClientUpdateTracker>();
+        foreach (var (machineGuid, info) in updates.CheckTimeouts(now))
+        {
+            var pc = await db.Pcs.FirstOrDefaultAsync(p => p.MachineGuid == machineGuid);
+            db.EventLogEntries.Add(new EventLogEntry
+            {
+                Type = EventType.Warning,
+                PcId = pc?.Id,
+                Message = ClientUpdateTracker.LogMessage($"PC #{pc?.Number?.ToString() ?? "?"}", info),
+            });
+        }
+
+        if (db.ChangeTracker.HasChanges())
             await db.SaveChangesAsync();
     }
 }

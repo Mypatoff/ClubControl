@@ -23,11 +23,13 @@ public class PowerService
 {
     private readonly ClubDbContext _db;
     private readonly IHubContext<ClubHub> _hub;
+    private readonly ClientUpdateTracker _updates;
 
-    public PowerService(ClubDbContext db, IHubContext<ClubHub> hub)
+    public PowerService(ClubDbContext db, IHubContext<ClubHub> hub, ClientUpdateTracker updates)
     {
         _db = db;
         _hub = hub;
+        _updates = updates;
     }
 
     /// <summary>Sends a WoL magic packet to every PC with a known MAC address. Works whether or not the PC is online.</summary>
@@ -75,11 +77,14 @@ public class PowerService
                 Type = CommandType.UpdateClient,
                 UpdateSha256 = sha256,
                 UpdateSignature = ClientUpdateAuth.Sign(pc.AuthTokenHash, sha256),
-            }, "Update client");
+            }, "Update client",
+            // From here on the tracker watches the PC: new version = updated, restart = unchanged, silence = no response.
+            afterSend: (pc, connectionId) => _updates.Started(pc.MachineGuid, ClubHub.GetClientVersion(pc.MachineGuid), connectionId, DateTime.UtcNow));
     }
 
     /// <summary>Sends one command per online PC; <paramref name="buildCommand"/> returning null skips that PC.</summary>
-    private async Task<int> SendCommandToOnlineAsync(IEnumerable<Pc> pcs, Func<Pc, ClientCommand?> buildCommand, string actionName)
+    private async Task<int> SendCommandToOnlineAsync(IEnumerable<Pc> pcs, Func<Pc, ClientCommand?> buildCommand, string actionName,
+        Action<Pc, string>? afterSend = null)
     {
         var sent = 0;
         foreach (var pc in pcs.Where(p => p.IsOnline))
@@ -92,6 +97,7 @@ public class PowerService
                 continue;
 
             await _hub.Clients.Client(connectionId).SendAsync(HubMethodNames.ReceiveCommand, command);
+            afterSend?.Invoke(pc, connectionId);
             sent++;
         }
 

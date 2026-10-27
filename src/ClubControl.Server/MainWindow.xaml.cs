@@ -115,7 +115,8 @@ public partial class MainWindow : Window
         pcs = pcs.Where(p => p.Enabled || snapshots.ContainsKey(p.Id)).ToList();
 
         var selectedIds = PcList.SelectedItems.Cast<PcRow>().Select(p => p.Id).ToHashSet();
-        var rows = pcs.Select(pc => BuildRow(pc, tariffNames, snapshots.GetValueOrDefault(pc.Id))).ToList();
+        var updates = scope.ServiceProvider.GetRequiredService<ClientUpdateTracker>();
+        var rows = pcs.Select(pc => BuildRow(pc, tariffNames, snapshots.GetValueOrDefault(pc.Id), updates.Get(pc.MachineGuid, DateTime.UtcNow))).ToList();
 
         // Replacing ItemsSource rebuilds every card and resets the scroll position, so remember it.
         var scrollOffset = FindDescendant<ScrollViewer>(PcList)?.VerticalOffset ?? 0;
@@ -162,7 +163,7 @@ public partial class MainWindow : Window
         StatOtherText.Text = $"{others.Count(r => r.HasActiveSession)}/{others.Count} {Strings.Get("KindOtherPlural")}";
     }
 
-    private static PcRow BuildRow(Pc pc, Dictionary<int, string> tariffNames, SessionService.ActiveSessionSnapshot? snap)
+    private static PcRow BuildRow(Pc pc, Dictionary<int, string> tariffNames, SessionService.ActiveSessionSnapshot? snap, ClientUpdateInfo? update)
     {
         var amount = "";
         var start = "";
@@ -208,6 +209,7 @@ public partial class MainWindow : Window
             RemainingDisplay = remaining,
             Note = snap?.Note ?? "",
             ExtrasUzs = snap?.ExtrasUzs ?? 0,
+            Update = update,
             ClientVersion = pc.IsOnline ? ClubHub.GetClientVersion(pc.MachineGuid) : ""
         };
     }

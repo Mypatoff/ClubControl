@@ -550,4 +550,16 @@
   <data name="StopStartedFormat" xml:space="preserve">
     <value>Boshlanishi {0} · o&apos;tdi {1}</value>
   </data>
+  <data name="UpdateCardUpdating" xml:space="preserve">
+    <value>⬇ Yangilanmoqda</value>
+  </data>
+  <data name="UpdateCardUpdated" xml:space="preserve">
+    <value>✔ Yangilandi</value>
+  </data>
+  <data name="UpdateCardSame" xml:space="preserve">
+    <value>⚠ Versiya bir xil</value>
+  </data>
+  <data name="UpdateCardFailed" xml:space="preserve">
+    <value>✖ Yangilanmadi</value>
+  </data>
 </root>

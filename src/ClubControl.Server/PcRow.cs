@@ -3,6 +3,7 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Media;
 using ClubControl.Server.Resources;
+using ClubControl.Server.Services;
 using ClubControl.Shared;
 
 namespace ClubControl.Server;
@@ -41,6 +42,21 @@ public class PcRow
     /// <summary>Client build this PC last reported ("1.0.0+f4545fa"); empty if unknown. Lets the admin see which PCs an "Update client" has reached.</summary>
     public string ClientVersion { get; init; } = "";
 
+    /// <summary>Progress / result of the last "Update client" on this PC; null when there is nothing to show.</summary>
+    public ClientUpdateInfo? Update { get; init; }
+
+    /// <summary>The state text on the card: the update progress or result while there is one, otherwise the normal state.</summary>
+    public string CardStateDisplay => Update is null ? StateDisplay : UpdateDisplay;
+
+    private string UpdateDisplay => Update?.Status switch
+    {
+        ClientUpdateStatus.Updating => Strings.Get("UpdateCardUpdating"),
+        ClientUpdateStatus.Updated => Strings.Get("UpdateCardUpdated"),
+        ClientUpdateStatus.Unchanged => Strings.Get("UpdateCardSame"),
+        ClientUpdateStatus.NoResponse => Strings.Get("UpdateCardFailed"),
+        _ => ""
+    };
+
     /// <summary>The optional note typed when the current session was started; empty if none.</summary>
     public string Note { get; init; } = "";
 
@@ -77,6 +93,7 @@ public class PcRow
     public string TooltipText => string.Join("\n", new[]
     {
         IsOther && Name != "" ? Name : "",
+        Update is null ? "" : UpdateDisplay + (Update.Status == ClientUpdateStatus.Updated ? $" (v{Update.VersionBefore} → v{Update.VersionNow})" : ""),
         StateDisplay, // the card is narrow, so a long state name ("Лимит достигнут") can be cut off there
         TariffDisplay,
         AmountDisplay,

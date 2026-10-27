@@ -24,11 +24,13 @@ public class ClubHub : Hub
 
     private readonly ClubDbContext _db;
     private readonly SessionService _sessionService;
+    private readonly ClientUpdateTracker _updates;
 
-    public ClubHub(ClubDbContext db, SessionService sessionService)
+    public ClubHub(ClubDbContext db, SessionService sessionService, ClientUpdateTracker updates)
     {
         _db = db;
         _sessionService = sessionService;
+        _updates = updates;
     }
 
     public async Task Heartbeat(HeartbeatRequest request)
@@ -76,6 +78,17 @@ public class ClubHub : Hub
 
         var wasOnline = pc.IsOnline;
         pc.IsOnline = true;
+
+        // After "Update client": the first heartbeat that shows a new version (or a restart) is the answer.
+        if (!isNew && _updates.OnHeartbeat(request.MachineGuid, request.ClientVersion, Context.ConnectionId, DateTime.UtcNow) is { } update)
+        {
+            _db.EventLogEntries.Add(new EventLogEntry
+            {
+                Type = ClientUpdateTracker.IsProblem(update) ? EventType.Warning : EventType.PowerCommand,
+                PcId = pc.Id,
+                Message = ClientUpdateTracker.LogMessage($"PC #{pc.Number?.ToString() ?? "?"}", update),
+            });
+        }
 
         if (isNew)
         {

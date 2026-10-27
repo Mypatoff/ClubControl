@@ -84,8 +84,17 @@ Safety nets:
   is skipped - configure it once in Settings and reinstall its client by hand that first time.
 - **Rollback:** the old files are backed up first. If the new build doesn't get a heartbeat through
   to the server within 90 seconds, the PC restores the old build and starts it again.
-- **Version:** hover over a PC card to see the build it runs (`v1.0.0+<git commit>`). After an update,
-  check that it changed - if it didn't, the PC rolled back; see `%ProgramData%\ClubControl\client-log.txt`.
+- **Version:** hover over a PC card to see the build it runs (`v1.0.0+<git commit>`).
+- **Result on the card and in the log:** right after you click "Update client" each PC's card says
+  "⬇ Updating". Then you see, on the card and as a line in the event log:
+  - "✔ Updated" - the PC now runs a new version (`PC #5 updated: v… -> v…`; the card text fades after 2 minutes).
+  - "⚠ Same version" - the PC restarted but still reports the same version: it already had that build, or
+    the update was rolled back.
+  - "✖ Update failed" - nothing happened within 5 minutes (no restart, no new version). The card keeps
+    this until the PC is updated again or changes version. The reason is in
+    `%ProgramData%\ClubControl\client-log.txt` on that PC.
+  This is judged by the server from what each PC reports, so it works with any client build, and it is
+  forgotten when the server restarts.
 
 ## One-time setup per PC
 

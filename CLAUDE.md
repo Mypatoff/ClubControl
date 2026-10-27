@@ -88,6 +88,11 @@ C# .NET 8. WPF for Server (admin panel + hosted ASP.NET Core/SignalR) and Client
       (`BillingCalculator.PrepayIncomeOnEarlyStop` = paid - the refund shown in the stop window), so reports
       show the real income; a session that ran its full time stays fully paid. The stop window says
       "Refund" instead of "no refund" (`StopPrepayRefundNote`). This reverses the old "no refund" rule.
+- [x] Post-phase-6 feature: "Update client" now reports its result. `ClientUpdateTracker` (Server, memory only,
+      singleton) remembers which PCs were sent the command and judges from their heartbeats: new
+      `ClientVersion` = updated, restart with the same version = unchanged, 5 minutes of nothing = no
+      response (`OfflineMonitorService` checks). Shown as card state text (`PcRow.CardStateDisplay`,
+      keys `UpdateCard*`) and as event-log lines (Warning for the two problem cases). No client change.
 - [x] Post-phase-6 change: `ResourceKind.Billiard` is now `ResourceKind.Other` (same stored value 1) and
       every non-computer resource has an admin-chosen `Pc.Name` ("Table 3", "PS5 room"; new column +
       `AddPcName` migration). The name shows on the card, in dialogs (`PcRow.Label`/`Strings.ResourceLabel`)

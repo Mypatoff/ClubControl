@@ -95,6 +95,7 @@ public partial class App : Application
         // the caller.
         builder.Services.AddSignalR(options => options.EnableDetailedErrors = builder.Environment.IsDevelopment());
         builder.Services.AddScoped<SessionService>();
+        builder.Services.AddSingleton<ClientUpdateTracker>();
         builder.Services.AddScoped<PowerService>();
         builder.Services.AddScoped<ReportsService>();
         builder.Services.AddHostedService<OfflineMonitorService>();

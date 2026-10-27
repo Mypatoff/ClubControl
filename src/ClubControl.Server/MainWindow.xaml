@@ -243,7 +243,7 @@
                                 <DockPanel Grid.Row="0">
                                     <TextBlock DockPanel.Dock="Left" Text="{Binding CardTitle}" FontSize="20" FontWeight="Bold" TextWrapping="NoWrap"
                                                TextTrimming="CharacterEllipsis" MaxWidth="78" />
-                                    <TextBlock Text="{Binding StateDisplay}" Foreground="{Binding AccentBrush}"
+                                    <TextBlock Text="{Binding CardStateDisplay}" Foreground="{Binding AccentBrush}"
                                                FontSize="10.5" FontWeight="SemiBold" VerticalAlignment="Center" Margin="6,0,0,0"
                                                TextAlignment="Right" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" />
                                 </DockPanel>
