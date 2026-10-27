@@ -84,6 +84,10 @@ C# .NET 8. WPF for Server (admin panel + hosted ASP.NET Core/SignalR) and Client
       `ClubControl Client` task's logon trigger if missing. It lives in the new client build, not in
       `ClientUpdateScript`, because the update script is written by the OLD client being replaced.
       Not exercised against a real Task Scheduler task yet - check on one PC after the first update.
+- [x] Post-phase-6 change: stopping a prepay session early now records only the money used
+      (`BillingCalculator.PrepayIncomeOnEarlyStop` = paid - the refund shown in the stop window), so reports
+      show the real income; a session that ran its full time stays fully paid. The stop window says
+      "Refund" instead of "no refund" (`StopPrepayRefundNote`). This reverses the old "no refund" rule.
 - [x] Post-phase-6 change: `ResourceKind.Billiard` is now `ResourceKind.Other` (same stored value 1) and
       every non-computer resource has an admin-chosen `Pc.Name` ("Table 3", "PS5 room"; new column +
       `AddPcName` migration). The name shows on the card, in dialogs (`PcRow.Label`/`Strings.ResourceLabel`)

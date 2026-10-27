@@ -167,13 +167,13 @@
     <value>Stop this prepay session?</value>
   </data>
   <data name="StopPrepayUnused" xml:space="preserve">
-    <value>Unused money</value>
+    <value>Refund</value>
   </data>
   <data name="StopPrepayTotal" xml:space="preserve">
-    <value>Total unused</value>
+    <value>Total refund</value>
   </data>
-  <data name="StopPrepayNoRefund" xml:space="preserve">
-    <value>The session is recorded as fully paid. There is no automatic refund.</value>
+  <data name="StopPrepayRefundNote" xml:space="preserve">
+    <value>Only the time used is recorded as income. Hand the refund back to the client.</value>
   </data>
   <data name="CannotStopSessionTitle" xml:space="preserve">
     <value>Cannot stop session</value>

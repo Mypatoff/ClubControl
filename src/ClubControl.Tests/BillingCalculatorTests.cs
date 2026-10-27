@@ -194,6 +194,26 @@ public class BillingCalculatorTests
     }
 
     [Fact]
+    public void PrepayIncomeOnEarlyStop_IsWhatWasPaidMinusTheRefund()
+    {
+        // Paid 10000, 30 minutes of 60 left: 5000 is handed back, 5000 is income.
+        Assert.Equal(5000, BillingCalculator.PrepayIncomeOnEarlyStop(remainingSeconds: 1800, pricePerHourUzs: 10000, paidUzs: 10000));
+    }
+
+    [Fact]
+    public void PrepayIncomeOnEarlyStop_RoundsTheRefundDownSoIncomeRoundsUp()
+    {
+        // 29m30s left = 4916 UZS -> refund 4900, income 5100.
+        Assert.Equal(5100, BillingCalculator.PrepayIncomeOnEarlyStop(29 * 60 + 30, 10000, 10000));
+    }
+
+    [Fact]
+    public void PrepayIncomeOnEarlyStop_NothingLeft_KeepsTheFullPayment()
+    {
+        Assert.Equal(10000, BillingCalculator.PrepayIncomeOnEarlyStop(0, 10000, 10000));
+    }
+
+    [Fact]
     public void SumPostpaySegments_AddsEachSegmentsOwnRoundedCharge()
     {
         var segments = new[]

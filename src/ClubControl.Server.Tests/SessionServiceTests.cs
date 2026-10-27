@@ -111,20 +111,52 @@ public class SessionServiceTests : SessionTestBase
     }
 
     [Fact]
-    public async Task Stopping_a_prepay_session_early_gives_no_refund()
+    public async Task Stopping_a_prepay_session_halfway_records_only_the_money_used()
     {
-        using var db = NewDb();
-        var service = ServiceFor(db);
-        await service.StartPrepayByMoneyAsync(Pc1, 10_000);
+        using (var before = NewDb())
+            await ServiceFor(before).StartPrepayByMoneyAsync(Pc1, 10_000); // 60 min at 10 000/h
+        await BackdateSessionAsync(TimeSpan.FromMinutes(30));              // 30 min used, 30 min left
 
-        await service.EndSessionEarlyAsync(Pc1);
+        using var db = NewDb();
+        await ServiceFor(db).EndSessionEarlyAsync(Pc1);
 
         var session = await GetOnlySessionAsync();
         Assert.Equal(SessionStatus.Ended, session.Status);
-        Assert.Equal(10_000, session.AmountUzs);
+        Assert.InRange(session.AmountUzs, 5_000, 5_200); // 5 000 used; the unused part is rounded down to 100 for the refund
         Assert.NotNull(session.ActualEndUtc);
         Assert.All(session.Segments, s => Assert.NotNull(s.EndUtc));
         Assert.Equal(PcState.Locked, (await GetPcAsync(Pc1)).State);
+    }
+
+    [Fact]
+    public async Task The_income_recorded_plus_the_refund_shown_is_what_was_paid()
+    {
+        using (var before = NewDb())
+            await ServiceFor(before).StartPrepayByMoneyAsync(Pc1, 10_000);
+        await BackdateSessionAsync(TimeSpan.FromMinutes(20));
+
+        int refundShown;
+        using (var db = NewDb())
+            refundShown = (await ServiceFor(db).GetActiveSessionSnapshotAsync(Pc1))!.RemainingMoneyUzs;
+
+        using (var db = NewDb())
+            await ServiceFor(db).EndSessionEarlyAsync(Pc1);
+
+        // The snapshot and the stop are a moment apart, so allow one 100 UZS rounding step.
+        Assert.InRange((await GetOnlySessionAsync()).AmountUzs + refundShown, 10_000, 10_100);
+    }
+
+    [Fact]
+    public async Task Stopping_a_prepay_session_whose_time_has_run_out_keeps_it_fully_paid()
+    {
+        using (var before = NewDb())
+            await ServiceFor(before).StartPrepayByMoneyAsync(Pc1, 10_000);
+        await BackdateSessionAsync(TimeSpan.FromMinutes(61)); // planned end already passed, nothing left to refund
+
+        using var db = NewDb();
+        await ServiceFor(db).EndSessionEarlyAsync(Pc1);
+
+        Assert.Equal(10_000, (await GetOnlySessionAsync()).AmountUzs);
     }
 
     [Fact]

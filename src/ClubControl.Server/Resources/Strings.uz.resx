@@ -167,13 +167,13 @@
     <value>Oldindan toʻlov sessiyasini toʻxtatasizmi?</value>
   </data>
   <data name="StopPrepayUnused" xml:space="preserve">
-    <value>Ishlatilmagan pul</value>
+    <value>Qaytariladi</value>
   </data>
   <data name="StopPrepayTotal" xml:space="preserve">
-    <value>Jami ishlatilmagan</value>
+    <value>Jami qaytariladi</value>
   </data>
-  <data name="StopPrepayNoRefund" xml:space="preserve">
-    <value>Sessiya toʻliq toʻlangan deb qayd etiladi. Pul avtomatik qaytarilmaydi.</value>
+  <data name="StopPrepayRefundNote" xml:space="preserve">
+    <value>Daromad sifatida faqat ishlatilgan vaqt qayd etiladi. Ishlatilmagan pulni mijozga qaytaring.</value>
   </data>
   <data name="CannotStopSessionTitle" xml:space="preserve">
     <value>Sessiyani toʻxtatib boʻlmadi</value>

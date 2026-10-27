@@ -47,7 +47,7 @@ public class ExtrasTests : SessionTestBase
 
         using var check = NewDb();
         var sessions = await check.Sessions.Include(s => s.Extras).Include(s => s.Pc).ToListAsync();
-        Assert.Equal(10_000, sessions.Single(s => s.Type == SessionType.Prepay).AmountUzs);          // still just what was prepaid
+        Assert.InRange(sessions.Single(s => s.Type == SessionType.Prepay).AmountUzs, 0, 200);        // stopped at once: nearly all refunded, the items are not added in
         Assert.Equal(StandardMin, sessions.Single(s => s.Type == SessionType.Postpay).AmountUzs);    // minimum charge, items not added in
         Assert.All(sessions, s => Assert.Equal(5_000, s.Extras.Sum(x => x.AmountUzs)));              // items kept for the record
     }

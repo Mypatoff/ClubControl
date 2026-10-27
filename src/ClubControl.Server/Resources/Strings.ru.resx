@@ -167,13 +167,13 @@
     <value>Остановить сессию предоплаты?</value>
   </data>
   <data name="StopPrepayUnused" xml:space="preserve">
-    <value>Не использовано</value>
+    <value>К возврату</value>
   </data>
   <data name="StopPrepayTotal" xml:space="preserve">
-    <value>Всего не использовано</value>
+    <value>Всего к возврату</value>
   </data>
-  <data name="StopPrepayNoRefund" xml:space="preserve">
-    <value>Сессия записывается как полностью оплаченная. Автоматический возврат денег не производится.</value>
+  <data name="StopPrepayRefundNote" xml:space="preserve">
+    <value>В доход записывается только использованное время. Верните неиспользованную сумму клиенту.</value>
   </data>
   <data name="CannotStopSessionTitle" xml:space="preserve">
     <value>Невозможно остановить сессию</value>

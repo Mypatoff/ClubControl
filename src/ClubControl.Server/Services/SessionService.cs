@@ -177,8 +177,8 @@ public class SessionService
     }
 
     /// <summary>
-    /// The one "Stop"/"Paid" action for any active session: prepay ends with no refund, postpay's
-    /// final cost is computed now, free stays at 0.
+    /// The one "Stop"/"Paid" action for any active session: prepay is recorded as only the time really
+    /// used (the unused money is handed back), postpay's final cost is computed now, free stays at 0.
     /// </summary>
     public async Task EndSessionEarlyAsync(Guid machineGuid)
     {
@@ -201,10 +201,22 @@ public class SessionService
                 Math.Max(BillingCalculator.SumPostpaySegments(elapsedPerSegment), tariff.MinPaymentUzs),
                 tariff.MaxPaymentUzs);
         }
-        // Prepay: AmountUzs already holds what was paid - no refund for stopping early (SPEC 5).
         // Free: AmountUzs stays 0.
 
         var reason = pc.State == PcState.LimitReached ? "Admin confirmed payment" : "Admin stopped the session";
+
+        if (session.Type == SessionType.Prepay && session.PlannedEndUtc.HasValue
+            && session.Segments.FirstOrDefault(s => s.EndUtc == null) is { } openSegment)
+        {
+            // Stopped early: only the time used is income, the rest is handed back (SPEC 5). Same
+            // remaining-money figure the stop window shows, so the admin refunds exactly what is recorded.
+            var remainingSeconds = Math.Max(0, (int)(session.PlannedEndUtc.Value - now).TotalSeconds);
+            var paid = session.AmountUzs;
+            session.AmountUzs = BillingCalculator.PrepayIncomeOnEarlyStop(remainingSeconds, openSegment.PricePerHourUzs, paid);
+            if (paid > session.AmountUzs)
+                reason += $", {paid - session.AmountUzs} UZS refunded";
+        }
+
         await CloseSessionAsync(session, now, reason);
     }
 

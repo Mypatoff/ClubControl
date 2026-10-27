@@ -9,7 +9,7 @@ public record StopPrepayLine(string Title, string Money, string TimeLeft, string
 
 /// <summary>
 /// Confirms stopping prepay sessions early and shows how much prepaid money is still unused on each
-/// (SPEC 5: the stop itself gives no refund - this only makes the admin aware of what is left).
+/// (SPEC 5: only the time used is recorded as income; the unused money shown here is handed back).
 /// DialogResult is true when the admin presses Stop.
 /// </summary>
 public partial class StopPrepayWindow : Window
@@ -31,7 +31,7 @@ public partial class StopPrepayWindow : Window
         ItemsDueText.Text = $"{itemsDueUzs:N0} UZS";
         ItemsDueCard.Visibility = itemsDueUzs > 0 ? Visibility.Visible : Visibility.Collapsed;
 
-        NoteText.Text = Strings.Get("StopPrepayNoRefund");
+        NoteText.Text = Strings.Get("StopPrepayRefundNote");
         CancelButton.Content = Strings.Get("Cancel");
         StopButton.Content = Strings.Get("ToolbarStop");
     }

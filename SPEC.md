@@ -69,7 +69,7 @@ One club, one admin laptop (server), up to ~30 gaming PCs (clients) on the same 
   - Start by time: price = minutes × pricePerHour / 60 (rounded up to 100).
   - Payment must be between tariff min and max; total paid in one session cannot exceed max.
   - **Extend** (Доплата): add money or minutes at the current PC's price.
-  - Ends automatically when time runs out. Early stop: no refund.
+  - Ends automatically when time runs out. Early stop: only the time used counts as income; the unused money (shown in the stop window) is handed back, and the session is recorded at the money used.
 - **Postpay:**
   - Open session, counts up. Current cost = started minutes × price/60, never below min.
   - When cost reaches the tariff maximum → client goes to "Limit reached" (locked), session waits for the admin.

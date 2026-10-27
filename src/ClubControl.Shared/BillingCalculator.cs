@@ -128,8 +128,7 @@ public static class BillingCalculator
     /// <summary>
     /// Prepay: the money still unused if the session stops now - the remaining time valued at the
     /// current price, rounded DOWN to 100 UZS (never promise more than is really left) and never more
-    /// than what was paid. It is shown to the admin when stopping early; the stop itself still gives
-    /// no refund (SPEC 5).
+    /// than what was paid. It is what the admin hands back when stopping early (SPEC 5).
     /// </summary>
     public static int RemainingPrepayMoney(int remainingSeconds, int pricePerHourUzs, int paidUzs)
     {
@@ -140,6 +139,14 @@ public static class BillingCalculator
         var roundedDown = remainingUzs / RoundingUzs * RoundingUzs;
         return (int)Math.Min(roundedDown, paidUzs);
     }
+
+    /// <summary>
+    /// Prepay stopped early: the session counts as income only for the time really used, i.e. what was
+    /// paid minus the <see cref="RemainingPrepayMoney"/> that is handed back. A session that has run its
+    /// full time (nothing remaining) stays fully paid.
+    /// </summary>
+    public static int PrepayIncomeOnEarlyStop(int remainingSeconds, int pricePerHourUzs, int paidUzs) =>
+        paidUzs - RemainingPrepayMoney(remainingSeconds, pricePerHourUzs, paidUzs);
 
     /// <summary>
     /// Move (postpay/free): cost already run up is kept and counting continues at the new price.

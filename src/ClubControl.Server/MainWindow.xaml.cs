@@ -674,7 +674,7 @@ public partial class MainWindow : Window
     /// <summary>
     /// Validates the current selection for Stop (SPEC extension: stop several PCs/resources at
     /// once, e.g. a group finishing together). All selected must have an active session, and all
-    /// must be the same kind of session - prepay (simple confirm, no refund) and postpay/limit-
+    /// must be the same kind of session - prepay (confirm, shows the refund) and postpay/limit-
     /// reached (payment collection) use different flows, so mixing them in one action isn't
     /// well-defined.
     /// </summary>
@@ -749,7 +749,7 @@ public partial class MainWindow : Window
 
     /// <summary>
     /// What the stop dialog shows for prepay: for each PC, how much of its prepaid money is still unused
-    /// and how much time that is, plus the total. The stop itself still gives no refund (SPEC 5).
+    /// and how much time that is, plus the total. Only the time used is recorded as income; the rest is handed back (SPEC 5).
     /// </summary>
     private static async Task<(List<StopPrepayLine> Lines, string TotalMoney, int ItemsDueUzs)> BuildStopPrepayLinesAsync(
         SessionService sessionService, List<PcRow> targets)
