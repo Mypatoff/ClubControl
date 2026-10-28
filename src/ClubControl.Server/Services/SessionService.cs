@@ -95,53 +95,6 @@ public class SessionService
         });
     }
 
-    public async Task ExtendPrepayByMoneyAsync(Guid machineGuid, int addMoneyUzs)
-    {
-        var (pc, session, segment, tariff) = await GetActivePrepayAsync(machineGuid);
-        var addMinutes = BillingCalculator.MinutesForMoney(addMoneyUzs, segment.PricePerHourUzs);
-
-        if (!BillingCalculator.IsValidExtendIncrement(addMoneyUzs, addMinutes))
-            throw new InvalidOperationException($"{addMoneyUzs} UZS is not enough to buy any extra time at {segment.PricePerHourUzs} UZS/hour.");
-
-        await ExtendPrepayAsync(pc, session, tariff, addMinutes, addMoneyUzs);
-    }
-
-    public async Task ExtendPrepayByTimeAsync(Guid machineGuid, int addMinutes)
-    {
-        var (pc, session, segment, tariff) = await GetActivePrepayAsync(machineGuid);
-        var addMoneyUzs = BillingCalculator.PriceForMinutes(addMinutes, segment.PricePerHourUzs);
-
-        if (!BillingCalculator.IsValidExtendIncrement(addMoneyUzs, addMinutes))
-            throw new InvalidOperationException("Extend time must be greater than zero.");
-
-        await ExtendPrepayAsync(pc, session, tariff, addMinutes, addMoneyUzs);
-    }
-
-    private async Task ExtendPrepayAsync(Pc pc, Session session, Tariff tariff, int addMinutes, int addMoneyUzs)
-    {
-        var newTotalPaid = session.AmountUzs + addMoneyUzs;
-        if (!BillingCalculator.IsValidPrepayPayment(newTotalPaid, tariff.MinPaymentUzs, tariff.MaxPaymentUzs))
-            throw new InvalidOperationException($"Extending would bring the total to {newTotalPaid} UZS, above the {tariff.MaxPaymentUzs} UZS maximum.");
-
-        session.AmountUzs = newTotalPaid;
-        session.PlannedEndUtc = session.PlannedEndUtc!.Value.AddMinutes(addMinutes);
-
-        await using (var transaction = await _db.Database.BeginTransactionAsync())
-        {
-            await _db.SaveChangesAsync();
-            LogEvent(EventType.SessionExtended, pc.Id, session.Id, $"Extended by {addMinutes} min, {addMoneyUzs} UZS");
-            await _db.SaveChangesAsync();
-            await transaction.CommitAsync();
-        }
-
-        var remaining = Math.Max(0, (int)(session.PlannedEndUtc.Value - DateTime.UtcNow).TotalSeconds);
-        await SendCommandAsync(pc, new ClientCommand
-        {
-            Type = CommandType.UpdateSession,
-            Session = new SessionInfo { Type = SessionType.Prepay, RemainingSeconds = remaining }
-        });
-    }
-
     // ---- postpay ----
 
     public async Task StartPostpayAsync(Guid machineGuid, string? note = null)
@@ -693,21 +646,6 @@ public class SessionService
             .Where(s => s.PcId == pcId && s.Status == SessionStatus.Active)
             .OrderByDescending(s => s.Id)
             .FirstOrDefaultAsync();
-
-    private async Task<(Pc Pc, Session Session, SessionSegment Segment, Tariff Tariff)> GetActivePrepayAsync(Guid machineGuid)
-    {
-        var pc = await GetPcAsync(machineGuid);
-        if (pc.State != PcState.PrepaySession)
-            throw new InvalidOperationException("PC does not have an active prepay session.");
-
-        var session = await GetActiveSessionAsync(pc.Id);
-        if (session is null || session.Type != SessionType.Prepay)
-            throw new InvalidOperationException("No active prepay session found.");
-
-        var segment = session.Segments.First(s => s.EndUtc == null);
-        var tariff = await GetTariffAsync(pc.TariffId!.Value);
-        return (pc, session, segment, tariff);
-    }
 
     private async Task<LockInfo> BuildLockInfoAsync(Pc pc, bool limitReached)
     {

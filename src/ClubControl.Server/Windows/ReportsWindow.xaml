@@ -12,16 +12,14 @@
 
                 <Border Width="1" Background="{StaticResource DividerBrush}" Margin="0,2,16,2" />
 
+                <!-- ←  Day | Week | Month  →   The arrows step one day back / forward and only work in Day mode. -->
+                <Button x:Name="PreviousButton" Content="←" Width="40" Margin="0,0,6,0" Style="{StaticResource SecondaryButtonStyle}" Click="OnPrevious" />
                 <Button x:Name="DailyButton" Margin="0,0,6,0" Style="{StaticResource SecondaryButtonStyle}" Click="OnDaily" />
                 <Button x:Name="WeeklyButton" Margin="0,0,6,0" Style="{StaticResource SecondaryButtonStyle}" Click="OnWeekly" />
-                <Button x:Name="MonthlyButton" Margin="0,0,16,0" Style="{StaticResource SecondaryButtonStyle}" Click="OnMonthly" />
+                <Button x:Name="MonthlyButton" Margin="0,0,6,0" Style="{StaticResource SecondaryButtonStyle}" Click="OnMonthly" />
+                <Button x:Name="NextButton" Content="→" Width="40" Margin="0,0,16,0" Style="{StaticResource SecondaryButtonStyle}" Click="OnNext" />
 
-                <TextBlock x:Name="FromLabelText" VerticalAlignment="Center" Margin="0,0,6,0" />
-                <DatePicker x:Name="FromDatePicker" Width="120" Margin="0,0,16,0" />
-                <TextBlock x:Name="ToLabelText" VerticalAlignment="Center" Margin="0,0,6,0" />
-                <DatePicker x:Name="ToDatePicker" Width="120" Margin="0,0,16,0" />
-
-                <Button x:Name="RefreshButton" Click="OnRefresh" />
+                <TextBlock x:Name="PeriodText" VerticalAlignment="Center" FontWeight="SemiBold" />
             </StackPanel>
         </Border>
 
@@ -81,7 +79,7 @@
                             <DataGridTextColumn x:Name="SessionTariffColumn" Binding="{Binding TariffLabel}" Width="100" />
                             <DataGridTextColumn x:Name="SessionIncomeColumn" Binding="{Binding IncomeDisplay}" Width="110" />
                             <DataGridTextColumn x:Name="SessionItemsColumn" Binding="{Binding ItemsDisplay}" Width="100" />
-                            <DataGridTextColumn x:Name="SessionNoteColumn" Binding="{Binding Note}" Width="*" />
+                            <DataGridTextColumn x:Name="SessionNoteColumn" Binding="{Binding Note}" Width="*" MinWidth="120" />
                         </DataGrid.Columns>
                     </DataGrid>
                 </TabItem>

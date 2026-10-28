@@ -93,6 +93,12 @@ C# .NET 8. WPF for Server (admin panel + hosted ASP.NET Core/SignalR) and Client
       `ClientVersion` = updated, restart with the same version = unchanged, 5 minutes of nothing = no
       response (`OfflineMonitorService` checks). Shown as card state text (`PcRow.CardStateDisplay`,
       keys `UpdateCard*`) and as event-log lines (Warning for the two problem cases). No client change.
+- [x] Post-phase-6 changes (admin panel): Reports now has `← Day | Week | Month →` instead of date pickers
+      (arrows move one day and only work in Day mode); the Extend feature is removed completely (button, menu,
+      `ExtendSessionWindow`, `SessionService.ExtendPrepay*`, `IsValidExtendIncrement` and their tests; old
+      `EventType.SessionExtended` rows still display); window title bars follow the theme (`TitleBar`, DWM dark
+      mode + Windows 11 caption colour, applied to every window on Loaded); the event log can be resized or hidden
+      with a `GridSplitter` (height kept in `log-panel-height.txt`); the left toolbar wraps on narrow windows.
 - [x] Post-phase-6 feature: "Update server" button (`ServerUpdateWindow`, `ServerUpdater`, `ServerUpdateRelease` in
       Shared). Reads the rolling GitHub "latest" release (public repo, no token), downloads the server and
       client zips, verifies them against `SHA256SUMS.txt` (new Build workflow step), copies the client zip

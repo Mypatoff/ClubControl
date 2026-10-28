@@ -22,9 +22,6 @@
   <data name="ToolbarStart" xml:space="preserve">
     <value>Старт</value>
   </data>
-  <data name="ToolbarExtend" xml:space="preserve">
-    <value>Продлить</value>
-  </data>
   <data name="ToolbarStop" xml:space="preserve">
     <value>Стоп</value>
   </data>
@@ -153,9 +150,6 @@
   </data>
   <data name="MultiTargetFormat" xml:space="preserve">
     <value>{0}: {1} ({2})</value>
-  </data>
-  <data name="ExtendOnlyActivePrepay" xml:space="preserve">
-    <value>Продление работает только для активной сессии предоплаты.</value>
   </data>
   <data name="MoveOnlyActiveSession" xml:space="preserve">
     <value>Перенос работает только для активной сессии.</value>
@@ -370,18 +364,6 @@
   <data name="LabelNote" xml:space="preserve">
     <value>Заметка (необязательно)</value>
   </data>
-  <data name="ExtendSessionTitle" xml:space="preserve">
-    <value>Продлить сессию</value>
-  </data>
-  <data name="AddMoney" xml:space="preserve">
-    <value>Добавить сумму (UZS)</value>
-  </data>
-  <data name="AddTime" xml:space="preserve">
-    <value>Добавить время (минуты)</value>
-  </data>
-  <data name="ButtonExtend" xml:space="preserve">
-    <value>Продлить</value>
-  </data>
   <data name="MoveSessionTitle" xml:space="preserve">
     <value>Перенести сессию</value>
   </data>
@@ -457,12 +439,6 @@
   <data name="PeriodMonthly" xml:space="preserve">
     <value>Месяц</value>
   </data>
-  <data name="FromLabel" xml:space="preserve">
-    <value>С</value>
-  </data>
-  <data name="ToLabel" xml:space="preserve">
-    <value>По</value>
-  </data>
   <data name="TotalIncome" xml:space="preserve">
     <value>Доход</value>
   </data>
@@ -489,9 +465,6 @@
   </data>
   <data name="ColumnType" xml:space="preserve">
     <value>Тип</value>
-  </data>
-  <data name="Refresh" xml:space="preserve">
-    <value>Обновить</value>
   </data>
   <data name="Export" xml:space="preserve">
     <value>Экспорт</value>

@@ -177,7 +177,7 @@
         <Setter Property="BorderBrush" Value="{DynamicResource DividerBrush}" />
     </Style>
 
-    <!-- ===== Selectable option cards (Start / Extend session dialogs) =====
+    <!-- ===== Selectable option cards (Start session dialog) =====
          The picked card's outline is switched to AccentBrush by the dialog's code-behind. -->
     <Style x:Key="OptionCardStyle" TargetType="Border">
         <Setter Property="Background" Value="{DynamicResource SurfaceBrush}" />

@@ -22,9 +22,6 @@
   <data name="ToolbarStart" xml:space="preserve">
     <value>Boshlash</value>
   </data>
-  <data name="ToolbarExtend" xml:space="preserve">
-    <value>Uzaytirish</value>
-  </data>
   <data name="ToolbarStop" xml:space="preserve">
     <value>Toʻxtatish</value>
   </data>
@@ -153,9 +150,6 @@
   </data>
   <data name="MultiTargetFormat" xml:space="preserve">
     <value>{0}: {1} ({2})</value>
-  </data>
-  <data name="ExtendOnlyActivePrepay" xml:space="preserve">
-    <value>Uzaytirish faqat faol oldindan toʻlov sessiyasi uchun ishlaydi.</value>
   </data>
   <data name="MoveOnlyActiveSession" xml:space="preserve">
     <value>Koʻchirish faqat faol sessiya uchun ishlaydi.</value>
@@ -370,18 +364,6 @@
   <data name="LabelNote" xml:space="preserve">
     <value>Izoh (ixtiyoriy)</value>
   </data>
-  <data name="ExtendSessionTitle" xml:space="preserve">
-    <value>Sessiyani uzaytirish</value>
-  </data>
-  <data name="AddMoney" xml:space="preserve">
-    <value>Summa qoʻshish (UZS)</value>
-  </data>
-  <data name="AddTime" xml:space="preserve">
-    <value>Vaqt qoʻshish (daqiqa)</value>
-  </data>
-  <data name="ButtonExtend" xml:space="preserve">
-    <value>Uzaytirish</value>
-  </data>
   <data name="MoveSessionTitle" xml:space="preserve">
     <value>Sessiyani koʻchirish</value>
   </data>
@@ -457,12 +439,6 @@
   <data name="PeriodMonthly" xml:space="preserve">
     <value>Oylik</value>
   </data>
-  <data name="FromLabel" xml:space="preserve">
-    <value>Dan</value>
-  </data>
-  <data name="ToLabel" xml:space="preserve">
-    <value>Gacha</value>
-  </data>
   <data name="TotalIncome" xml:space="preserve">
     <value>Umumiy daromad</value>
   </data>
@@ -489,9 +465,6 @@
   </data>
   <data name="ColumnType" xml:space="preserve">
     <value>Turi</value>
-  </data>
-  <data name="Refresh" xml:space="preserve">
-    <value>Yangilash</value>
   </data>
   <data name="Export" xml:space="preserve">
     <value>Eksport</value>

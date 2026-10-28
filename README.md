@@ -194,7 +194,7 @@ auto-discovery:
   tier - tariffs are freely named, not limited to a fixed pair), and Save.
 - These rows never show as online/offline (there is no client to report a heartbeat), and the
   Turn-on/Restart/Shut-down buttons do nothing for them (nothing to power-cycle) - that is expected,
-  not a bug. Start/Extend/Stop/Move work exactly like any other row.
+  not a bug. Start/Stop/Move work exactly like any other row.
 - Right-click a row (or a multi-selection) for the same actions as the toolbar, scoped to just
   that row/selection.
 
@@ -217,7 +217,7 @@ auto-discovery:
   both kinds. Check totals and the per-PC/per-tariff/per-type breakdowns match what you started,
   and that an "Other" session never shows up in the Computers report or vice versa.
 - **Manual resources**: click "Add Computer" and "Add Named Resource" (it asks for a name, e.g. "Table 3"), confirm both appear in the main
-  table with the right icon, can Start/Extend/Stop/Move a session, and never go "offline" or
+  table with the right icon, can Start/Stop/Move a session, and never go "offline" or
   respond to Turn on/Restart/Shut down.
 - **Tariffs**: Settings > Tariffs - add a new tariff, rename an existing one, save, and confirm
   the new/renamed name shows up immediately in the Add dialogs and the main table.

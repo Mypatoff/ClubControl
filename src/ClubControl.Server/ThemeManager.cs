@@ -12,8 +12,12 @@ namespace ClubControl.Server;
 /// </summary>
 public static class ThemeManager
 {
+    /// <summary>Whether the dark palette is the active one (the title bars follow it, see <see cref="TitleBar"/>).</summary>
+    public static bool IsDark { get; private set; }
+
     public static void Apply(UiTheme theme)
     {
+        IsDark = theme == UiTheme.Dark;
         var palette = new Uri(theme == UiTheme.Dark ? "Themes/DarkTheme.xaml" : "Themes/Theme.xaml", UriKind.Relative);
         Application.Current.Resources.MergedDictionaries.Clear();
         Application.Current.Resources.MergedDictionaries.Add(new ResourceDictionary { Source = palette });

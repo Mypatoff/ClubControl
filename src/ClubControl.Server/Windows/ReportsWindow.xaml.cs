@@ -17,7 +17,11 @@ namespace ClubControl.Server.Windows;
 public partial class ReportsWindow : Window
 {
     private readonly IServiceProvider _services;
+    private enum Period { Day, Week, Month }
+
     private ResourceKind _kind = ResourceKind.Computer;
+    private Period _period = Period.Day;
+    private DateTime _day = DateTime.Today; // the day shown in Day mode; the arrows move it
     private ReportsService.Report? _lastReport;
 
     public ReportsWindow(IServiceProvider services)
@@ -26,7 +30,6 @@ public partial class ReportsWindow : Window
         _services = services;
         ApplyLocalization();
 
-        SetRange(DateTime.Today, DateTime.Today.AddDays(1));
         Loaded += async (_, _) => await RefreshAsync();
     }
 
@@ -38,9 +41,6 @@ public partial class ReportsWindow : Window
         DailyButton.Content = Strings.Get("PeriodDaily");
         WeeklyButton.Content = Strings.Get("PeriodWeekly");
         MonthlyButton.Content = Strings.Get("PeriodMonthly");
-        FromLabelText.Text = Strings.Get("FromLabel");
-        ToLabelText.Text = Strings.Get("ToLabel");
-        RefreshButton.Content = Strings.Get("Refresh");
         ExportButton.Content = Strings.Get("Export");
         CloseButton.Content = Strings.Get("Close");
 
@@ -80,10 +80,40 @@ public partial class ReportsWindow : Window
         }
     }
 
-    private void SetRange(DateTime fromLocal, DateTime toLocalExclusive)
+    /// <summary>The first day and the day after the last day (local time) of what the buttons currently select.</summary>
+    private (DateTime From, DateTime ToExclusive) CurrentRange() => _period switch
     {
-        FromDatePicker.SelectedDate = fromLocal;
-        ToDatePicker.SelectedDate = toLocalExclusive.AddDays(-1);
+        Period.Week => (DateTime.Today.AddDays(-6), DateTime.Today.AddDays(1)),
+        Period.Month => (new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1), DateTime.Today.AddDays(1)),
+        _ => (_day, _day.AddDays(1)),
+    };
+
+    private async void OnPrevious(object sender, RoutedEventArgs e)
+    {
+        _day = _day.AddDays(-1);
+        await RefreshAsync();
+    }
+
+    private async void OnNext(object sender, RoutedEventArgs e)
+    {
+        _day = _day.AddDays(1);
+        await RefreshAsync();
+    }
+
+    /// <summary>Shows which button is on and the dates it covers; the arrows only make sense for a single day.</summary>
+    private void UpdatePeriodControls()
+    {
+        DailyButton.FontWeight = _period == Period.Day ? FontWeights.Bold : FontWeights.Normal;
+        WeeklyButton.FontWeight = _period == Period.Week ? FontWeights.Bold : FontWeights.Normal;
+        MonthlyButton.FontWeight = _period == Period.Month ? FontWeights.Bold : FontWeights.Normal;
+        ComputersKindButton.FontWeight = _kind == ResourceKind.Computer ? FontWeights.Bold : FontWeights.Normal;
+        OtherKindButton.FontWeight = _kind == ResourceKind.Other ? FontWeights.Bold : FontWeights.Normal;
+
+        PreviousButton.IsEnabled = NextButton.IsEnabled = _period == Period.Day;
+
+        var (from, toExclusive) = CurrentRange();
+        var last = toExclusive.AddDays(-1);
+        PeriodText.Text = from == last ? from.ToString("dd.MM.yyyy") : $"{from:dd.MM.yyyy} – {last:dd.MM.yyyy}";
     }
 
     private async void OnComputersKind(object sender, RoutedEventArgs e)
@@ -98,32 +128,32 @@ public partial class ReportsWindow : Window
         await RefreshAsync();
     }
 
+    // "Day" always goes back to today, from where the arrows walk to other days.
     private async void OnDaily(object sender, RoutedEventArgs e)
     {
-        SetRange(DateTime.Today, DateTime.Today.AddDays(1));
+        _period = Period.Day;
+        _day = DateTime.Today;
         await RefreshAsync();
     }
 
+    // The last 7 days up to today.
     private async void OnWeekly(object sender, RoutedEventArgs e)
     {
-        var startOfWeek = DateTime.Today.AddDays(-6);
-        SetRange(startOfWeek, DateTime.Today.AddDays(1));
+        _period = Period.Week;
         await RefreshAsync();
     }
 
+    // From the 1st of this month up to today.
     private async void OnMonthly(object sender, RoutedEventArgs e)
     {
-        var startOfMonth = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
-        SetRange(startOfMonth, DateTime.Today.AddDays(1));
+        _period = Period.Month;
         await RefreshAsync();
     }
-
-    private async void OnRefresh(object sender, RoutedEventArgs e) => await RefreshAsync();
 
     private async Task RefreshAsync()
     {
-        var fromLocal = FromDatePicker.SelectedDate ?? DateTime.Today;
-        var toLocalExclusive = (ToDatePicker.SelectedDate ?? DateTime.Today).AddDays(1);
+        UpdatePeriodControls();
+        var (fromLocal, toLocalExclusive) = CurrentRange();
 
         using var scope = _services.CreateScope();
         var reports = scope.ServiceProvider.GetRequiredService<ReportsService>();

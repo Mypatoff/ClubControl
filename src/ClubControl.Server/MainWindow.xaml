@@ -60,8 +60,10 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
-            <RowDefinition Height="*" />
+            <RowDefinition Height="*" MinHeight="140" />
             <RowDefinition Height="Auto" />
+            <!-- The event log: drag the bar above it to make it taller, or all the way down to hide it. -->
+            <RowDefinition x:Name="LogRow" Height="110" MinHeight="0" />
         </Grid.RowDefinitions>
 
         <!-- Title + live counters -->
@@ -109,28 +111,27 @@
         <Border Grid.Row="1" Background="{StaticResource SurfaceBrush}" BorderBrush="{StaticResource DividerBrush}"
                 BorderThickness="1" CornerRadius="12" Padding="10,8">
             <DockPanel>
-                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Top">
                     <Button x:Name="UpdateServerButton" Margin="0,0,6,0" Style="{StaticResource SecondaryButtonStyle}" Click="OnUpdateServer" />
                     <Button x:Name="SettingsButton" Margin="0,0,6,0" Style="{StaticResource SecondaryButtonStyle}" Click="OnSettings" />
                     <Button x:Name="ReportsButton" Style="{StaticResource SecondaryButtonStyle}" Click="OnReports" />
                 </StackPanel>
-                <StackPanel Orientation="Horizontal">
-                    <Button x:Name="StartButton" Margin="0,0,6,0" Style="{StaticResource SuccessButtonStyle}" Click="OnStart" />
-                    <Button x:Name="StopButton" Margin="0,0,6,0" Style="{StaticResource DangerButtonStyle}" Click="OnStop" />
-                    <Button x:Name="MoveButton" Margin="0,0,6,0" Style="{StaticResource SecondaryButtonStyle}" Click="OnMove" />
-                    <Button x:Name="ExtendButton" Margin="0,0,6,0" Style="{StaticResource SecondaryButtonStyle}" Click="OnExtend" />
-                    <Button x:Name="AddItemButton" Margin="0,0,14,0" Style="{StaticResource SecondaryButtonStyle}" Click="OnAddItem" />
+                <WrapPanel Orientation="Horizontal">
+                    <Button x:Name="StartButton" Margin="0,2,6,2" Style="{StaticResource SuccessButtonStyle}" Click="OnStart" />
+                    <Button x:Name="StopButton" Margin="0,2,6,2" Style="{StaticResource DangerButtonStyle}" Click="OnStop" />
+                    <Button x:Name="MoveButton" Margin="0,2,6,2" Style="{StaticResource SecondaryButtonStyle}" Click="OnMove" />
+                    <Button x:Name="AddItemButton" Margin="0,2,14,2" Style="{StaticResource SecondaryButtonStyle}" Click="OnAddItem" />
                     <Border Width="1" Background="{StaticResource DividerBrush}" Margin="0,2,14,2" />
-                    <Button x:Name="TurnOnButton" Margin="0,0,6,0" Style="{StaticResource SecondaryButtonStyle}" Click="OnTurnOn" />
-                    <Button x:Name="RestartButton" Margin="0,0,6,0" Style="{StaticResource SecondaryButtonStyle}" Click="OnRestart" />
-                    <Button x:Name="ShutDownButton" Margin="0,0,6,0" Style="{StaticResource SecondaryButtonStyle}" Click="OnShutDown" />
-                    <Button x:Name="UpdateClientButton" Style="{StaticResource SecondaryButtonStyle}" Click="OnUpdateClient" />
-                </StackPanel>
+                    <Button x:Name="TurnOnButton" Margin="0,2,6,2" Style="{StaticResource SecondaryButtonStyle}" Click="OnTurnOn" />
+                    <Button x:Name="RestartButton" Margin="0,2,6,2" Style="{StaticResource SecondaryButtonStyle}" Click="OnRestart" />
+                    <Button x:Name="ShutDownButton" Margin="0,2,6,2" Style="{StaticResource SecondaryButtonStyle}" Click="OnShutDown" />
+                    <Button x:Name="UpdateClientButton" Margin="0,2,0,2" Style="{StaticResource SecondaryButtonStyle}" Click="OnUpdateClient" />
+                </WrapPanel>
             </DockPanel>
         </Border>
 
         <!-- PCs and other resources as cards, grouped into two sections (the others on a green felt panel) -->
-        <Border Grid.Row="2" Margin="0,12" Background="{StaticResource SurfaceBrush}" BorderBrush="{StaticResource DividerBrush}"
+        <Border Grid.Row="2" Margin="0,12,0,0" Background="{StaticResource SurfaceBrush}" BorderBrush="{StaticResource DividerBrush}"
                 BorderThickness="1" CornerRadius="12">
             <Grid Margin="8">
             <ListBox x:Name="PcList" Background="Transparent" BorderThickness="0" SelectionMode="Extended"
@@ -147,7 +148,6 @@
                         <MenuItem x:Name="CtxStart" InputGestureText="Enter" Click="OnStart" />
                         <MenuItem x:Name="CtxStop" InputGestureText="Delete" Click="OnStop" />
                         <MenuItem x:Name="CtxMove" Click="OnMove" />
-                        <MenuItem x:Name="CtxExtend" Click="OnExtend" />
                         <MenuItem x:Name="CtxAddItem" Click="OnAddItem" />
                         <Separator />
                         <MenuItem x:Name="CtxTurnOn" Click="OnTurnOn" />
@@ -266,8 +266,21 @@
         </Border>
 
         <!-- Status + event log -->
-        <Border Grid.Row="3" Background="{StaticResource SurfaceBrush}" BorderBrush="{StaticResource DividerBrush}"
-                BorderThickness="1" CornerRadius="12" Padding="12,8" Height="110">
+        <GridSplitter x:Name="LogSplitter" Grid.Row="3" Height="12" HorizontalAlignment="Stretch" VerticalAlignment="Center"
+                      ResizeDirection="Rows" ResizeBehavior="PreviousAndNext" ShowsPreview="False" Cursor="SizeNS"
+                      DragCompleted="LogSplitter_DragCompleted" MouseDoubleClick="LogSplitter_MouseDoubleClick">
+            <GridSplitter.Template>
+                <ControlTemplate TargetType="GridSplitter">
+                    <Border Background="Transparent">
+                        <Border Width="56" Height="4" CornerRadius="2" Background="{StaticResource DividerBrush}"
+                                HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                </ControlTemplate>
+            </GridSplitter.Template>
+        </GridSplitter>
+
+        <Border Grid.Row="4" Background="{StaticResource SurfaceBrush}" BorderBrush="{StaticResource DividerBrush}"
+                BorderThickness="1" CornerRadius="12" Padding="12,8" ClipToBounds="True">
             <DockPanel>
                 <DockPanel DockPanel.Dock="Top" Margin="0,0,0,6">
                     <TextBlock x:Name="StatusText" DockPanel.Dock="Right" Foreground="{StaticResource TextSecondaryBrush}"

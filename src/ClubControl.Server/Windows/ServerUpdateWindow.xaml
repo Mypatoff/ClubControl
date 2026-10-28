@@ -1,7 +1,7 @@
 <Window x:Class="ClubControl.Server.Windows.ServerUpdateWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Update server" Width="480" SizeToContent="Height"
+        Title="Update server" Width="580" SizeToContent="Height"
         WindowStartupLocation="CenterOwner" ResizeMode="NoResize" ShowInTaskbar="False">
     <StackPanel Margin="24">
         <TextBlock x:Name="HeaderText" FontSize="16" FontWeight="Bold" Margin="0,0,0,12" TextWrapping="Wrap" />

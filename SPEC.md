@@ -69,7 +69,6 @@ One club, one admin laptop (server), up to ~30 gaming PCs (clients) on the same 
   - Start by money: minutes = floor(money / pricePerHour × 60).
   - Start by time: price = minutes × pricePerHour / 60 (rounded up to 100).
   - Payment must be between tariff min and max; total paid in one session cannot exceed max.
-  - **Extend** (Доплата): add money or minutes at the current PC's price.
   - Ends automatically when time runs out. Early stop: only the time used counts as income; the unused money (shown in the stop window) is handed back, and the session is recorded at the money used.
 - **Postpay:**
   - Open session, counts up. Current cost = started minutes × price/60, never below min.
@@ -94,11 +93,11 @@ One club, one admin laptop (server), up to ~30 gaming PCs (clients) on the same 
 - On open: admin password prompt (single admin account). First run asks to create the password (stored hashed, PBKDF2).
 - Password reset: if a file named `reset-password` exists next to the exe at startup, allow setting a new password, then delete the file.
 - **Main window = one screen, GameClass style:**
-  - Toolbar: Start, Extend, Stop, Move | Turn on, Restart, Shut down (each with "selected / all").
+  - Toolbar: Start, Stop, Move | Turn on, Restart, Shut down (each with "selected / all").
   - Table, one row per PC, multi-select. Columns: connection dot (green online / grey offline), PC number, class, state, session type, amount (paid or current cost), start, end, remaining.
   - Card colours: offline (switched off / not connected) = red, connected and free = blue, session running (prepay or postpay) = green, limit reached = orange. Offline overrides the others; nothing is greyed out.
-  - Event log panel at the bottom (PC connected/disconnected, session started/ended/extended/moved, warnings, limit reached, manual unlock, power commands). Events are also saved in the database.
-- Separate windows: Start session, Extend, Move, Postpay payment, Settings, Reports.
+  - Event log panel at the bottom; drag the bar above it to resize it, down to the edge to hide it, double-click the bar to hide / show (the height is remembered in `%ProgramData%\ClubControl\log-panel-height.txt`). It lists (PC connected/disconnected, session started/ended/extended/moved, warnings, limit reached, manual unlock, power commands). Events are also saved in the database.
+- Separate windows: Start session, Move, Postpay payment, Settings, Reports.
 
 ## 8. Settings
 
@@ -108,7 +107,7 @@ One club, one admin laptop (server), up to ~30 gaming PCs (clients) on the same 
 
 ## 9. Reports
 
-- Daily, weekly, monthly (date picker).
+- A row of buttons `←  Day | Week | Month  →`: Day is today, Week is the last 7 days, Month is the 1st of this month up to today. The arrows step one day back / forward and only work in Day mode (greyed out otherwise). No date pickers.
 - Total income, number of sessions, total hours.
 - Sessions list (first tab, newest first): one row per session with the PC / other resource, start, end ("running" if not ended), duration, type, tariff, amount, items and note. Also in the CSV export.
 - Breakdown per PC, per class (Standard / VIP), per session type (prepay / postpay).

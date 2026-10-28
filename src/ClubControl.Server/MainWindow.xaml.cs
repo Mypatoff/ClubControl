@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
@@ -31,10 +33,69 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
         ApplyLocalization();
+        RestoreLogHeight();
 
         _refreshTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
         _refreshTimer.Tick += async (_, _) => await RefreshAsync();
         _refreshTimer.Start();
+    }
+
+    // ---- the event log at the bottom: drag the bar above it to resize, down to the edge to hide it ----
+
+    private const double DefaultLogHeight = 110;
+
+    private static readonly string LogHeightFile = Path.Combine(DbPaths.DataDirectory, "log-panel-height.txt");
+
+    private double _heightBeforeHiding = DefaultLogHeight;
+
+    /// <summary>The height the admin left it at last time (also after a theme switch, which recreates this window).</summary>
+    private void RestoreLogHeight()
+    {
+        try
+        {
+            if (File.Exists(LogHeightFile) && double.TryParse(File.ReadAllText(LogHeightFile).Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out var height))
+                LogRow.Height = new GridLength(Math.Clamp(height, 0, 600));
+        }
+        catch (Exception)
+        {
+            // A missing or unreadable file just means the default height.
+        }
+    }
+
+    private void SaveLogHeight()
+    {
+        try
+        {
+            File.WriteAllText(LogHeightFile, LogRow.ActualHeight.ToString("F0", CultureInfo.InvariantCulture));
+        }
+        catch (Exception)
+        {
+            // Only a convenience: the height simply is not remembered.
+        }
+    }
+
+    private void LogSplitter_DragCompleted(object sender, System.Windows.Controls.Primitives.DragCompletedEventArgs e)
+    {
+        // The splitter leaves the row at the dragged height; make it a fixed number again and remember it.
+        LogRow.Height = new GridLength(LogRow.ActualHeight);
+        SaveLogHeight();
+    }
+
+    /// <summary>Double-click on the bar: hide the log, or bring it back to the height it had.</summary>
+    private void LogSplitter_MouseDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
+    {
+        if (LogRow.ActualHeight > 1)
+        {
+            _heightBeforeHiding = LogRow.ActualHeight;
+            LogRow.Height = new GridLength(0);
+        }
+        else
+        {
+            LogRow.Height = new GridLength(_heightBeforeHiding > 1 ? _heightBeforeHiding : DefaultLogHeight);
+        }
+
+        // The new height is applied by the next layout pass; ActualHeight would still be the old one here.
+        Dispatcher.BeginInvoke(SaveLogHeight, DispatcherPriority.Loaded);
     }
 
     private void ApplyLocalization()
@@ -44,7 +105,6 @@ public partial class MainWindow : Window
         StopButton.Content = "⏹ " + Strings.Get("ToolbarStop");
         StopButton.ToolTip = Strings.Get("TooltipStop");
         MoveButton.Content = "↔ " + Strings.Get("ToolbarMove");
-        ExtendButton.Content = "⏱ " + Strings.Get("ToolbarExtend");
         AddItemButton.Content = "🛒 " + Strings.Get("AddItemTitle");
         TurnOnButton.Content = "⚡ " + Strings.Get("ToolbarTurnOn");
         RestartButton.Content = "🔁 " + Strings.Get("ToolbarRestart");
@@ -57,7 +117,6 @@ public partial class MainWindow : Window
         CtxStart.Header = Strings.Get("ToolbarStart");
         CtxStop.Header = Strings.Get("ToolbarStop");
         CtxMove.Header = Strings.Get("ToolbarMove");
-        CtxExtend.Header = Strings.Get("ToolbarExtend");
         CtxAddItem.Header = Strings.Get("AddItemTitle");
         CtxTurnOn.Header = Strings.Get("ToolbarTurnOn");
         CtxRestart.Header = Strings.Get("ToolbarRestart");
@@ -577,24 +636,6 @@ public partial class MainWindow : Window
             return;
 
         var window = new StartSessionWindow(Services, targets) { Owner = this };
-        if (window.ShowDialog() == true)
-            await RefreshAsync();
-    }
-
-    private async void OnExtend(object sender, RoutedEventArgs e)
-    {
-        var pc = GetSingleSelectedPc();
-        if (pc is null)
-            return;
-
-        if (pc.State != PcState.PrepaySession)
-        {
-            MessageBox.Show(Strings.Get("ExtendOnlyActivePrepay"), Strings.Get("ConfirmTitle"),
-                MessageBoxButton.OK, MessageBoxImage.Information);
-            return;
-        }
-
-        var window = new ExtendSessionWindow(Services, pc) { Owner = this };
         if (window.ShowDialog() == true)
             await RefreshAsync();
     }

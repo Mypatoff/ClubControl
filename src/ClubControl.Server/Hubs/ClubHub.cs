@@ -159,7 +159,7 @@ public class ClubHub : Hub
     // Session/billing logic (SPEC section 5) and ClientCommand delivery are never exposed as hub
     // RPCs: the hub is reachable by every PC terminal on the LAN, and a hub method has no notion of
     // "admin vs. terminal" caller. The admin panel calls SessionService directly in-process (see
-    // MainWindow/StartSessionWindow/ExtendSessionWindow/MoveSessionWindow/PostpayPaymentWindow) -
+    // MainWindow/StartSessionWindow/MoveSessionWindow/PostpayPaymentWindow) -
     // never through this hub - precisely so a terminal client can never invoke "start a free
     // session", "extend my own session for free", or "unlock this PC" by calling a hub method
     // itself. Earlier phases exposed these as hub RPCs for ClubControl.TestClient to drive by hand;

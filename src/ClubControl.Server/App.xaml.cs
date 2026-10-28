@@ -41,6 +41,9 @@ public partial class App : Application
             new RoutedEventHandler((sender, _) =>
                 ((Window)sender).SetResourceReference(FrameworkElement.StyleProperty, typeof(Window))));
 
+        // Same idea for the title bar Windows draws: dark in the dark theme (see TitleBar).
+        TitleBar.InstallForAllWindows();
+
         // Without this, an unhandled exception on any thread just silently kills the process -
         // no dialog, nothing in the event log the admin can see. Show what happened instead.
         AppDomain.CurrentDomain.UnhandledException += (_, args) => ShowFatalError(args.ExceptionObject as Exception);

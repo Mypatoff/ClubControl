@@ -77,15 +77,6 @@ public static class BillingCalculator
         pricePerHourUzs > 0 && minPaymentUzs >= 0 && maxPaymentUzs > 0 && minPaymentUzs <= maxPaymentUzs;
 
     /// <summary>
-    /// An extend (Доплата) must itself add a positive amount of both money and time: a top-up too
-    /// small to buy even one extra minute at the current price must be rejected rather than
-    /// silently charging money for zero added time, and a non-positive minute count must never be
-    /// allowed to shrink the session's planned end time.
-    /// </summary>
-    public static bool IsValidExtendIncrement(int addMoneyUzs, int addMinutes) =>
-        addMoneyUzs > 0 && addMinutes > 0;
-
-    /// <summary>
     /// Postpay cost for elapsed time so far: per-started-minute charge, never below the tariff minimum.
     /// Does not cap at the maximum - call <see cref="HasReachedLimit"/> to decide that separately.
     /// </summary>
