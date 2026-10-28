@@ -538,6 +538,12 @@
   <data name="UpdateCardWaiting" xml:space="preserve">
     <value>⏳ Waiting</value>
   </data>
+  <data name="AuthRejectedCard" xml:space="preserve">
+    <value>🔒 Auth failed</value>
+  </data>
+  <data name="AuthRejectedTooltip" xml:space="preserve">
+    <value>The client on this PC is running, but the server rejects its secret token (the token file on the PC was lost or damaged). Fix: in Settings clear this PC's number and Save, then enter the number again and Save.</value>
+  </data>
   <data name="ClientMissingCard" xml:space="preserve">
     <value>⚠ No client</value>
   </data>

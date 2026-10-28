@@ -178,8 +178,9 @@ public partial class MainWindow : Window
         var selectedIds = PcList.SelectedItems.Cast<PcRow>().Select(p => p.Id).ToHashSet();
         var updates = scope.ServiceProvider.GetRequiredService<ClientUpdateTracker>();
         var clientMissing = scope.ServiceProvider.GetRequiredService<ClientMissingTracker>();
+        var rejections = scope.ServiceProvider.GetRequiredService<AuthRejectionTracker>();
         var rows = pcs.Select(pc => BuildRow(pc, tariffNames, snapshots.GetValueOrDefault(pc.Id), updates.Get(pc.MachineGuid, DateTime.UtcNow),
-            clientMissing.IsMissing(pc.MachineGuid))).ToList();
+            clientMissing.IsMissing(pc.MachineGuid), rejections.IsRejected(pc.MachineGuid, DateTime.UtcNow))).ToList();
 
         // Replacing ItemsSource rebuilds every card and resets the scroll position, so remember it.
         var scrollOffset = FindDescendant<ScrollViewer>(PcList)?.VerticalOffset ?? 0;
@@ -236,7 +237,7 @@ public partial class MainWindow : Window
         StatOtherText.Text = $"{others.Count(r => r.HasActiveSession)}/{others.Count} {Strings.Get("KindOtherPlural")}";
     }
 
-    private static PcRow BuildRow(Pc pc, Dictionary<int, string> tariffNames, SessionService.ActiveSessionSnapshot? snap, ClientUpdateInfo? update, bool clientMissing)
+    private static PcRow BuildRow(Pc pc, Dictionary<int, string> tariffNames, SessionService.ActiveSessionSnapshot? snap, ClientUpdateInfo? update, bool clientMissing, bool authRejected)
     {
         var amount = "";
         var start = "";
@@ -288,6 +289,7 @@ public partial class MainWindow : Window
             ExtrasUzs = snap?.ExtrasUzs ?? 0,
             Update = update,
             ClientMissing = clientMissing,
+            AuthRejected = authRejected,
             ClientVersion = pc.IsOnline ? ClubHub.GetClientVersion(pc.MachineGuid) : ""
         };
     }

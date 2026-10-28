@@ -538,6 +538,12 @@
   <data name="UpdateCardWaiting" xml:space="preserve">
     <value>⏳ В очереди</value>
   </data>
+  <data name="AuthRejectedCard" xml:space="preserve">
+    <value>🔒 Нет доступа</value>
+  </data>
+  <data name="AuthRejectedTooltip" xml:space="preserve">
+    <value>Клиент на этом компьютере запущен, но сервер отклоняет его секретный токен (файл токена на ПК потерян или повреждён). Что делать: в Настройках очистите номер этого ПК и сохраните, затем введите номер снова и сохраните.</value>
+  </data>
   <data name="ClientMissingCard" xml:space="preserve">
     <value>⚠ Нет клиента</value>
   </data>

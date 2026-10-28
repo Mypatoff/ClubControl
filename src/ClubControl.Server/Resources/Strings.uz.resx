@@ -538,6 +538,12 @@
   <data name="UpdateCardWaiting" xml:space="preserve">
     <value>⏳ Navbatda</value>
   </data>
+  <data name="AuthRejectedCard" xml:space="preserve">
+    <value>🔒 Ruxsat yo'q</value>
+  </data>
+  <data name="AuthRejectedTooltip" xml:space="preserve">
+    <value>Bu kompyuterdagi klient ishlayapti, lekin server uning maxfiy tokenini rad etmoqda (kompyuterdagi token fayli yo'qolgan yoki shikastlangan). Tuzatish: Sozlamalarda bu kompyuter raqamini o'chirib Saqlang, so'ng raqamni qayta kiritib Saqlang.</value>
+  </data>
   <data name="ClientMissingCard" xml:space="preserve">
     <value>⚠ Klient yo'q</value>
   </data>

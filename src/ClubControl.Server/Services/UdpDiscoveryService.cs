@@ -27,6 +27,7 @@ public class UdpDiscoveryService : BackgroundService
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         using var udpClient = new UdpClient(NetworkConstants.DiscoveryPort);
+        UdpSockets.IgnoreUnreachableReplies(udpClient);
         stoppingToken.Register(() => udpClient.Close());
 
         while (!stoppingToken.IsCancellationRequested)
@@ -43,6 +44,13 @@ public class UdpDiscoveryService : BackgroundService
             catch (ObjectDisposedException)
             {
                 break;
+            }
+            catch (SocketException) when (!stoppingToken.IsCancellationRequested)
+            {
+                // Anything the socket reports must never end discovery: without it a PC that restarts
+                // could not find the server again, and nothing on the server would show why.
+                await Task.Delay(TimeSpan.FromMilliseconds(200), stoppingToken);
+                continue;
             }
 
             var text = Encoding.UTF8.GetString(result.Buffer);

@@ -19,6 +19,26 @@ public static class ClientLog
 
     public static void Error(string context, Exception ex) => Append(context, ex.ToString());
 
+    private static readonly System.Collections.Generic.Dictionary<string, DateTime> LastLogged = new();
+
+    /// <summary>
+    /// Like <see cref="Error"/>, but the same error is written at most once a minute: one that repeats on
+    /// every timer tick would otherwise fill the file (and the disk) on a PC nobody looks at.
+    /// </summary>
+    public static void ErrorThrottled(string context, Exception ex)
+    {
+        var key = context + ex.GetType().Name + ex.Message;
+        lock (WriteLock)
+        {
+            if (LastLogged.TryGetValue(key, out var last) && DateTime.UtcNow - last < TimeSpan.FromMinutes(1))
+                return;
+
+            LastLogged[key] = DateTime.UtcNow;
+        }
+
+        Error(context, ex);
+    }
+
     public static void Info(string context, string message) => Append(context, message);
 
     private static void Append(string context, string text)

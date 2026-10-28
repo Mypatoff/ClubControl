@@ -22,22 +22,33 @@ public partial class App : Application
             var ex = args.ExceptionObject as Exception;
             if (ex is not null)
                 ClientLog.Error("AppDomain.UnhandledException", ex);
+
+            // No dialog on a gaming PC: the process is ending anyway, and an open message box would keep it
+            // (and its single-instance mutex) alive, so the scheduled task could not start a fresh client.
+#if DEBUG
             ShowFatalError(ex);
+#endif
         };
         DispatcherUnhandledException += (_, args) =>
         {
             // Keep running after an unexpected UI-thread error instead of exiting - this runs
             // unattended on a kiosk PC, so staying alive (even degraded) beats dropping the lock
-            // screen and keyboard block with nobody there to notice or restart it.
-            ClientLog.Error("DispatcherUnhandledException", args.Exception);
+            // screen and keyboard block with nobody there to notice or restart it. Only written
+            // down: a dialog would show the customer a stack trace, and an error that repeats every
+            // second would pile up one dialog after another.
+            ClientLog.ErrorThrottled("DispatcherUnhandledException", args.Exception);
+#if DEBUG
             ShowFatalError(args.Exception);
+#endif
             args.Handled = true;
         };
     }
 
+#if DEBUG
     private static void ShowFatalError(Exception? ex) =>
         MessageBox.Show(ex?.ToString() ?? "Unknown error.", "ClubControl Client - unexpected error",
             MessageBoxButton.OK, MessageBoxImage.Error);
+#endif
 
     protected override void OnStartup(StartupEventArgs e)
     {

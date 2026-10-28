@@ -25,12 +25,14 @@ public class ClubHub : Hub
     private readonly ClubDbContext _db;
     private readonly SessionService _sessionService;
     private readonly ClientUpdateTracker _updates;
+    private readonly AuthRejectionTracker _rejections;
 
-    public ClubHub(ClubDbContext db, SessionService sessionService, ClientUpdateTracker updates)
+    public ClubHub(ClubDbContext db, SessionService sessionService, ClientUpdateTracker updates, AuthRejectionTracker rejections)
     {
         _db = db;
         _sessionService = sessionService;
         _updates = updates;
+        _rejections = rejections;
     }
 
     public async Task Heartbeat(HeartbeatRequest request)
@@ -47,13 +49,18 @@ public class ClubHub : Hub
         // trust-on-first-use bootstrap (see PcTokenHasher.IsHeartbeatAuthorized).
         if (pc is not null && !PcTokenHasher.IsHeartbeatAuthorized(pc.AuthTokenHash, request.AuthToken))
         {
-            _db.EventLogEntries.Add(new EventLogEntry
+            // The same PC is rejected again every 5 seconds: the log gets a line now and then, the PC card says so meanwhile.
+            if (_rejections.Record(request.MachineGuid, DateTime.UtcNow))
             {
-                Type = EventType.AuthRejected,
-                PcId = pc.Id,
-                Message = $"Rejected heartbeat for PC #{pc.Number?.ToString() ?? "?"}: missing or wrong auth token (claimed from {request.IpAddress})",
-            });
-            await _db.SaveChangesAsync();
+                _db.EventLogEntries.Add(new EventLogEntry
+                {
+                    Type = EventType.AuthRejected,
+                    PcId = pc.Id,
+                    Message = $"Rejected heartbeat for PC #{pc.Number?.ToString() ?? "?"}: missing or wrong auth token (claimed from {request.IpAddress})",
+                });
+                await _db.SaveChangesAsync();
+            }
+
             return;
         }
 

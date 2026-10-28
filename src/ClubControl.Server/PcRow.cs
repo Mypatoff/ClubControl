@@ -45,6 +45,11 @@ public class PcRow
     /// <summary>Progress / result of the last "Update client" on this PC; null when there is nothing to show.</summary>
     public ClientUpdateInfo? Update { get; init; }
 
+    /// <summary>The client on this PC keeps connecting but the server rejects its token (see <see cref="Services.AuthRejectionTracker"/>).</summary>
+    public bool AuthRejected { get; init; }
+
+    public bool IsAuthRejected => IsOffline && AuthRejected;
+
     /// <summary>The server found this PC switched on although its client is not connected (see <see cref="Services.ClientMissingTracker"/>).</summary>
     public bool ClientMissing { get; init; }
 
@@ -53,6 +58,7 @@ public class PcRow
 
     /// <summary>The state text on the card: the update progress or result while there is one, then "No client", otherwise the normal state.</summary>
     public string CardStateDisplay => Update is not null ? UpdateDisplay
+        : IsAuthRejected ? Strings.Get("AuthRejectedCard")
         : IsClientMissing ? Strings.Get("ClientMissingCard")
         : StateDisplay;
 
@@ -103,6 +109,7 @@ public class PcRow
     {
         IsOther && Name != "" ? Name : "",
         Update is null ? "" : UpdateDisplay + (Update.Status == ClientUpdateStatus.Updated ? $" (v{Update.VersionBefore} → v{Update.VersionNow})" : ""),
+        IsAuthRejected ? Strings.Get("AuthRejectedTooltip") : "",
         IsClientMissing ? Strings.Get("ClientMissingTooltip") : "",
         StateDisplay, // the card is narrow, so a long state name ("Лимит достигнут") can be cut off there
         TariffDisplay,
@@ -117,7 +124,7 @@ public class PcRow
     public bool IsRepair => State == PcState.ManualUnlocked;
 
     /// <summary>Card accent colour (SPEC 7): pink = PC on but client missing, red = offline (overrides everything else for networked PCs; manual resources are never "offline"), green = session running, blue = free, purple = repair.</summary>
-    public Brush AccentBrush => IsClientMissing
+    public Brush AccentBrush => IsClientMissing || IsAuthRejected
         ? Resource("StateNoClientBrush")
         : IsOffline
         ? Resource("StateOfflineBrush")

@@ -61,13 +61,14 @@ public class ClientMissingMonitorService : BackgroundService
         using var scope = _scopeFactory.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ClubDbContext>();
         var updates = scope.ServiceProvider.GetRequiredService<ClientUpdateTracker>();
+        var rejections = scope.ServiceProvider.GetRequiredService<AuthRejectionTracker>();
 
         var now = DateTime.UtcNow;
         var pcs = await db.Pcs
             .Where(p => !p.IsManual && p.Kind == ResourceKind.Computer && p.Enabled && p.Number != null)
             .ToListAsync();
 
-        var due = pcs.Where(pc => ShouldCheck(pc, updates, now)).ToList();
+        var due = pcs.Where(pc => ShouldCheck(pc, updates, rejections, now)).ToList();
         if (due.Count > 0)
         {
             var answers = await Task.WhenAll(due.Select(pc => PcPowerProbe.IsPoweredOnAsync(pc.IpAddress, pc.MacAddress)));
@@ -90,9 +91,10 @@ public class ClientMissingMonitorService : BackgroundService
             await db.SaveChangesAsync();
     }
 
-    private bool ShouldCheck(Pc pc, ClientUpdateTracker updates, DateTime now)
+    private bool ShouldCheck(Pc pc, ClientUpdateTracker updates, AuthRejectionTracker rejections, DateTime now)
     {
-        if (pc.IsOnline)
+        // A rejected client is running, it just is not let in: "client missing" would be the wrong diagnosis.
+        if (pc.IsOnline || rejections.IsRejected(pc.MachineGuid, now))
         {
             _tracker.Forget(pc.MachineGuid);
             return false;

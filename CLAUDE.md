@@ -174,3 +174,12 @@ C# .NET 8. WPF for Server (admin panel + hosted ASP.NET Core/SignalR) and Client
       in front when the entry has a `PcId` and the message does not already name it (so "Postpay session started"
       becomes "PC #5: Postpay session started"; old entries too, nothing stored changes). Not unit-tested (private
       WPF window code); checked by building only.
+- [x] Post-phase-6 fixes (robustness, from a code audit): (1) `UdpDiscoveryService` no longer dies when a client closes its
+      socket before the reply arrives (Windows reports that on the server's NEXT receive; `UdpSockets.IgnoreUnreachableReplies`
+      + a catch for `SocketException`; reproduced in `UdpSocketsTests`). (2) A client with a bad/lost token is no longer
+      written to the event log every 5 s: `AuthRejectionTracker` logs it once per 10 min per PC and the card shows
+      "Auth failed" (pink; the "No client" check skips such a PC). (3) The client shows no error dialogs any more (log
+      only, `ClientLog.ErrorThrottled`; Debug builds still show them). (4) The event log is emptied at every admin log-on
+      (`App.OnStartup`, before the host starts; sessions/reports untouched). Known and accepted by the owner: server
+      serves clients only after the admin password is typed, static IP is set at install (clients never re-discover),
+      second monitor plugged in while locked, backups on the same disk.

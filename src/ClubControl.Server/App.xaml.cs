@@ -209,6 +209,7 @@ public partial class App : Application
         builder.Services.AddScoped<SessionService>();
         builder.Services.AddSingleton<ClientUpdateTracker>();
         builder.Services.AddSingleton<ClientMissingTracker>();
+        builder.Services.AddSingleton<AuthRejectionTracker>();
         builder.Services.AddScoped<PowerService>();
         builder.Services.AddScoped<ReportsService>();
         builder.Services.AddHostedService<OfflineMonitorService>();
@@ -294,6 +295,11 @@ public partial class App : Application
             Shutdown();
             return;
         }
+
+        // The event log starts empty at every admin log-on (billing records are not in it: sessions and
+        // reports are untouched). Done before the host starts, so no client event is lost by it.
+        using (var scope = _host.Services.CreateScope())
+            await scope.ServiceProvider.GetRequiredService<ClubDbContext>().EventLogEntries.ExecuteDeleteAsync();
 
         await _host.StartAsync();
 
