@@ -7,6 +7,7 @@ using System.Net.Http;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+using ClubControl.Server.Data;
 using ClubControl.Shared;
 
 namespace ClubControl.Server.Services;
@@ -124,8 +125,13 @@ public class ServerUpdater
         var backupDir = Path.Combine(tempDir, "ClubControl.Server.Backup");
         var scriptPath = Path.Combine(tempDir, "ClubControl.Server.Update.ps1");
 
+        // The script also keeps a copy of club.db and puts it back if the new build never reports healthy: that
+        // build may already have upgraded the database, and the old build cannot run on a newer one.
+        var databaseCopy = Path.Combine(tempDir, "ClubControl.Server.club-before-update.db");
+
         File.WriteAllText(scriptPath, ClientUpdateScript.Build(
-            Environment.ProcessId, staged.SourceDir, staged.ExtractDir, staged.InstallDir, exeName, backupDir, ServerUpdateRelease.HealthMarkerPath));
+            Environment.ProcessId, staged.SourceDir, staged.ExtractDir, staged.InstallDir, exeName, backupDir, ServerUpdateRelease.HealthMarkerPath,
+            databasePath: DbPaths.DatabasePath, databaseCopyPath: databaseCopy));
 
         Process.Start(new ProcessStartInfo("powershell.exe", $"-WindowStyle Hidden -ExecutionPolicy Bypass -File \"{scriptPath}\"")
         {

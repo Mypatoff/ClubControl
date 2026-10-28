@@ -108,6 +108,46 @@ public class ClientUpdateScriptTests : IDisposable
     }
 
     [Fact]
+    public void Build_StopsBeforeTouchingTheInstallFolderIfTheBackupFails()
+    {
+        // A rollback from a half-made backup (robocopy /MIR) would delete files, so a failed backup must end the script first.
+        var script = BuildScript();
+
+        var backup = script.IndexOf("robocopy 'C:\\Club\\Client' 'C:\\Temp\\backup' /E", StringComparison.Ordinal);
+        var abort = script.IndexOf("exit 4", StringComparison.Ordinal);
+        var copy = script.IndexOf("robocopy 'C:\\Temp\\src' 'C:\\Club\\Client'", StringComparison.Ordinal);
+
+        Assert.True(backup >= 0 && abort > backup && copy > abort, "the backup result must be checked before the new build is copied over the install folder");
+        Assert.Contains("if ($LASTEXITCODE -ge 8) { Remove-Item -Recurse -Force 'C:\\Temp\\backup'", script);
+    }
+
+    [Fact]
+    public void Build_WithoutADatabase_HasNoDatabaseSteps()
+    {
+        Assert.DoesNotContain("club.db", BuildScript());
+    }
+
+    [Fact]
+    public void Build_WithADatabase_CopiesItBeforeTheSwapAndPutsItBackOnRollback()
+    {
+        var script = ClientUpdateScript.Build(1234, @"C:\Temp\src", @"C:\Temp\extract", @"C:\Club\Server", "App.exe",
+            @"C:\Temp\backup", @"C:\Data\healthy.flag", 60, 90, @"C:\Data\club.db", @"C:\Temp\club-copy.db");
+
+        var copyAside = script.IndexOf("Copy-Item 'C:\\Data\\club.db' 'C:\\Temp\\club-copy.db'", StringComparison.Ordinal);
+        var swap = script.IndexOf("robocopy 'C:\\Temp\\src' 'C:\\Club\\Server'", StringComparison.Ordinal);
+        var restoreFunction = script.IndexOf("function Restore-OldBuild", StringComparison.Ordinal);
+        var putBack = script.IndexOf("Copy-Item 'C:\\Temp\\club-copy.db' 'C:\\Data\\club.db'", StringComparison.Ordinal);
+        var startOld = script.IndexOf("Start-Process", restoreFunction, StringComparison.Ordinal);
+
+        Assert.True(copyAside >= 0 && copyAside < swap, "the database must be copied before the new build is started");
+        Assert.True(putBack > restoreFunction && putBack < startOld, "the copy must be put back before the old build starts again");
+
+        // The files SQLite keeps beside the database travel with it, and a leftover one from the failed build is removed.
+        Assert.Contains("Copy-Item 'C:\\Data\\club.db-wal' 'C:\\Temp\\club-copy.db-wal'", script);
+        Assert.Contains("else { Remove-Item 'C:\\Data\\club.db-wal' -Force -ErrorAction SilentlyContinue }", script);
+    }
+
+    [Fact]
     public void Build_QuotesPathsSoAnApostropheCannotBreakOutOfTheString()
     {
         var script = BuildScript(installDir: @"C:\Bob's Club\Client");
