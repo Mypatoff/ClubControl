@@ -4,9 +4,11 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using ClubControl.Server.Data;
 using ClubControl.Server.Resources;
 using ClubControl.Server.Services;
 using ClubControl.Shared;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace ClubControl.Server.Windows;
@@ -63,6 +65,7 @@ public partial class StartSessionWindow : Window
         using var scope = _services.CreateScope();
         var sessionService = scope.ServiceProvider.GetRequiredService<SessionService>();
         var failures = new List<string>();
+        var started = new List<Guid>();
 
         foreach (var target in _targets)
         {
@@ -72,11 +75,26 @@ public partial class StartSessionWindow : Window
                     await sessionService.StartPrepayByMoneyAsync(target.MachineGuid, ParseInt(MoneyBox.Text), NoteBox.Text);
                 else
                     await sessionService.StartPostpayAsync(target.MachineGuid, NoteBox.Text);
+
+                started.Add(target.MachineGuid);
             }
             catch (Exception ex)
             {
                 failures.Add($"#{target.Number}: {ex.Message}");
             }
+        }
+
+        // A PC that is switched off is woken up now, so the admin does not have to press "Turn on" too.
+        try
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ClubDbContext>();
+            var startedPcs = await db.Pcs.Where(p => started.Contains(p.MachineGuid)).ToListAsync();
+            await scope.ServiceProvider.GetRequiredService<PowerService>().WakeForSessionAsync(startedPcs);
+        }
+        catch (Exception ex)
+        {
+            // The sessions are already running; only say that the wake-up did not go out.
+            failures.Add($"Wake-on-LAN: {ex.Message}");
         }
 
         if (failures.Count > 0)

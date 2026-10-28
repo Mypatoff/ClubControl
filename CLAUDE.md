@@ -165,3 +165,8 @@ C# .NET 8. WPF for Server (admin panel + hosted ASP.NET Core/SignalR) and Client
       after a server start. Server-only, works with the clients already installed. The ARP call was run against
       this dev PC's gateway; it is not yet seen on the club's real network (check with a PC whose client folder
       is renamed, and with a normal shutdown - that must stay red).
+- [x] Post-phase-6 change: starting a session on a switched-off PC now sends Wake-on-LAN by itself
+      (`StartSessionWindow.OnOk` -> `PowerService.WakeForSessionAsync`, rule in `PowerService.NeedsWakeUp`: networked
+      computer, not connected, MAC known). One event-log line per start. The session is billed from the moment
+      it is started, also while the PC boots (unchanged behaviour). Needs Wake-on-LAN enabled in the PC's BIOS/NIC;
+      not yet tried on a real switched-off club PC (the existing "Turn on" button uses the same packet).

@@ -48,6 +48,30 @@ public class PowerService
         return sent;
     }
 
+    /// <summary>
+    /// A networked computer that is not connected right now and can be woken: it has reported its MAC
+    /// address at least once. (A PC that is on but has lost its client also matches; the packet is harmless to it.)
+    /// </summary>
+    public static bool NeedsWakeUp(Pc pc) =>
+        !pc.IsManual && pc.Kind == ResourceKind.Computer && !pc.IsOnline && !string.IsNullOrWhiteSpace(pc.MacAddress);
+
+    /// <summary>
+    /// Called after sessions were started: sends Wake-on-LAN to those PCs that are switched off, so the
+    /// admin does not have to press "Turn on" as well. The client then connects and gets its session from
+    /// the server like after any restart (SPEC 5). Returns how many PCs were woken.
+    /// </summary>
+    public async Task<int> WakeForSessionAsync(IEnumerable<Pc> pcs)
+    {
+        var woken = pcs.Where(NeedsWakeUp).ToList();
+        foreach (var pc in woken)
+            await SendMagicPacketAsync(pc.MacAddress);
+
+        if (woken.Count > 0)
+            await LogEventAsync($"Session started on switched-off PC {string.Join(", ", woken.Select(p => "#" + p.Number))}: Wake-on-LAN sent");
+
+        return woken.Count;
+    }
+
     public Task<int> ShutdownAsync(IEnumerable<Pc> pcs) =>
         SendCommandToOnlineAsync(pcs, _ => new ClientCommand { Type = CommandType.Shutdown }, "Shutdown");
 
