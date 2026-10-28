@@ -99,6 +99,12 @@ C# .NET 8. WPF for Server (admin panel + hosted ASP.NET Core/SignalR) and Client
       `EventType.SessionExtended` rows still display); window title bars follow the theme (`TitleBar`, DWM dark
       mode + Windows 11 caption colour, applied to every window on Loaded); the event log can be resized or hidden
       with a `GridSplitter` (height kept in `log-panel-height.txt`); the left toolbar wraps on narrow windows.
+- [x] Post-phase-6 fix (robustness): the server no longer shuts down on an unexpected UI-thread error once it is up
+      (`App` handlers: `ServerLog` to `server-log.txt`, same error at most once a minute, tray balloon at most every
+      10 min; errors before `_startedUp` or on other threads still end it) and checks `club.db` at startup
+      (`DatabaseHealth`: integrity check, restore the newest good backup only with the admin's OK, damaged file kept as
+      `club_damaged_*.db`). The check opens the file normally, not read-only, so SQLite can finish a write that a power cut
+      interrupted (the live DB runs in WAL mode). Checked against copies of the real club.db and newest backup.
 - [x] Post-phase-6 change: the client update zip now lives next to the server program
       (`<server folder>\ClientUpdate\ClubControl.Client.zip`, `ClientUpdateFile.ServerFolderPath`), because that
       folder is writable by the server's Windows user (a file in ProgramData created by an elevated process may not

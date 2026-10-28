@@ -44,20 +44,129 @@ public partial class App : Application
         // Same idea for the title bar Windows draws: dark in the dark theme (see TitleBar).
         TitleBar.InstallForAllWindows();
 
-        // Without this, an unhandled exception on any thread just silently kills the process -
-        // no dialog, nothing in the event log the admin can see. Show what happened instead.
-        AppDomain.CurrentDomain.UnhandledException += (_, args) => ShowFatalError(args.ExceptionObject as Exception);
+        // An error on a background thread cannot be recovered from by .NET: write it down, say so, and the
+        // process ends. Without this it would just vanish with nothing for the admin to see.
+        AppDomain.CurrentDomain.UnhandledException += (_, args) =>
+        {
+            ServerLog.Error("AppDomain.UnhandledException", args.ExceptionObject as Exception ?? new Exception("Unknown error"));
+            ShowFatalError(args.ExceptionObject as Exception);
+        };
+
+        // A forgotten background task that failed: nothing waits for it, so it is only written down.
+        TaskScheduler.UnobservedTaskException += (_, args) =>
+        {
+            ServerLog.Error("UnobservedTaskException", args.Exception);
+            args.SetObserved();
+        };
+
+        // An error in the admin window (a screen refresh, a button) must not take the whole server down:
+        // the gaming PCs depend on it. Once the server is up it is written to server-log.txt and the
+        // admin gets a short notice; before that (a broken start) it still stops with a message.
         DispatcherUnhandledException += (_, args) =>
         {
-            ShowFatalError(args.Exception);
             args.Handled = true;
-            Shutdown();
+            LogUnexpectedError(args.Exception);
+
+            if (!_startedUp)
+            {
+                ShowFatalError(args.Exception);
+                Shutdown();
+                return;
+            }
+
+            NotifyUnexpectedError();
         };
+    }
+
+    private bool _startedUp;
+    private readonly System.Collections.Generic.Dictionary<string, DateTime> _lastLogged = new();
+    private DateTime _lastNotice = DateTime.MinValue;
+
+    /// <summary>The same error repeating every second (a failing screen refresh) is written once a minute, not 60 times.</summary>
+    private void LogUnexpectedError(Exception ex)
+    {
+        var key = ex.GetType().Name + ": " + ex.Message;
+        var now = DateTime.UtcNow;
+        if (_lastLogged.TryGetValue(key, out var last) && now - last < TimeSpan.FromMinutes(1))
+            return;
+
+        _lastLogged[key] = now;
+        ServerLog.Error("DispatcherUnhandledException", ex);
+    }
+
+    /// <summary>A balloon from the tray icon (no window to click away), at most once every 10 minutes.</summary>
+    private void NotifyUnexpectedError()
+    {
+        if (_trayIcon is null || DateTime.UtcNow - _lastNotice < TimeSpan.FromMinutes(10))
+            return;
+
+        _lastNotice = DateTime.UtcNow;
+        _trayIcon.ShowBalloonTip(10_000, "ClubControl",
+            "An unexpected error was written to server-log.txt (in ProgramData\\ClubControl). The server keeps running.",
+            System.Windows.Forms.ToolTipIcon.Warning);
     }
 
     private static void ShowFatalError(Exception? ex) =>
         MessageBox.Show(ex?.ToString() ?? "Unknown error.", "ClubControl - unexpected error",
             MessageBoxButton.OK, MessageBoxImage.Error);
+
+    /// <summary>
+    /// Looks at club.db before anything opens it. A damaged file is never used or deleted: with the admin's
+    /// OK it is moved aside and the newest good backup takes its place. Returns false when the server must not start.
+    /// </summary>
+    private static bool EnsureHealthyDatabase()
+    {
+        string? problem;
+        try
+        {
+            problem = DatabaseHealth.Check(DbPaths.DatabasePath);
+        }
+        catch (Exception ex)
+        {
+            // Could not even look (locked, no access): not proof of damage. Carry on; the normal start reports a real problem.
+            ServerLog.Error("DatabaseHealth.Check", ex);
+            return true;
+        }
+
+        if (problem is null)
+            return true;
+
+        ServerLog.Info("DatabaseHealth", $"club.db is damaged: {problem}");
+
+        var backup = DatabaseHealth.FindNewestGoodBackup(DbPaths.BackupDirectory);
+        if (backup is null)
+        {
+            MessageBox.Show(
+                "The database file (club.db) is damaged and there is no good backup to use.\n" +
+                "Copy C:\\ProgramData\\ClubControl somewhere safe and ask for help. Nothing was changed.\n\n" +
+                "Файл базы данных (club.db) повреждён, а исправной резервной копии нет.\n" +
+                "Скопируйте C:\\ProgramData\\ClubControl в надёжное место. Ничего не изменено.\n\n" +
+                "Maʼlumotlar bazasi fayli (club.db) shikastlangan va yaroqli zaxira nusxa yoʻq.\n" +
+                "C:\\ProgramData\\ClubControl papkasini xavfsiz joyga nusxalang. Hech narsa oʻzgartirilmadi.",
+                "ClubControl", MessageBoxButton.OK, MessageBoxImage.Error);
+            return false;
+        }
+
+        var backupDate = File.GetLastWriteTime(backup).ToString("dd.MM.yyyy HH:mm");
+        var answer = MessageBox.Show(
+            $"The database file (club.db) is damaged.\nRestore the newest good backup ({backupDate})? Changes made after it are lost. " +
+            "The damaged file is kept, not deleted.\n\n" +
+            $"Файл базы данных (club.db) повреждён.\nВосстановить последнюю исправную копию ({backupDate})? Изменения после неё будут потеряны. " +
+            "Повреждённый файл сохранится, не удаляется.\n\n" +
+            $"Maʼlumotlar bazasi fayli (club.db) shikastlangan.\nEng yangi yaroqli nusxa ({backupDate}) tiklansinmi? Undan keyingi oʻzgarishlar yoʻqoladi. " +
+            "Shikastlangan fayl oʻchirilmaydi, saqlanadi.\n\nYes / Да / Ha = restore.   No / Нет / Yoʻq = exit.",
+            "ClubControl", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+        if (answer != MessageBoxResult.Yes)
+            return false;
+
+        var kept = DatabaseHealth.RestoreFromBackup(DbPaths.DatabasePath, backup);
+        ServerLog.Info("DatabaseHealth", $"Restored {backup}; the damaged file was kept as {kept}");
+        MessageBox.Show(
+            $"Restored from {Path.GetFileName(backup)}.\nThe damaged file was kept as:\n{kept}\n\n" +
+            $"Восстановлено из {Path.GetFileName(backup)}.\nПовреждённый файл сохранён как:\n{kept}",
+            "ClubControl", MessageBoxButton.OK, MessageBoxImage.Information);
+        return true;
+    }
 
     protected override async void OnStartup(StartupEventArgs e)
     {
@@ -115,6 +224,12 @@ public partial class App : Application
             File.Exists(ClientUpdateFile.FilePath)
                 ? Results.File(ClientUpdateFile.FilePath, "application/zip")
                 : Results.NotFound());
+
+        if (!EnsureHealthyDatabase())
+        {
+            Shutdown();
+            return;
+        }
 
         using (var scope = _host.Services.CreateScope())
         {
@@ -183,6 +298,9 @@ public partial class App : Application
         CreateTrayIcon();
         MainWindow = new MainWindow();
         MainWindow.Show();
+
+        // From here on an unexpected error is logged and the server keeps running (see the handlers in the constructor).
+        _startedUp = true;
     }
 
     /// <summary>Admin password prompt on open, first-run password creation, and the reset-password file (SPEC section 7).</summary>

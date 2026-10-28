@@ -233,6 +233,16 @@ auto-discovery:
 - **Daily backup**: check `%ProgramData%\ClubControl\Backups` - a `club_YYYY-MM-DD.db` file should
   appear within an hour of the server running on a new day. Older backups beyond the newest 30 are
   deleted automatically.
+- **Damaged database**: every time the server starts it checks `club.db` before using it. If the file is
+  damaged (a power cut, a failing disk, a virus), it says so and offers to restore the newest backup that
+  passes the same check (Yes) or to exit (No). The damaged file is never deleted: it is kept next to the
+  database as `club_damaged_<date>_<time>.db`. Anything entered after that backup is lost. If there is no
+  good backup it changes nothing and tells you to copy `C:\ProgramData\ClubControl` somewhere safe.
+- **Unexpected errors**: an error in the admin panel no longer closes the server (the gaming PCs depend on
+  it). It is written to `%ProgramData%\ClubControl\server-log.txt` (the same error at most once a minute;
+  the file is rotated at 2 MB) and the tray icon shows a short notice, at most once every 10 minutes. An
+  error while the server is still starting up, or on a background thread, still ends it, with a message.
+  If you see the notice often, send me `server-log.txt`.
 - **Languages**: Settings > General > "Admin panel language" (Russian/Uzbek) and "Lock-screen
   language" (Uzbek/Russian/English). The lock screen/timer on the client update immediately; the
   admin panel asks you to restart ClubControl to fully switch (already-open windows keep their

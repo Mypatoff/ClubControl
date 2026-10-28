@@ -117,6 +117,8 @@ One club, one admin laptop (server), up to ~30 gaming PCs (clients) on the same 
 ## 10. Reliability
 
 - Automatic daily backup of the database to `%ProgramData%\ClubControl\Backups`, keep last 30.
+- At startup `club.db` is checked (`PRAGMA integrity_check`) before it is used; if it is damaged the admin may restore the newest good backup, and the damaged file is kept (`club_damaged_*.db`), never deleted.
+- An unexpected error in the admin panel after startup is logged to `server-log.txt` and shown as a tray notice; it does not close the server.
 - All UI text in .resx resource files (ru, uz, en).
 
 ## 11. Out of scope for version 1
