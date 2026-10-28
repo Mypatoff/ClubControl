@@ -170,3 +170,7 @@ C# .NET 8. WPF for Server (admin panel + hosted ASP.NET Core/SignalR) and Client
       computer, not connected, MAC known). One event-log line per start. The session is billed from the moment
       it is started, also while the PC boots (unchanged behaviour). Needs Wake-on-LAN enabled in the PC's BIOS/NIC;
       not yet tried on a real switched-off club PC (the existing "Turn on" button uses the same packet).
+- [x] Post-phase-6 fix: event log lines now say which PC they are about. `MainWindow.FormatEvent` puts the PC label
+      in front when the entry has a `PcId` and the message does not already name it (so "Postpay session started"
+      becomes "PC #5: Postpay session started"; old entries too, nothing stored changes). Not unit-tested (private
+      WPF window code); checked by building only.

@@ -172,6 +172,7 @@ public partial class MainWindow : Window
         // session (e.g. disabled mid-session) - that must stay visible, since hiding it would also
         // hide the only place to free/stop it and collect payment.
         var pcs = await db.Pcs.AsNoTracking().OrderBy(p => p.Number).ToListAsync();
+        var pcById = pcs.ToDictionary(p => p.Id); // for the event log, which also mentions hidden (disabled) PCs
         pcs = pcs.Where(p => p.Enabled || snapshots.ContainsKey(p.Id)).ToList();
 
         var selectedIds = PcList.SelectedItems.Cast<PcRow>().Select(p => p.Id).ToHashSet();
@@ -195,7 +196,7 @@ public partial class MainWindow : Window
             .OrderByDescending(e => e.TimestampUtc)
             .Take(200)
             .ToListAsync();
-        EventLogList.ItemsSource = events.Select(FormatEvent).ToList();
+        EventLogList.ItemsSource = events.Select(e => FormatEvent(e, pcById)).ToList();
 
         StatusText.Text = Strings.Format("StatusListening", NetworkConstants.SignalRPort, NetworkConstants.DiscoveryPort,
             pcs.Count(p => p.IsOnline), pcs.Count);
@@ -291,8 +292,22 @@ public partial class MainWindow : Window
         };
     }
 
-    private static string FormatEvent(EventLogEntry e) =>
-        $"{e.TimestampUtc.ToLocalTime():HH:mm:ss} [{e.Type}] {e.Message}";
+    private static string FormatEvent(EventLogEntry e, Dictionary<int, Pc> pcById)
+    {
+        // Many messages ("Postpay session started") don't say where it happened, but the entry knows its PC.
+        // Done here rather than when writing the entry, so the old entries get it too.
+        var message = e.Message;
+        if (e.PcId is { } pcId && pcById.TryGetValue(pcId, out var pc) && !NamesPc(message, pc))
+            message = $"{Strings.ResourceLabel(pc.Kind, pc.Name, pc.Number)}: {message}";
+
+        return $"{e.TimestampUtc.ToLocalTime():HH:mm:ss} [{e.Type}] {message}";
+    }
+
+    /// <summary>Whether the message already says which PC it is about ("PC #5 reconnected", "Moved from PC #3 to PC #5").</summary>
+    private static bool NamesPc(string message, Pc pc) =>
+        pc.Kind == ResourceKind.Other && pc.Name != ""
+            ? message.Contains(pc.Name)
+            : pc.Number is { } number && message.Contains($"#{number}");
 
     // ---- right-click: select the row under the cursor unless it is already part of a multi-selection.
     // Right-clicking anywhere that isn't a row (empty space, the header) suppresses the context
