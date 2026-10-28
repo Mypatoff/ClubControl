@@ -183,3 +183,11 @@ C# .NET 8. WPF for Server (admin panel + hosted ASP.NET Core/SignalR) and Client
       (`App.OnStartup`, before the host starts; sessions/reports untouched). Known and accepted by the owner: server
       serves clients only after the admin password is typed, static IP is set at install (clients never re-discover),
       second monitor plugged in while locked, backups on the same disk.
+- [x] Post-phase-6 performance fix ("server gets slower and slower"): measured with 60k sessions + 150k events -
+      the event log query the panel runs every second took 270 ms (full table sort), the running-sessions queries
+      8-11 ms. New migration `AddQueryIndexes` (index on `EventLogEntries.TimestampUtc` and `Sessions.Status`) brings
+      them to 2 ms and 2-4 ms. The panel also no longer rebuilds every card each second: `PcRow` is
+      `INotifyPropertyChanged` and `CopyFrom` updates the card on screen in place (only changed cards redraw; the list
+      is rebuilt only when the set/order of cards or the language changes); the event log list is re-read only when a
+      newer event id exists; the snapshot and postpay tick load the tariffs once instead of once per session. The
+      in-place card update is covered by `PcRowTests` but was not click-tested in the real window.

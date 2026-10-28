@@ -379,6 +379,7 @@ public class SessionService
             .Where(s => s.Status == SessionStatus.Active && s.Type == SessionType.Postpay)
             .ToListAsync();
 
+        var tariffs = sessions.Count > 0 ? await LoadTariffsAsync() : new Dictionary<int, Tariff>();
         foreach (var session in sessions)
         {
             var pc = session.Pc;
@@ -389,8 +390,8 @@ public class SessionService
             if (openSegment is null)
                 continue;
 
-            var tariff = await TariffsHelper.GetAsync(_db, pc.TariffId.Value);
-            if (tariff is null || !BillingCalculator.IsValidTariff(tariff.PricePerHourUzs, tariff.MinPaymentUzs, tariff.MaxPaymentUzs))
+            var tariff = tariffs.GetValueOrDefault(pc.TariffId.Value);
+            if (tariff is null ||!BillingCalculator.IsValidTariff(tariff.PricePerHourUzs, tariff.MinPaymentUzs, tariff.MaxPaymentUzs))
                 continue; // misconfigured tariff: freeze this one session's cost rather than mis-bill it or crash the tick for every other PC
 
             var elapsedPerSegment = session.Segments
@@ -485,13 +486,14 @@ public class SessionService
             .Where(s => s.Status == SessionStatus.Active)
             .ToListAsync();
 
+        var tariffs = await LoadTariffsAsync();
         var result = new Dictionary<int, ActiveSessionSnapshot>();
         foreach (var session in sessions)
         {
             if (session.Pc is null)
                 continue;
 
-            result[session.PcId] = await BuildSnapshotAsync(session.Pc, session);
+            result[session.PcId] = await BuildSnapshotAsync(session.Pc, session, tariffs);
         }
 
         return result;
@@ -504,9 +506,9 @@ public class SessionService
         return session is null ? null : await BuildSnapshotAsync(pc, session);
     }
 
-    private async Task<ActiveSessionSnapshot> BuildSnapshotAsync(Pc pc, Session session)
+    private async Task<ActiveSessionSnapshot> BuildSnapshotAsync(Pc pc, Session session, Dictionary<int, Tariff>? tariffs = null)
     {
-        var info = await BuildSessionInfoAsync(pc, session);
+        var info = await BuildSessionInfoAsync(pc, session, tariffs);
         var amountOrCost = session.Type == SessionType.Prepay ? session.AmountUzs : info.CurrentCostUzs;
 
         int consumedUzs;
@@ -530,7 +532,9 @@ public class SessionService
         }
         else if (session.Type == SessionType.Postpay)
         {
-            var tariff = await GetTariffAsync(pc.TariffId!.Value);
+            var tariff = tariffs is null
+                ? await GetTariffAsync(pc.TariffId!.Value)
+                : RequireValidTariff(tariffs.GetValueOrDefault(pc.TariffId!.Value));
             capUzs = tariff.MaxPaymentUzs;
             consumedUzs = info.CurrentCostUzs;
         }
@@ -629,10 +633,13 @@ public class SessionService
         return pc;
     }
 
-    private async Task<Tariff> GetTariffAsync(int tariffId)
+    private async Task<Tariff> GetTariffAsync(int tariffId) =>
+        RequireValidTariff(await TariffsHelper.GetAsync(_db, tariffId));
+
+    private static Tariff RequireValidTariff(Tariff? tariff)
     {
-        var tariff = await TariffsHelper.GetAsync(_db, tariffId)
-            ?? throw new InvalidOperationException("That tariff no longer exists.");
+        if (tariff is null)
+            throw new InvalidOperationException("That tariff no longer exists.");
 
         if (!BillingCalculator.IsValidTariff(tariff.PricePerHourUzs, tariff.MinPaymentUzs, tariff.MaxPaymentUzs))
             throw new InvalidOperationException(
@@ -640,6 +647,10 @@ public class SessionService
 
         return tariff;
     }
+
+    /// <summary>All tariffs at once, for work that goes through many sessions (one query instead of one per session).</summary>
+    private async Task<Dictionary<int, Tariff>> LoadTariffsAsync() =>
+        (await _db.Tariffs.AsNoTracking().ToListAsync()).ToDictionary(t => t.Id);
 
     private Task<Session?> GetActiveSessionAsync(int pcId) =>
         _db.Sessions.Include(s => s.Segments).Include(s => s.Extras)
@@ -660,7 +671,7 @@ public class SessionService
         };
     }
 
-    private async Task<SessionInfo> BuildSessionInfoAsync(Pc pc, Session session)
+    private async Task<SessionInfo> BuildSessionInfoAsync(Pc pc, Session session, Dictionary<int, Tariff>? tariffs = null)
     {
         if (session.Type == SessionType.Prepay)
         {
@@ -677,7 +688,9 @@ public class SessionService
         if (session.Type == SessionType.Free)
             return new SessionInfo { Type = SessionType.Free, ElapsedSeconds = totalElapsed, CurrentCostUzs = 0, MaxPaymentUzs = 0 };
 
-        var tariff = await GetTariffAsync(pc.TariffId!.Value);
+        var tariff = tariffs is null
+            ? await GetTariffAsync(pc.TariffId!.Value)
+            : RequireValidTariff(tariffs.GetValueOrDefault(pc.TariffId!.Value));
         var cost = Math.Min(
             Math.Max(BillingCalculator.SumPostpaySegments(elapsedPerSegment), tariff.MinPaymentUzs),
             tariff.MaxPaymentUzs);

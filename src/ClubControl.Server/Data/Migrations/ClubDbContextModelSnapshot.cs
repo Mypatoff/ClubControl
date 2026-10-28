@@ -41,6 +41,8 @@ namespace ClubControl.Server.Data.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("TimestampUtc");
+
                     b.ToTable("EventLogEntries");
                 });
 
@@ -143,6 +145,8 @@ namespace ClubControl.Server.Data.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("PcId");
+
+                    b.HasIndex("Status");
 
                     b.ToTable("Sessions");
                 });

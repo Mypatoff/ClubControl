@@ -1,5 +1,7 @@
 using System;
+using System.ComponentModel;
 using System.Linq;
+using System.Reflection;
 using System.Windows;
 using System.Windows.Media;
 using ClubControl.Server.Resources;
@@ -10,48 +12,77 @@ namespace ClubControl.Server;
 
 // Looks the brushes up from the active theme (Themes/Theme.xaml or DarkTheme.xaml) rather than
 // hardcoding colours, so cards re-theme automatically on the next refresh tick after a theme
-// switch - PcRow instances are rebuilt fresh every second anyway (see MainWindow.RefreshAsync).
+// switch - the window is recreated for a theme switch (see App), so its rows start over.
 
 /// <summary>
-/// One row of the main table (SPEC section 7). Built fresh on every refresh tick from the
+/// One row of the main table (SPEC section 7). Built on every refresh tick from the
 /// database plus <see cref="Services.SessionService.ActiveSessionSnapshot"/> - never bound live to
-/// an EF entity, so the UI thread never touches a DbContext from another scope.
+/// an EF entity, so the UI thread never touches a DbContext from another scope. The card already on
+/// screen takes over the new values (<see cref="CopyFrom"/>) instead of being replaced by a new one,
+/// so a refresh does not rebuild all the cards every second.
 /// </summary>
-public class PcRow
+public class PcRow : INotifyPropertyChanged
 {
-    public required int Id { get; init; }
-    public required Guid MachineGuid { get; init; }
-    public required bool IsOnline { get; init; }
-    public required bool Enabled { get; init; }
-    public required bool IsManual { get; init; }
-    public required ResourceKind Kind { get; init; }
-    public required int? Number { get; init; }
-    public string Name { get; init; } = "";
-    public required int? TariffId { get; init; }
-    public required PcState State { get; init; }
+    public event PropertyChangedEventHandler? PropertyChanged;
 
-    public required string KindIcon { get; init; }
-    public required string TariffDisplay { get; init; }
-    public required string StateDisplay { get; init; }
-    public required string SessionTypeDisplay { get; init; }
-    public required string AmountDisplay { get; init; }
-    public required string StartDisplay { get; init; }
-    public required string EndDisplay { get; init; }
-    public required string RemainingDisplay { get; init; }
+    // Every plain property above and below (the ones with a setter); the computed ones follow from them.
+    private static readonly PropertyInfo[] StoredProperties = typeof(PcRow).GetProperties()
+        .Where(p => p.CanRead && p.CanWrite).ToArray();
+
+    /// <summary>
+    /// Takes over the values of a freshly built row for the same PC and, only if something really changed,
+    /// tells the card to redraw (all its bindings, including the computed ones such as the colour).
+    /// </summary>
+    public void CopyFrom(PcRow fresh)
+    {
+        var changed = false;
+        foreach (var property in StoredProperties)
+        {
+            var value = property.GetValue(fresh);
+            if (Equals(property.GetValue(this), value))
+                continue;
+
+            property.SetValue(this, value);
+            changed = true;
+        }
+
+        if (changed)
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(string.Empty));
+    }
+
+    public required int Id { get; set; }
+    public required Guid MachineGuid { get; set; }
+    public required bool IsOnline { get; set; }
+    public required bool Enabled { get; set; }
+    public required bool IsManual { get; set; }
+    public required ResourceKind Kind { get; set; }
+    public required int? Number { get; set; }
+    public string Name { get; set; } = "";
+    public required int? TariffId { get; set; }
+    public required PcState State { get; set; }
+
+    public required string KindIcon { get; set; }
+    public required string TariffDisplay { get; set; }
+    public required string StateDisplay { get; set; }
+    public required string SessionTypeDisplay { get; set; }
+    public required string AmountDisplay { get; set; }
+    public required string StartDisplay { get; set; }
+    public required string EndDisplay { get; set; }
+    public required string RemainingDisplay { get; set; }
 
     /// <summary>Client build this PC last reported ("1.0.0+f4545fa"); empty if unknown. Lets the admin see which PCs an "Update client" has reached.</summary>
-    public string ClientVersion { get; init; } = "";
+    public string ClientVersion { get; set; } = "";
 
     /// <summary>Progress / result of the last "Update client" on this PC; null when there is nothing to show.</summary>
-    public ClientUpdateInfo? Update { get; init; }
+    public ClientUpdateInfo? Update { get; set; }
 
     /// <summary>The client on this PC keeps connecting but the server rejects its token (see <see cref="Services.AuthRejectionTracker"/>).</summary>
-    public bool AuthRejected { get; init; }
+    public bool AuthRejected { get; set; }
 
     public bool IsAuthRejected => IsOffline && AuthRejected;
 
     /// <summary>The server found this PC switched on although its client is not connected (see <see cref="Services.ClientMissingTracker"/>).</summary>
-    public bool ClientMissing { get; init; }
+    public bool ClientMissing { get; set; }
 
     /// <summary>A networked PC that is on but whose client was deleted, uninstalled or closed: not the same as switched off.</summary>
     public bool IsClientMissing => IsOffline && ClientMissing;
@@ -73,10 +104,10 @@ public class PcRow
     };
 
     /// <summary>The optional note typed when the current session was started; empty if none.</summary>
-    public string Note { get; init; } = "";
+    public string Note { get; set; } = "";
 
     /// <summary>Total of the items (drinks, snacks) added to the current session; 0 if none.</summary>
-    public int ExtrasUzs { get; init; }
+    public int ExtrasUzs { get; set; }
 
     /// <summary>A manual resource (offline PC, other resource) never connects, so there is nothing to shut down/restart/wake.</summary>
     public bool SupportsPowerControl => !IsManual;

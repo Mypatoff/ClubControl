@@ -182,26 +182,61 @@ public partial class MainWindow : Window
         var rows = pcs.Select(pc => BuildRow(pc, tariffNames, snapshots.GetValueOrDefault(pc.Id), updates.Get(pc.MachineGuid, DateTime.UtcNow),
             clientMissing.IsMissing(pc.MachineGuid), rejections.IsRejected(pc.MachineGuid, DateTime.UtcNow))).ToList();
 
-        // Replacing ItemsSource rebuilds every card and resets the scroll position, so remember it.
-        var scrollOffset = FindDescendant<ScrollViewer>(PcList)?.VerticalOffset ?? 0;
-        PcList.ItemsSource = BuildCardView(rows);
-        foreach (var row in rows.Where(r => selectedIds.Contains(r.Id)))
-            PcList.SelectedItems.Add(row);
-        if (scrollOffset > 0)
-            _ = Dispatcher.BeginInvoke(() => FindDescendant<ScrollViewer>(PcList)?.ScrollToVerticalOffset(scrollOffset),
-                DispatcherPriority.Loaded);
+        // The same cards in the same order (the usual case, every second): the cards on screen just take the new
+        // values, and only those that changed redraw. Rebuilding all of them every second was most of this
+        // window's work. Only a different set of cards, a different order or another language rebuilds the list.
+        var culture = CultureInfo.CurrentUICulture.Name;
+        if (culture == _shownCulture && SameCards(_shownRows, rows))
+        {
+            for (var i = 0; i < rows.Count; i++)
+                _shownRows[i].CopyFrom(rows[i]);
+
+            rows = _shownRows;
+        }
+        else
+        {
+            // Replacing ItemsSource rebuilds every card and resets the scroll position, so remember it.
+            var scrollOffset = FindDescendant<ScrollViewer>(PcList)?.VerticalOffset ?? 0;
+            PcList.ItemsSource = BuildCardView(rows);
+            foreach (var row in rows.Where(r => selectedIds.Contains(r.Id)))
+                PcList.SelectedItems.Add(row);
+            if (scrollOffset > 0)
+                _ = Dispatcher.BeginInvoke(() => FindDescendant<ScrollViewer>(PcList)?.ScrollToVerticalOffset(scrollOffset),
+                    DispatcherPriority.Loaded);
+
+            _shownRows = rows;
+            _shownCulture = culture;
+        }
 
         UpdateCounters(rows);
 
-        var events = await db.EventLogEntries.AsNoTracking()
-            .OrderByDescending(e => e.TimestampUtc)
-            .Take(200)
-            .ToListAsync();
-        EventLogList.ItemsSource = events.Select(e => FormatEvent(e, pcById)).ToList();
+        // The newest id is a one-row read; the 200 lines are fetched and redrawn only when there is something new.
+        var newestEventId = await db.EventLogEntries.MaxAsync(e => (int?)e.Id) ?? 0;
+        if (newestEventId != _shownEventId || culture != _shownEventCulture)
+        {
+            var events = await db.EventLogEntries.AsNoTracking()
+                .OrderByDescending(e => e.TimestampUtc)
+                .Take(200)
+                .ToListAsync();
+            EventLogList.ItemsSource = events.Select(e => FormatEvent(e, pcById)).ToList();
+            _shownEventId = newestEventId;
+            _shownEventCulture = culture;
+        }
 
         StatusText.Text = Strings.Format("StatusListening", NetworkConstants.SignalRPort, NetworkConstants.DiscoveryPort,
             pcs.Count(p => p.IsOnline), pcs.Count);
     }
+
+    // What is on screen now, so the next refresh can update it in place (see RefreshAsync).
+    private List<PcRow> _shownRows = new();
+    private string _shownCulture = "";
+    private int _shownEventId = -1;
+    private string _shownEventCulture = "";
+
+    /// <summary>Same cards, same order: what the list sorts by (section, then number) has not changed.</summary>
+    private static bool SameCards(List<PcRow> shown, List<PcRow> fresh) =>
+        shown.Count == fresh.Count &&
+        shown.Zip(fresh).All(pair => pair.First.Id == pair.Second.Id && pair.First.IsOther == pair.Second.IsOther && pair.First.Number == pair.Second.Number);
 
     /// <summary>PCs first, then other resources - the list shows them as two separate sections (see MainWindow.xaml).</summary>
     private static ListCollectionView BuildCardView(List<PcRow> rows)

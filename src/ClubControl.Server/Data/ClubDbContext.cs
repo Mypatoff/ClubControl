@@ -27,6 +27,15 @@ public class ClubDbContext : DbContext
             .HasIndex(t => t.Name)
             .IsUnique();
 
+        // The admin panel asks for "the newest 200 events" and "the running sessions" every second. Without
+        // these two indexes each of those reads and sorts the whole table, so the panel got slower with every
+        // session and event ever recorded (a year of events: a quarter of a second per refresh).
+        modelBuilder.Entity<EventLogEntry>()
+            .HasIndex(e => e.TimestampUtc);
+
+        modelBuilder.Entity<Session>()
+            .HasIndex(s => s.Status);
+
         modelBuilder.Entity<Session>()
             .HasMany(s => s.Segments)
             .WithOne(seg => seg.Session)
