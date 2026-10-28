@@ -22,7 +22,10 @@ AppVerName={#AppName} {#AppVersion}
 AppPublisher={#AppName}
 VersionInfoVersion={#AppVersion}
 VersionInfoDescription={#AppName} Setup
-DefaultDirName={autopf}\{#AppName}
+; The server's default is C:\ClubControl and the client's is Program Files; which one is not known
+; until the type is chosen, so the folder is asked on our own page after it (see DirPage below).
+DefaultDirName={code:DefaultAppDir}
+DisableDirPage=yes
 DefaultGroupName={#AppName}
 DisableProgramGroupPage=yes
 OutputDir=..\dist
@@ -51,6 +54,10 @@ english.CompServer=ClubControl Server
 english.CompClient=ClubControl Client
 english.Desktop=Create a &desktop shortcut
 english.LaunchServer=Start ClubControl Server now
+english.DirTitle=Install folder
+english.DirDescription=Where should ClubControl be installed?
+english.DirLabel=The server needs a folder your Windows user can change (C:\ClubControl), so that "Update server" in the admin panel can replace it. A gaming PC client belongs in Program Files, where only an administrator can change it.
+english.DirEmpty=Please choose a folder.
 english.KioskTitle=Windows account of this gaming PC
 english.KioskDescription=The client starts automatically when this account logs on.
 english.KioskLabel=Account that logs on automatically (see "Configure Windows auto-logon" in the README):
@@ -62,6 +69,10 @@ russian.CompServer=ClubControl Сервер
 russian.CompClient=ClubControl Клиент
 russian.Desktop=Создать ярлык на &рабочем столе
 russian.LaunchServer=Запустить ClubControl Сервер
+russian.DirTitle=Папка установки
+russian.DirDescription=Куда установить ClubControl?
+russian.DirLabel=Серверу нужна папка, которую может изменять ваш пользователь Windows (C:\ClubControl), чтобы «Обновить сервер» в панели администратора мог заменить его. Клиент игрового ПК лучше держать в Program Files, где его может менять только администратор.
+russian.DirEmpty=Выберите папку.
 russian.KioskTitle=Учётная запись Windows этого игрового компьютера
 russian.KioskDescription=Клиент запускается автоматически, когда эта учётная запись входит в систему.
 russian.KioskLabel=Учётная запись с автоматическим входом (см. «Настройка автовхода Windows» в README):
@@ -78,6 +89,12 @@ Name: "client"; Description: "{cm:CompClient}"; Types: client; Flags: fixed
 
 [Tasks]
 Name: "desktopicon"; Description: "{cm:Desktop}"; Components: server
+
+[Dirs]
+; The server replaces its own files ("Update server") running as the normal Windows user, so its folder must
+; allow that. The client is deliberately NOT given this: it starts at logon with administrator rights, and a
+; folder that any user can write to would let anyone swap its exe for their own program.
+Name: "{app}\Server"; Permissions: users-modify; Components: server
 
 [Files]
 Source: "{#ServerDir}\*"; DestDir: "{app}\Server"; Components: server; Flags: ignoreversion recursesubdirs createallsubdirs
@@ -100,6 +117,35 @@ const
 
 var
   KioskPage: TInputQueryWizardPage;
+  DirPage: TInputDirWizardPage;
+  ProposedDir: String; // what the folder box was last filled with, to tell if the admin typed their own
+
+// Where an earlier setup of this program put it ('' if it was never installed).
+function PreviousInstallDir: String;
+begin
+  if not RegQueryStringValue(HKLM, 'Software\Microsoft\Windows\CurrentVersion\Uninstall\{7D0C6A52-3B1E-4F8A-9C4D-5E2B8A1F6C93}_is1',
+    'Inno Setup: App Path', Result) then
+    Result := '';
+end;
+
+// Server: C:\ClubControl, a folder the normal Windows user can write to (needed by "Update server").
+// Client: Program Files, where only an administrator can change it. An existing install stays where it is.
+function FolderForType(IsServer: Boolean): String;
+begin
+  if PreviousInstallDir <> '' then
+    Result := PreviousInstallDir
+  else if IsServer then
+    Result := ExpandConstant('{sd}\{#AppName}')
+  else
+    Result := ExpandConstant('{autopf}\{#AppName}');
+end;
+
+// DefaultDirName: used as it is when setup runs silently (/TYPE=server picks the server's folder), and as
+// the starting value of the folder page.
+function DefaultAppDir(Param: String): String;
+begin
+  Result := FolderForType(CompareText(ExpandConstant('{param:TYPE|}'), 'server') = 0);
+end;
 
 function RunHidden(const FileName, Params: String): Integer;
 var
@@ -120,6 +166,25 @@ begin
   KioskPage.Values[0] := ExpandConstant('{param:KioskUser|}');
   if KioskPage.Values[0] = '' then
     KioskPage.Values[0] := GetUserNameString;
+
+  // Created after the kiosk page so that it comes right after the type page and before it.
+  DirPage := CreateInputDirPage(wpSelectComponents, CustomMessage('DirTitle'), CustomMessage('DirDescription'),
+    CustomMessage('DirLabel'), False, '');
+  DirPage.Add('');
+end;
+
+procedure CurPageChanged(CurPageID: Integer);
+var
+  Proposal: String;
+begin
+  if CurPageID = DirPage.ID then
+  begin
+    // Fill in the folder that fits the chosen type, unless the admin already typed a different one.
+    Proposal := FolderForType(WizardIsComponentSelected('server'));
+    if (DirPage.Values[0] = '') or (DirPage.Values[0] = ProposedDir) then
+      DirPage.Values[0] := Proposal;
+    ProposedDir := Proposal;
+  end;
 end;
 
 function ShouldSkipPage(PageID: Integer): Boolean;
@@ -130,6 +195,17 @@ end;
 function NextButtonClick(CurPageID: Integer): Boolean;
 begin
   Result := True;
+  if (CurPageID = DirPage.ID) then
+  begin
+    if Trim(DirPage.Values[0]) = '' then
+    begin
+      MsgBox(CustomMessage('DirEmpty'), mbError, MB_OK);
+      Result := False;
+    end
+    else
+      // {app} is read from the (hidden) standard folder box.
+      WizardForm.DirEdit.Text := Trim(DirPage.Values[0]);
+  end;
   if (CurPageID = KioskPage.ID) and (Trim(KioskPage.Values[0]) = '') then
   begin
     MsgBox(CustomMessage('KioskEmpty'), mbError, MB_OK);

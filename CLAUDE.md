@@ -99,6 +99,16 @@ C# .NET 8. WPF for Server (admin panel + hosted ASP.NET Core/SignalR) and Client
       `EventType.SessionExtended` rows still display); window title bars follow the theme (`TitleBar`, DWM dark
       mode + Windows 11 caption colour, applied to every window on Loaded); the event log can be resized or hidden
       with a `GridSplitter` (height kept in `log-panel-height.txt`); the left toolbar wraps on narrow windows.
+- [x] Post-phase-6 change: the client update zip now lives next to the server program
+      (`<server folder>\ClientUpdate\ClubControl.Client.zip`, `ClientUpdateFile.ServerFolderPath`), because that
+      folder is writable by the server's Windows user (a file in ProgramData created by an elevated process may not
+      be). A server in a protected folder falls back to the old `%ProgramData%` place (`LegacyPath`); when both
+      exist the newer file is served. The installer (`installer/ClubControl.iss`) now proposes `C:\ClubControl`
+      for the Server type via its own folder page (the built-in one is disabled, because the type is chosen
+      after it) and gives `{app}\Server` Users-modify; the Client type keeps Program Files and is NOT made
+      user-writable (it runs elevated at logon). An existing install keeps its folder. Tested silently with a
+      renamed copy of the installer (server default folder + ACL, upgrade in place, client folder, uninstall);
+      the interactive wizard pages were not clicked through.
 - [x] Post-phase-6 feature: "Update server" button (`ServerUpdateWindow`, `ServerUpdater`, `ServerUpdateRelease` in
       Shared). Reads the rolling GitHub "latest" release (public repo, no token), downloads the server and
       client zips, verifies them against `SHA256SUMS.txt` (new Build workflow step), copies the client zip

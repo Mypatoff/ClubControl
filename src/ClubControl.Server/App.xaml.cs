@@ -84,7 +84,7 @@ public partial class App : Application
         ShutdownMode = ShutdownMode.OnExplicitShutdown;
 
         Directory.CreateDirectory(DbPaths.DataDirectory);
-        Directory.CreateDirectory(Path.GetDirectoryName(ClientUpdateFile.FilePath)!);
+        _ = ClientUpdateFile.StagePath; // makes sure the folder for the client update zip exists (next to the server, or the old place)
 
         var builder = WebApplication.CreateBuilder();
         builder.WebHost.UseUrls($"http://0.0.0.0:{NetworkConstants.SignalRPort}");

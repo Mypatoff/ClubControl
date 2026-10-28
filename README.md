@@ -13,17 +13,23 @@ on GitHub (or build it, see below) and copy it to each PC. It needs nothing else
 bundled - and asks for Administrator rights once.
 
 1. Run it and choose the setup type:
-   - **Server** - on the admin laptop. Installs to `C:\Program Files\ClubControl\Server`, adds the
+   - **Server** - on the admin laptop. Installs to `C:\ClubControl\Server` (the setup proposes it on the
+     folder page; change it if you like), a folder your normal Windows user can write to, so that
+     "Update server" in the admin panel can replace the program by itself. Adds the
      Start menu entry (and an optional desktop shortcut) named "ClubControl Server", opens the two
      firewall ports (TCP 5050, UDP 5051, **Private network profile only**) and offers to start it.
-   - **Client** - on each gaming PC. Installs to `C:\Program Files\ClubControl\Client` and asks which
+   - **Client** - on each gaming PC. Installs to `C:\Program Files\ClubControl\Client` - on purpose a
+     folder only an administrator can change, because the client starts with administrator rights at
+     logon (a folder anyone can write to would let a player swap its program). It asks which
      Windows account logs on automatically on that PC (the kiosk account from "Configure Windows
      auto-logon" below). It creates the "ClubControl Client" startup task for that account, the same
      one `install-client.ps1` makes, and starts it.
 2. The per-PC Windows settings below (Wake-on-LAN, Fast Startup, auto-logon) are still done by hand.
 3. To update, run a newer `ClubControl-Setup.exe` over the old install with the same type. It stops
-   the running program first and keeps the database. (Clients can also be updated from the admin
-   panel, see below.)
+   the running program first and keeps the database. An existing install stays in the folder it is in
+   (a server that was installed to `C:\Program Files` by an older setup keeps working, but cannot use
+   "Update server"; to move it, uninstall it and install the server again - the database stays).
+   (Server and clients can also be updated from the admin panel, see below.)
 4. Uninstall from Windows "Apps & features" (or the Start menu entry). It removes the program, the
    startup task and the firewall rules, and **leaves `%ProgramData%\ClubControl` (database, backups,
    logs) untouched**.
@@ -31,7 +37,7 @@ bundled - and asks for Administrator rights once.
 For unattended installs the setup accepts the usual Inno Setup switches plus two of its own:
 `ClubControl-Setup.exe /VERYSILENT /TYPE=client /KioskUser="ClubPC1"` installs the client for that
 auto-logon account without any questions (add `/NoStart=1` to not start it right away), and
-`/TYPE=server` installs the server.
+`/TYPE=server` installs the server (to `C:\ClubControl`; `/DIR="D:\Club"` picks another folder).
 
 To build the setup yourself you need [Inno Setup 6](https://jrsoftware.org/isdl.php) installed, then:
 
@@ -65,8 +71,8 @@ Once a server runs a build that has this button, you never need to reinstall it 
    every push to `main` produces) and shows the installed and the newest version.
 2. Click **Download and update** and enter the admin password. It downloads the server zip and the client
    zip, checks both against the published `SHA256SUMS.txt` (a download that does not match is thrown
-   away), and **replaces the client update file** (`%ProgramData%\ClubControl\ClientUpdate\ClubControl.Client.zip`)
-   with the new client zip. Then the server closes, swaps its own files and starts again by itself in
+   away), and **replaces the client update file** (`ClientUpdate\ClubControl.Client.zip` in the server's own
+   folder, see "Updating the client later") with the new client zip. Then the server closes, swaps its own files and starts again by itself in
    about 30 seconds. Log in again.
 3. To update the gaming PCs afterwards, select them and use "Update client" as described below - the zip is
    already in place.
@@ -77,10 +83,10 @@ Good to know:
   `%ProgramData%\ClubControl\server-healthy.flag` once it has started) within 90 seconds, the old build
   is put back. A database upgrade the new build already did is **not** undone - it makes its own backup
   in `Backups` first.
-- It only works when the server runs from a folder your Windows user can write to (for example the
-  unzipped `ClubControl-Server-win-x64` folder). A server installed with `ClubControl-Setup.exe` lives in
-  `C:\Program Files`, which needs administrator rights: use the "Open download page" button and run
-  `ClubControl-Setup.exe` again instead.
+- It only works when the server runs from a folder your Windows user can write to: the setup's default
+  `C:\ClubControl\Server`, or the unzipped `ClubControl-Server-win-x64` folder. A server in
+  `C:\Program Files` (an older setup put it there) needs administrator rights: use the "Open download
+  page" button and run `ClubControl-Setup.exe` again instead.
 - The server needs internet access for this. Anyone who can push to the GitHub repository can ship a build
   this way, so keep the repository's access limited.
 - The very first time you still have to put a build with this button on the server by hand.
@@ -92,8 +98,11 @@ After the first install, you do not need to walk to every PC again for a client-
 1. Publish the client as above (self-contained, so the zip is about 65 MB), zip the **contents** of `publish/client` (not the folder itself -
    `ClubControl.Client.exe` must be at the top level of the zip), and save it as
    `ClubControl.Client.zip`.
-2. On the admin laptop, copy that zip to
-   `%ProgramData%\ClubControl\ClientUpdate\ClubControl.Client.zip`, overwriting whatever was there.
+2. On the admin laptop, copy that zip to the `ClientUpdate` folder **inside the server's own folder**
+   (for example `C:\ClubControl\Server\ClientUpdate\ClubControl.Client.zip`; create the folder if it
+   is not there), overwriting whatever was there. "Update server" does this for you. (A server in a
+   protected folder such as Program Files cannot write there and keeps using the older place,
+   `%ProgramData%\ClubControl\ClientUpdate\ClubControl.Client.zip`; if both exist the newer file is used.)
 3. In the admin panel, select the PC(s) to update (or none, to update every enabled PC) and click
    "Update client" (or right-click > "Update client"). Each selected online PC downloads the zip
    from the server, swaps its own files, and restarts itself - no manual copying, no reinstalling

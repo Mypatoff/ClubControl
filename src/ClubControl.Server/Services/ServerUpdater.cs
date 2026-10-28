@@ -75,7 +75,7 @@ public class ServerUpdater
 
     /// <summary>
     /// Downloads the server and client zips, checks both against the published checksums, unpacks the
-    /// server build, and replaces the client update file (<see cref="ClientUpdateFile.FilePath"/>) with
+    /// server build, and replaces the client update file (<see cref="ClientUpdateFile.StagePath"/>) with
     /// the new client zip. Nothing of the running server is touched yet.
     /// </summary>
     public async Task<StagedServerUpdate> DownloadAsync(ReleaseInfo release, IProgress<double> progress, CancellationToken ct)
@@ -164,11 +164,25 @@ public class ServerUpdater
     /// <summary>Replaces the zip the gaming PCs download on "Update client", so one click updates both.</summary>
     private static void StageClientZip(string newClientZip)
     {
-        Directory.CreateDirectory(Path.GetDirectoryName(ClientUpdateFile.FilePath)!);
+        var target = ClientUpdateFile.StagePath;
 
         // Copy next to the target first, then swap: a PC downloading right now never sees a half-written file.
-        var partial = ClientUpdateFile.FilePath + ".new";
+        var partial = target + ".new";
         File.Copy(newClientZip, partial, overwrite: true);
-        File.Move(partial, ClientUpdateFile.FilePath, overwrite: true);
+        File.Move(partial, target, overwrite: true);
+
+        // An older copy in the other place would only confuse; the new one is what gets handed out.
+        foreach (var other in new[] { ClientUpdateFile.ServerFolderPath, ClientUpdateFile.LegacyPath })
+        {
+            try
+            {
+                if (!string.Equals(other, target, StringComparison.OrdinalIgnoreCase) && File.Exists(other))
+                    File.Delete(other);
+            }
+            catch (Exception)
+            {
+                // Not allowed to delete it: harmless, the newer file is the one served.
+            }
+        }
     }
 }
