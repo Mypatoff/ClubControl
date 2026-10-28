@@ -45,8 +45,16 @@ public class PcRow
     /// <summary>Progress / result of the last "Update client" on this PC; null when there is nothing to show.</summary>
     public ClientUpdateInfo? Update { get; init; }
 
-    /// <summary>The state text on the card: the update progress or result while there is one, otherwise the normal state.</summary>
-    public string CardStateDisplay => Update is null ? StateDisplay : UpdateDisplay;
+    /// <summary>The server found this PC switched on although its client is not connected (see <see cref="Services.ClientMissingTracker"/>).</summary>
+    public bool ClientMissing { get; init; }
+
+    /// <summary>A networked PC that is on but whose client was deleted, uninstalled or closed: not the same as switched off.</summary>
+    public bool IsClientMissing => IsOffline && ClientMissing;
+
+    /// <summary>The state text on the card: the update progress or result while there is one, then "No client", otherwise the normal state.</summary>
+    public string CardStateDisplay => Update is not null ? UpdateDisplay
+        : IsClientMissing ? Strings.Get("ClientMissingCard")
+        : StateDisplay;
 
     private string UpdateDisplay => Update?.Status switch
     {
@@ -95,6 +103,7 @@ public class PcRow
     {
         IsOther && Name != "" ? Name : "",
         Update is null ? "" : UpdateDisplay + (Update.Status == ClientUpdateStatus.Updated ? $" (v{Update.VersionBefore} → v{Update.VersionNow})" : ""),
+        IsClientMissing ? Strings.Get("ClientMissingTooltip") : "",
         StateDisplay, // the card is narrow, so a long state name ("Лимит достигнут") can be cut off there
         TariffDisplay,
         AmountDisplay,
@@ -107,8 +116,10 @@ public class PcRow
     /// <summary>Opened by staff with the unlock password and not billing: shown as "Repair".</summary>
     public bool IsRepair => State == PcState.ManualUnlocked;
 
-    /// <summary>Card accent colour (SPEC 7): red = offline (overrides everything else for networked PCs; manual resources are never "offline"), green = session running, blue = free, purple = repair.</summary>
-    public Brush AccentBrush => IsOffline
+    /// <summary>Card accent colour (SPEC 7): pink = PC on but client missing, red = offline (overrides everything else for networked PCs; manual resources are never "offline"), green = session running, blue = free, purple = repair.</summary>
+    public Brush AccentBrush => IsClientMissing
+        ? Resource("StateNoClientBrush")
+        : IsOffline
         ? Resource("StateOfflineBrush")
         : State switch
         {

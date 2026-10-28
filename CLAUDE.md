@@ -156,3 +156,12 @@ C# .NET 8. WPF for Server (admin panel + hosted ASP.NET Core/SignalR) and Client
       exe and tray icon). Both apps are now published self-contained (the installer bundles .NET), so the
       "Update client" zip must be self-contained too. Tested here (silent): server and client install,
       upgrade over an existing install and uninstall all clean; setup is about 100 MB.
+- [x] Post-phase-6 feature: "client missing" status. A PC whose heartbeats stopped for 2 minutes is probed on the
+      network (`PcPowerProbe`: ARP lookup via `SendARP`, then ping; MAC must match the one it reported). If it
+      answers twice in a row while no client is connected, `ClientMissingTracker` (memory only, no migration)
+      flags it: pink card (`StateNoClientBrush`) with "No client", a top-bar chip, a tooltip and one Warning log
+      line. `ClientMissingMonitorService` runs the checks (own loop, so slow probes never delay
+      `OfflineMonitorService`); skipped for disabled/manual PCs, PCs mid "Update client", and the first 2 minutes
+      after a server start. Server-only, works with the clients already installed. The ARP call was run against
+      this dev PC's gateway; it is not yet seen on the club's real network (check with a PC whose client folder
+      is renamed, and with a normal shutdown - that must stay red).

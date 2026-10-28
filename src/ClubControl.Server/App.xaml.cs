@@ -208,9 +208,11 @@ public partial class App : Application
         builder.Services.AddSignalR(options => options.EnableDetailedErrors = builder.Environment.IsDevelopment());
         builder.Services.AddScoped<SessionService>();
         builder.Services.AddSingleton<ClientUpdateTracker>();
+        builder.Services.AddSingleton<ClientMissingTracker>();
         builder.Services.AddScoped<PowerService>();
         builder.Services.AddScoped<ReportsService>();
         builder.Services.AddHostedService<OfflineMonitorService>();
+        builder.Services.AddHostedService<ClientMissingMonitorService>();
         builder.Services.AddHostedService<UdpDiscoveryService>();
         builder.Services.AddHostedService<SessionMonitorService>();
         builder.Services.AddHostedService<BackupService>();

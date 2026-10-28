@@ -538,6 +538,15 @@
   <data name="UpdateCardWaiting" xml:space="preserve">
     <value>⏳ Navbatda</value>
   </data>
+  <data name="ClientMissingCard" xml:space="preserve">
+    <value>⚠ Klient yo'q</value>
+  </data>
+  <data name="ClientMissingTooltip" xml:space="preserve">
+    <value>Kompyuter yoqilgan, lekin unda ClubControl klienti ishlamayapti (o'chirilgan, olib tashlangan yoki yopilgan). Kompyuterni tekshiring.</value>
+  </data>
+  <data name="StatNoClient" xml:space="preserve">
+    <value>Klient yo'q</value>
+  </data>
   <data name="ToolbarUpdateServer" xml:space="preserve">
     <value>Serverni yangilash</value>
   </data>

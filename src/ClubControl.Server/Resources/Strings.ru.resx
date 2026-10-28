@@ -538,6 +538,15 @@
   <data name="UpdateCardWaiting" xml:space="preserve">
     <value>⏳ В очереди</value>
   </data>
+  <data name="ClientMissingCard" xml:space="preserve">
+    <value>⚠ Нет клиента</value>
+  </data>
+  <data name="ClientMissingTooltip" xml:space="preserve">
+    <value>Компьютер включён, но клиент ClubControl на нём не запущен (удалён, деинсталлирован или закрыт). Проверьте этот компьютер.</value>
+  </data>
+  <data name="StatNoClient" xml:space="preserve">
+    <value>Нет клиента</value>
+  </data>
   <data name="ToolbarUpdateServer" xml:space="preserve">
     <value>Обновить сервер</value>
   </data>

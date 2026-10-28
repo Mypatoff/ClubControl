@@ -538,6 +538,15 @@
   <data name="UpdateCardWaiting" xml:space="preserve">
     <value>⏳ Waiting</value>
   </data>
+  <data name="ClientMissingCard" xml:space="preserve">
+    <value>⚠ No client</value>
+  </data>
+  <data name="ClientMissingTooltip" xml:space="preserve">
+    <value>The PC is switched on, but the ClubControl client is not running on it (deleted, uninstalled or closed). Check this PC.</value>
+  </data>
+  <data name="StatNoClient" xml:space="preserve">
+    <value>No client</value>
+  </data>
   <data name="ToolbarUpdateServer" xml:space="preserve">
     <value>Update server</value>
   </data>

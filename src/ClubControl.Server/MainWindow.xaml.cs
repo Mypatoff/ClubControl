@@ -176,7 +176,9 @@ public partial class MainWindow : Window
 
         var selectedIds = PcList.SelectedItems.Cast<PcRow>().Select(p => p.Id).ToHashSet();
         var updates = scope.ServiceProvider.GetRequiredService<ClientUpdateTracker>();
-        var rows = pcs.Select(pc => BuildRow(pc, tariffNames, snapshots.GetValueOrDefault(pc.Id), updates.Get(pc.MachineGuid, DateTime.UtcNow))).ToList();
+        var clientMissing = scope.ServiceProvider.GetRequiredService<ClientMissingTracker>();
+        var rows = pcs.Select(pc => BuildRow(pc, tariffNames, snapshots.GetValueOrDefault(pc.Id), updates.Get(pc.MachineGuid, DateTime.UtcNow),
+            clientMissing.IsMissing(pc.MachineGuid))).ToList();
 
         // Replacing ItemsSource rebuilds every card and resets the scroll position, so remember it.
         var scrollOffset = FindDescendant<ScrollViewer>(PcList)?.VerticalOffset ?? 0;
@@ -215,20 +217,25 @@ public partial class MainWindow : Window
         var others = rows.Where(r => r.IsOther).ToList();
 
         var busy = computers.Count(r => r.HasActiveSession);
-        var offline = computers.Count(r => r.IsOffline && !r.HasActiveSession);
+        var noClient = computers.Count(r => r.IsClientMissing && !r.HasActiveSession);
+        var offline = computers.Count(r => r.IsOffline && !r.IsClientMissing && !r.HasActiveSession);
         var repair = computers.Count(r => r.IsRepair && !r.IsOffline);
 
-        StatFreeText.Text = $"{computers.Count - busy - offline - repair} {Strings.Get("StateFree")}";
+        StatFreeText.Text = $"{computers.Count - busy - offline - noClient - repair} {Strings.Get("StateFree")}";
         StatBusyText.Text = $"{busy} {Strings.Get("StatBusy")}";
         StatOfflineText.Text = $"{offline} {Strings.Get("StatOffline")}";
 
-        // Only shown while a PC is in repair, so the usual bar stays as short as it was.
+        // These two chips are only shown while there is something to show, so the usual bar stays as short as it was.
+        // The "No client" chip counts every such PC, also one that still has a session: that case matters most.
+        var noClientShown = computers.Count(r => r.IsClientMissing);
+        NoClientChip.Visibility = noClientShown > 0 ? Visibility.Visible : Visibility.Collapsed;
+        StatNoClientText.Text = $"{noClientShown} {Strings.Get("StatNoClient")}";
         RepairChip.Visibility = repair > 0 ? Visibility.Visible : Visibility.Collapsed;
         StatRepairText.Text = $"{repair} {Strings.Get("StateManualUnlocked")}";
         StatOtherText.Text = $"{others.Count(r => r.HasActiveSession)}/{others.Count} {Strings.Get("KindOtherPlural")}";
     }
 
-    private static PcRow BuildRow(Pc pc, Dictionary<int, string> tariffNames, SessionService.ActiveSessionSnapshot? snap, ClientUpdateInfo? update)
+    private static PcRow BuildRow(Pc pc, Dictionary<int, string> tariffNames, SessionService.ActiveSessionSnapshot? snap, ClientUpdateInfo? update, bool clientMissing)
     {
         var amount = "";
         var start = "";
@@ -279,6 +286,7 @@ public partial class MainWindow : Window
             Note = snap?.Note ?? "",
             ExtrasUzs = snap?.ExtrasUzs ?? 0,
             Update = update,
+            ClientMissing = clientMissing,
             ClientVersion = pc.IsOnline ? ClubHub.GetClientVersion(pc.MachineGuid) : ""
         };
     }
