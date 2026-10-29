@@ -133,6 +133,9 @@ namespace ClubControl.Server.Data.Migrations
                     b.Property<DateTime?>("PlannedEndUtc")
                         .HasColumnType("TEXT");
 
+                    b.Property<int?>("ShiftId")
+                        .HasColumnType("INTEGER");
+
                     b.Property<DateTime>("StartUtc")
                         .HasColumnType("TEXT");
 
@@ -145,6 +148,8 @@ namespace ClubControl.Server.Data.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("PcId");
+
+                    b.HasIndex("ShiftId");
 
                     b.HasIndex("Status");
 
@@ -263,6 +268,23 @@ namespace ClubControl.Server.Data.Migrations
                     b.ToTable("Settings");
                 });
 
+            modelBuilder.Entity("ClubControl.Server.Data.Models.Shift", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("ClosedUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("OpenedUtc")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Shifts");
+                });
+
             modelBuilder.Entity("ClubControl.Server.Data.Models.Tariff", b =>
                 {
                     b.Property<int>("Id")
@@ -301,7 +323,13 @@ namespace ClubControl.Server.Data.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("ClubControl.Server.Data.Models.Shift", "Shift")
+                        .WithMany()
+                        .HasForeignKey("ShiftId");
+
                     b.Navigation("Pc");
+
+                    b.Navigation("Shift");
                 });
 
             modelBuilder.Entity("ClubControl.Server.Data.Models.SessionExtra", b =>

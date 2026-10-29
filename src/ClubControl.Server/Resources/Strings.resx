@@ -604,4 +604,34 @@
   <data name="UpdateServerOpenPage" xml:space="preserve">
     <value>Open download page</value>
   </data>
+  <data name="ToolbarOpenShift" xml:space="preserve">
+    <value>Open shift</value>
+  </data>
+  <data name="ToolbarCloseShift" xml:space="preserve">
+    <value>Close shift</value>
+  </data>
+  <data name="ShiftChipOpen" xml:space="preserve">
+    <value>Shift open since {0}</value>
+  </data>
+  <data name="ShiftChipNone" xml:space="preserve">
+    <value>No shift open</value>
+  </data>
+  <data name="ShiftCloseBlocked" xml:space="preserve">
+    <value>{0} session(s) are still running, so the shift cannot be closed. Stop or pay for them first.</value>
+  </data>
+  <data name="ShiftCloseConfirm" xml:space="preserve">
+    <value>Close the shift opened at {0}?</value>
+  </data>
+  <data name="PeriodShift" xml:space="preserve">
+    <value>Shift</value>
+  </data>
+  <data name="ShiftNone" xml:space="preserve">
+    <value>No shifts yet</value>
+  </data>
+  <data name="ShiftLabel" xml:space="preserve">
+    <value>Shift #{0}: {1} – {2}</value>
+  </data>
+  <data name="ShiftStillOpen" xml:space="preserve">
+    <value>open</value>
+  </data>
 </root>

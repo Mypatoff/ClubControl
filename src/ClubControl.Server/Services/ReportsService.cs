@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 using ClubControl.Server.Data;
 using ClubControl.Server.Data.Models;
@@ -33,12 +34,30 @@ public class ReportsService
         string TariffName, int AmountUzs, int ExtrasUzs, string Note);
     public record Report(Totals Totals, List<PcRow> ByPc, List<TariffRow> ByTariff, List<TypeRow> ByType, List<SessionLine> Sessions);
 
-    public async Task<Report> BuildReportAsync(DateTime startUtc, DateTime endUtc, ResourceKind kind)
+    /// <summary>A shift for the report's shift picker; ClosedUtc is null while it is still open.</summary>
+    public record ShiftInfo(int Id, DateTime OpenedUtc, DateTime? ClosedUtc);
+
+    /// <summary>Every shift, newest first.</summary>
+    public async Task<List<ShiftInfo>> GetShiftsAsync() =>
+        await _db.Shifts.AsNoTracking()
+            .OrderByDescending(s => s.Id)
+            .Select(s => new ShiftInfo(s.Id, s.OpenedUtc, s.ClosedUtc))
+            .ToListAsync();
+
+    public async Task<Report> BuildReportAsync(DateTime startUtc, DateTime endUtc, ResourceKind kind) =>
+        await BuildAsync(s => s.StartUtc >= startUtc && s.StartUtc < endUtc, kind);
+
+    /// <summary>The same report for one working shift: every session that started while it was open, even past midnight.</summary>
+    public async Task<Report> BuildShiftReportAsync(int shiftId, ResourceKind kind) =>
+        await BuildAsync(s => s.ShiftId == shiftId, kind);
+
+    private async Task<Report> BuildAsync(Expression<Func<Session, bool>> filter, ResourceKind kind)
     {
         var sessions = await _db.Sessions
             .Include(s => s.Pc)
             .Include(s => s.Extras)
-            .Where(s => s.StartUtc >= startUtc && s.StartUtc < endUtc && s.Pc!.Kind == kind)
+            .Where(filter)
+            .Where(s => s.Pc!.Kind == kind)
             .ToListAsync();
 
         var tariffNames = await _db.Tariffs.ToDictionaryAsync(t => t.Id, t => t.Name);

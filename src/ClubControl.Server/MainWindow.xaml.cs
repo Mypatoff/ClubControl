@@ -209,6 +209,7 @@ public partial class MainWindow : Window
         }
 
         UpdateCounters(rows);
+        UpdateShiftControls(await ShiftHelper.GetOpenAsync(db));
 
         // The newest id is a one-row read; the 200 lines are fetched and redrawn only when there is something new.
         var newestEventId = await db.EventLogEntries.MaxAsync(e => (int?)e.Id) ?? 0;
@@ -272,7 +273,56 @@ public partial class MainWindow : Window
         StatOtherText.Text = $"{others.Count(r => r.HasActiveSession)}/{others.Count} {Strings.Get("KindOtherPlural")}";
     }
 
-    private static PcRow BuildRow(Pc pc, Dictionary<int, string> tariffNames, SessionService.ActiveSessionSnapshot? snap, ClientUpdateInfo? update, bool clientMissing, bool authRejected)
+    /// <summary>The shift chip in the header and the one button that opens or closes the shift.</summary>
+    private void UpdateShiftControls(Shift? open)
+    {
+        ShiftButton.Content = open is null ? "🔓 " + Strings.Get("ToolbarOpenShift") : "🔒 " + Strings.Get("ToolbarCloseShift");
+        StatShiftText.Text = open is null
+            ? Strings.Get("ShiftChipNone")
+            : Strings.Format("ShiftChipOpen", open.OpenedUtc.ToLocalTime().ToString("dd.MM HH:mm"));
+        ShiftDot.Fill = (Brush)FindResource(open is null ? "TextSecondaryBrush" : "StateRunningBrush");
+    }
+
+    private async void OnShiftToggle(object sender, RoutedEventArgs e)
+    {
+        using var scope = Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ClubDbContext>();
+
+        try
+        {
+            var open = await ShiftHelper.GetOpenAsync(db);
+            if (open is null)
+            {
+                await ShiftHelper.OpenAsync(db);
+            }
+            else
+            {
+                // A shift cannot end while a session is running (or waiting to be paid): tell the admin why.
+                var running = await ShiftHelper.CountRunningSessionsAsync(db);
+                if (running > 0)
+                {
+                    MessageBox.Show(Strings.Format("ShiftCloseBlocked", running), Strings.Get("ConfirmTitle"),
+                        MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                if (MessageBox.Show(Strings.Format("ShiftCloseConfirm", open.OpenedUtc.ToLocalTime().ToString("dd.MM.yyyy HH:mm")),
+                        Strings.Get("ConfirmTitle"), MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes)
+                    return;
+
+                await ShiftHelper.CloseAsync(db);
+            }
+        }
+        catch (InvalidOperationException ex)
+        {
+            // E.g. a session was started while the confirmation was open.
+            MessageBox.Show(ex.Message, Strings.Get("ConfirmTitle"), MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
+
+        await RefreshAsync();
+    }
+
+    private static PcRow BuildRow(Pc pc,Dictionary<int, string> tariffNames, SessionService.ActiveSessionSnapshot? snap, ClientUpdateInfo? update, bool clientMissing, bool authRejected)
     {
         var amount = "";
         var start = "";

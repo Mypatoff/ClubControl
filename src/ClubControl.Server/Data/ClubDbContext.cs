@@ -14,6 +14,7 @@ public class ClubDbContext : DbContext
     public DbSet<Session> Sessions => Set<Session>();
     public DbSet<SessionSegment> SessionSegments => Set<SessionSegment>();
     public DbSet<SessionExtra> SessionExtras => Set<SessionExtra>();
+    public DbSet<Shift> Shifts => Set<Shift>();
     public DbSet<EventLogEntry> EventLogEntries => Set<EventLogEntry>();
     public DbSet<Setting> Settings => Set<Setting>();
 
@@ -50,6 +51,11 @@ public class ClubDbContext : DbContext
             .HasOne(s => s.Pc)
             .WithMany()
             .HasForeignKey(s => s.PcId);
+
+        modelBuilder.Entity<Session>()
+            .HasOne(s => s.Shift)
+            .WithMany()
+            .HasForeignKey(s => s.ShiftId);
 
         modelBuilder.Entity<SessionSegment>()
             .HasOne(seg => seg.Pc)

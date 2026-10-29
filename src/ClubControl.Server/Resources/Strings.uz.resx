@@ -604,4 +604,34 @@
   <data name="UpdateServerOpenPage" xml:space="preserve">
     <value>Yuklab olish sahifasini ochish</value>
   </data>
+  <data name="ToolbarOpenShift" xml:space="preserve">
+    <value>Smenani ochish</value>
+  </data>
+  <data name="ToolbarCloseShift" xml:space="preserve">
+    <value>Smenani yopish</value>
+  </data>
+  <data name="ShiftChipOpen" xml:space="preserve">
+    <value>Smena {0} dan beri ochiq</value>
+  </data>
+  <data name="ShiftChipNone" xml:space="preserve">
+    <value>Smena ochilmagan</value>
+  </data>
+  <data name="ShiftCloseBlocked" xml:space="preserve">
+    <value>{0} ta seans hali davom etmoqda, shuning uchun smenani yopib boʻlmaydi. Avval ularni tugating yoki toʻlovni qabul qiling.</value>
+  </data>
+  <data name="ShiftCloseConfirm" xml:space="preserve">
+    <value>{0} da ochilgan smena yopilsinmi?</value>
+  </data>
+  <data name="PeriodShift" xml:space="preserve">
+    <value>Smena</value>
+  </data>
+  <data name="ShiftNone" xml:space="preserve">
+    <value>Hali smenalar yoʻq</value>
+  </data>
+  <data name="ShiftLabel" xml:space="preserve">
+    <value>Smena №{0}: {1} – {2}</value>
+  </data>
+  <data name="ShiftStillOpen" xml:space="preserve">
+    <value>ochiq</value>
+  </data>
 </root>

@@ -26,6 +26,10 @@ public class Session
     public bool IsFree { get; set; }
     public string? Note { get; set; }
 
+    /// <summary>The shift that was open when the session started. Null for sessions from before shifts existed.</summary>
+    public int? ShiftId { get; set; }
+    public Shift? Shift { get; set; }
+
     public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
 
     public List<SessionSegment> Segments { get; set; } = new();

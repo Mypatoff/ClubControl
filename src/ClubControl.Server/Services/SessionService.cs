@@ -71,6 +71,7 @@ public class SessionService
             PlannedEndUtc = now.AddMinutes(minutes),
             AmountUzs = paidUzs,
             Note = CleanNote(note),
+            ShiftId = (await ShiftHelper.GetOrOpenAsync(_db)).Id,
         };
         session.Segments.Add(new SessionSegment { PcId = pc.Id, PricePerHourUzs = tariff.PricePerHourUzs, StartUtc = now });
         _db.Sessions.Add(session);
@@ -103,7 +104,14 @@ public class SessionService
         var tariff = await GetTariffAsync(pc.TariffId!.Value);
         var now = DateTime.UtcNow;
 
-        var session = new Session { PcId = pc.Id, Type = SessionType.Postpay, StartUtc = now, Note = CleanNote(note) };
+        var session = new Session
+        {
+            PcId = pc.Id,
+            Type = SessionType.Postpay,
+            StartUtc = now,
+            Note = CleanNote(note),
+            ShiftId = (await ShiftHelper.GetOrOpenAsync(_db)).Id,
+        };
         session.Segments.Add(new SessionSegment { PcId = pc.Id, PricePerHourUzs = tariff.PricePerHourUzs, StartUtc = now });
         _db.Sessions.Add(session);
         pc.State = PcState.PostpaySession;

@@ -44,7 +44,9 @@ public enum EventType
     PowerCommand,
     AuthRejected,
     ManualUnlock,
-    ItemAdded
+    ItemAdded,
+    ShiftOpened,
+    ShiftClosed
 }
 
 public enum LockScreenLanguage

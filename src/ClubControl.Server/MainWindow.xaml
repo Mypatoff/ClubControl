@@ -102,6 +102,12 @@
                         <TextBlock x:Name="StatRepairText" Style="{StaticResource ChipTextStyle}" />
                     </StackPanel>
                 </Border>
+                <Border Style="{StaticResource ChipStyle}">
+                    <StackPanel Orientation="Horizontal">
+                        <Ellipse x:Name="ShiftDot" Width="9" Height="9" Fill="{StaticResource StateOfflineBrush}" />
+                        <TextBlock x:Name="StatShiftText" Style="{StaticResource ChipTextStyle}" />
+                    </StackPanel>
+                </Border>
                 <Border Style="{StaticResource ChipStyle}" BorderBrush="{StaticResource FeltBorderBrush}">
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Text="📦" VerticalAlignment="Center" />
@@ -118,6 +124,7 @@
                 BorderThickness="1" CornerRadius="12" Padding="10,8">
             <DockPanel>
                 <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Top">
+                    <Button x:Name="ShiftButton" Margin="0,0,14,0" Style="{StaticResource SecondaryButtonStyle}" Click="OnShiftToggle" />
                     <Button x:Name="UpdateServerButton" Margin="0,0,6,0" Style="{StaticResource SecondaryButtonStyle}" Click="OnUpdateServer" />
                     <Button x:Name="SettingsButton" Margin="0,0,6,0" Style="{StaticResource SecondaryButtonStyle}" Click="OnSettings" />
                     <Button x:Name="ReportsButton" Style="{StaticResource SecondaryButtonStyle}" Click="OnReports" />

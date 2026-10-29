@@ -12,8 +12,9 @@
 
                 <Border Width="1" Background="{StaticResource DividerBrush}" Margin="0,2,16,2" />
 
-                <!-- ←  Day | Week | Month  →   The arrows step one day back / forward and only work in Day mode. -->
+                <!-- ←  Shift | Day | Week | Month  →   The arrows step one shift or one day back / forward; they do nothing in Week and Month. -->
                 <Button x:Name="PreviousButton" Content="←" Width="40" Margin="0,0,6,0" Style="{StaticResource SecondaryButtonStyle}" Click="OnPrevious" />
+                <Button x:Name="ShiftButton" Margin="0,0,6,0" Style="{StaticResource SecondaryButtonStyle}" Click="OnShift" />
                 <Button x:Name="DailyButton" Margin="0,0,6,0" Style="{StaticResource SecondaryButtonStyle}" Click="OnDaily" />
                 <Button x:Name="WeeklyButton" Margin="0,0,6,0" Style="{StaticResource SecondaryButtonStyle}" Click="OnWeekly" />
                 <Button x:Name="MonthlyButton" Margin="0,0,6,0" Style="{StaticResource SecondaryButtonStyle}" Click="OnMonthly" />

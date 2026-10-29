@@ -604,4 +604,34 @@
   <data name="UpdateServerOpenPage" xml:space="preserve">
     <value>Открыть страницу загрузки</value>
   </data>
+  <data name="ToolbarOpenShift" xml:space="preserve">
+    <value>Открыть смену</value>
+  </data>
+  <data name="ToolbarCloseShift" xml:space="preserve">
+    <value>Закрыть смену</value>
+  </data>
+  <data name="ShiftChipOpen" xml:space="preserve">
+    <value>Смена открыта с {0}</value>
+  </data>
+  <data name="ShiftChipNone" xml:space="preserve">
+    <value>Смена не открыта</value>
+  </data>
+  <data name="ShiftCloseBlocked" xml:space="preserve">
+    <value>Идут сессии ({0}), поэтому смену закрыть нельзя. Сначала завершите их или примите оплату.</value>
+  </data>
+  <data name="ShiftCloseConfirm" xml:space="preserve">
+    <value>Закрыть смену, открытую в {0}?</value>
+  </data>
+  <data name="PeriodShift" xml:space="preserve">
+    <value>Смена</value>
+  </data>
+  <data name="ShiftNone" xml:space="preserve">
+    <value>Смен пока нет</value>
+  </data>
+  <data name="ShiftLabel" xml:space="preserve">
+    <value>Смена №{0}: {1} – {2}</value>
+  </data>
+  <data name="ShiftStillOpen" xml:space="preserve">
+    <value>открыта</value>
+  </data>
 </root>

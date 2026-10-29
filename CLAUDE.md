@@ -191,3 +191,10 @@ C# .NET 8. WPF for Server (admin panel + hosted ASP.NET Core/SignalR) and Client
       is rebuilt only when the set/order of cards or the language changes); the event log list is re-read only when a
       newer event id exists; the snapshot and postpay tick load the tariffs once instead of once per session. The
       in-place card update is covered by `PcRowTests` but was not click-tested in the real window.
+- [x] Post-phase-6 feature: working shifts ("Open shift" / "Close shift", `Shift` table + `Session.ShiftId` + `AddShifts`
+      migration, `ShiftHelper`). One button on the main panel and a header chip show the state. Starting a session with no
+      shift open opens one by itself; closing is refused while any session is still running (incl. one waiting to be
+      paid). Reports has a new "Shift" view (arrows walk between shifts, opens on the newest shift) that lists exactly the
+      sessions started in that shift, also past midnight; Day/Week/Month are unchanged. Sessions from before shifts
+      existed have no shift and only show in the calendar views. Covered by `ShiftTests`; the new window controls were
+      checked by building only, not click-tested.

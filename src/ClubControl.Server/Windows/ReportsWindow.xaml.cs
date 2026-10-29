@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -17,11 +18,13 @@ namespace ClubControl.Server.Windows;
 public partial class ReportsWindow : Window
 {
     private readonly IServiceProvider _services;
-    private enum Period { Day, Week, Month }
+    private enum Period { Shift, Day, Week, Month }
 
     private ResourceKind _kind = ResourceKind.Computer;
     private Period _period = Period.Day;
     private DateTime _day = DateTime.Today; // the day shown in Day mode; the arrows move it
+    private List<ReportsService.ShiftInfo> _shifts = new(); // newest first
+    private int _shiftIndex;                                // the shift shown in Shift mode; the arrows move it
     private ReportsService.Report? _lastReport;
 
     public ReportsWindow(IServiceProvider services)
@@ -30,7 +33,16 @@ public partial class ReportsWindow : Window
         _services = services;
         ApplyLocalization();
 
-        Loaded += async (_, _) => await RefreshAsync();
+        Loaded += async (_, _) =>
+        {
+            // A club that works in shifts wants to see the current shift first, not a calendar day.
+            using (var scope = _services.CreateScope())
+                _shifts = await scope.ServiceProvider.GetRequiredService<ReportsService>().GetShiftsAsync();
+            if (_shifts.Count > 0)
+                _period = Period.Shift;
+
+            await RefreshAsync();
+        };
     }
 
     private void ApplyLocalization()
@@ -38,6 +50,7 @@ public partial class ReportsWindow : Window
         Title = Strings.Get("ReportsTitle");
         ComputersKindButton.Content = "🖥 " + Strings.ResourceKindName(ResourceKind.Computer);
         OtherKindButton.Content = "📦 " + Strings.ResourceKindName(ResourceKind.Other);
+        ShiftButton.Content = Strings.Get("PeriodShift");
         DailyButton.Content = Strings.Get("PeriodDaily");
         WeeklyButton.Content = Strings.Get("PeriodWeekly");
         MonthlyButton.Content = Strings.Get("PeriodMonthly");
@@ -88,26 +101,42 @@ public partial class ReportsWindow : Window
         _ => (_day, _day.AddDays(1)),
     };
 
+    // ← goes back in time: to the previous day, or to the shift before the one shown (shifts are listed newest first).
     private async void OnPrevious(object sender, RoutedEventArgs e)
     {
-        _day = _day.AddDays(-1);
+        if (_period == Period.Shift)
+            _shiftIndex++;
+        else
+            _day = _day.AddDays(-1);
         await RefreshAsync();
     }
 
     private async void OnNext(object sender, RoutedEventArgs e)
     {
-        _day = _day.AddDays(1);
+        if (_period == Period.Shift)
+            _shiftIndex--;
+        else
+            _day = _day.AddDays(1);
         await RefreshAsync();
     }
 
-    /// <summary>Shows which button is on and the dates it covers; the arrows only make sense for a single day.</summary>
+    /// <summary>Shows which button is on and what it covers; the arrows only make sense for a single shift or day.</summary>
     private void UpdatePeriodControls()
     {
+        ShiftButton.FontWeight = _period == Period.Shift ? FontWeights.Bold : FontWeights.Normal;
         DailyButton.FontWeight = _period == Period.Day ? FontWeights.Bold : FontWeights.Normal;
         WeeklyButton.FontWeight = _period == Period.Week ? FontWeights.Bold : FontWeights.Normal;
         MonthlyButton.FontWeight = _period == Period.Month ? FontWeights.Bold : FontWeights.Normal;
         ComputersKindButton.FontWeight = _kind == ResourceKind.Computer ? FontWeights.Bold : FontWeights.Normal;
         OtherKindButton.FontWeight = _kind == ResourceKind.Other ? FontWeights.Bold : FontWeights.Normal;
+
+        if (_period == Period.Shift)
+        {
+            PreviousButton.IsEnabled = _shiftIndex < _shifts.Count - 1;
+            NextButton.IsEnabled = _shiftIndex > 0;
+            PeriodText.Text = _shifts.Count == 0 ? Strings.Get("ShiftNone") : ShiftText(_shifts[_shiftIndex]);
+            return;
+        }
 
         PreviousButton.IsEnabled = NextButton.IsEnabled = _period == Period.Day;
 
@@ -115,6 +144,11 @@ public partial class ReportsWindow : Window
         var last = toExclusive.AddDays(-1);
         PeriodText.Text = from == last ? from.ToString("dd.MM.yyyy") : $"{from:dd.MM.yyyy} – {last:dd.MM.yyyy}";
     }
+
+    /// <summary>"Shift #12: 28.10 14:05 – 29.10 02:30" (or "open" while it has not been closed).</summary>
+    private static string ShiftText(ReportsService.ShiftInfo shift) =>
+        Strings.Format("ShiftLabel", shift.Id, shift.OpenedUtc.ToLocalTime().ToString("dd.MM HH:mm"),
+            shift.ClosedUtc is { } closed ? closed.ToLocalTime().ToString("dd.MM HH:mm") : Strings.Get("ShiftStillOpen"));
 
     private async void OnComputersKind(object sender, RoutedEventArgs e)
     {
@@ -125,6 +159,14 @@ public partial class ReportsWindow : Window
     private async void OnOtherKind(object sender, RoutedEventArgs e)
     {
         _kind = ResourceKind.Other;
+        await RefreshAsync();
+    }
+
+    // "Shift" always goes to the newest shift (the open one, if there is one); the arrows walk to older ones.
+    private async void OnShift(object sender, RoutedEventArgs e)
+    {
+        _period = Period.Shift;
+        _shiftIndex = 0;
         await RefreshAsync();
     }
 
@@ -152,12 +194,26 @@ public partial class ReportsWindow : Window
 
     private async Task RefreshAsync()
     {
-        UpdatePeriodControls();
-        var (fromLocal, toLocalExclusive) = CurrentRange();
-
         using var scope = _services.CreateScope();
         var reports = scope.ServiceProvider.GetRequiredService<ReportsService>();
-        var report = await reports.BuildReportAsync(fromLocal.ToUniversalTime(), toLocalExclusive.ToUniversalTime(), _kind);
+
+        // Re-read each time: a shift may have been opened or closed since this window opened.
+        _shifts = await reports.GetShiftsAsync();
+        _shiftIndex = Math.Clamp(_shiftIndex, 0, Math.Max(0, _shifts.Count - 1));
+        UpdatePeriodControls();
+
+        ReportsService.Report report;
+        if (_period == Period.Shift)
+        {
+            // With no shifts at all the report is simply empty (no session has shift id 0).
+            report = await reports.BuildShiftReportAsync(_shifts.Count == 0 ? 0 : _shifts[_shiftIndex].Id, _kind);
+        }
+        else
+        {
+            var (fromLocal, toLocalExclusive) = CurrentRange();
+            report = await reports.BuildReportAsync(fromLocal.ToUniversalTime(), toLocalExclusive.ToUniversalTime(), _kind);
+        }
+
         _lastReport = report;
 
         TotalIncomeValue.Text = $"{report.Totals.TotalIncomeUzs:N0} UZS";
@@ -217,7 +273,9 @@ public partial class ReportsWindow : Window
         var dialog = new SaveFileDialog
         {
             Filter = "CSV (*.csv)|*.csv",
-            FileName = $"ClubControl-report-{DateTime.Today:yyyy-MM-dd}.csv"
+            FileName = _period == Period.Shift && _shifts.Count > 0
+                ? $"ClubControl-report-shift-{_shifts[_shiftIndex].Id}.csv"
+                : $"ClubControl-report-{DateTime.Today:yyyy-MM-dd}.csv"
         };
         if (dialog.ShowDialog() != true)
             return;
