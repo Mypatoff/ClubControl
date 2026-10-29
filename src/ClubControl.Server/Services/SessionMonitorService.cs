@@ -1,6 +1,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using ClubControl.Server.Data;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -75,5 +76,8 @@ public class SessionMonitorService : BackgroundService
 
         await sessionService.EndExpiredPrepaySessionsAsync();
         await sessionService.TickPostpayCostsAsync();
+
+        // A shift staff forgot to close ends by itself (see ShiftHelper.CloseIfIdleAsync).
+        await ShiftHelper.CloseIfIdleAsync(scope.ServiceProvider.GetRequiredService<ClubDbContext>(), DateTime.UtcNow);
     }
 }

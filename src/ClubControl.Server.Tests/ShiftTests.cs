@@ -89,6 +89,89 @@ public class ShiftTests : SessionTestBase
         Assert.Contains(await check.EventLogEntries.ToListAsync(), e => e.Type == EventType.ShiftClosed);
     }
 
+    // ---- a forgotten shift closes itself ----
+
+    /// <summary>Makes the open shift and everything in it look <paramref name="age"/> older.</summary>
+    private async Task AgeEverythingAsync(TimeSpan age)
+    {
+        using var db = NewDb();
+        foreach (var shift in await db.Shifts.ToListAsync())
+            shift.OpenedUtc -= age;
+        foreach (var session in await db.Sessions.ToListAsync())
+        {
+            session.StartUtc -= age;
+            session.ActualEndUtc -= age;
+        }
+        await db.SaveChangesAsync();
+    }
+
+    [Fact]
+    public async Task A_shift_with_no_activity_for_eight_hours_is_closed_at_its_last_activity()
+    {
+        using (var db = NewDb())
+            await ServiceFor(db).StartPostpayAsync(Pc1);
+        using (var db = NewDb())
+            await ServiceFor(db).EndSessionEarlyAsync(Pc1);
+        await AgeEverythingAsync(TimeSpan.FromHours(9));
+
+        using (var db = NewDb())
+            Assert.NotNull(await ShiftHelper.CloseIfIdleAsync(db, DateTime.UtcNow));
+
+        using var check = NewDb();
+        var shift = await check.Shifts.SingleAsync();
+        var sessionEnd = (await check.Sessions.SingleAsync()).ActualEndUtc!.Value;
+        Assert.Equal(sessionEnd, shift.ClosedUtc); // closed when the last session ended, not 9 hours later
+        Assert.Contains(await check.EventLogEntries.ToListAsync(), e => e.Type == EventType.ShiftClosed && e.Message.Contains("automatically"));
+    }
+
+    [Fact]
+    public async Task A_shift_with_recent_activity_stays_open_even_if_it_was_opened_long_ago()
+    {
+        using (var db = NewDb())
+            await ServiceFor(db).StartPostpayAsync(Pc1);
+        using (var db = NewDb())
+            await ServiceFor(db).EndSessionEarlyAsync(Pc1);
+        await AgeEverythingAsync(TimeSpan.FromHours(9));
+
+        // The session ended 9 hours ago; a newer one ended 2 hours ago.
+        using (var db = NewDb())
+            await ServiceFor(db).StartPostpayAsync(Pc2);
+        using (var db = NewDb())
+            await ServiceFor(db).EndSessionEarlyAsync(Pc2);
+
+        using (var db = NewDb())
+            Assert.Null(await ShiftHelper.CloseIfIdleAsync(db, DateTime.UtcNow.AddHours(2)));
+
+        using var check = NewDb();
+        Assert.Null((await check.Shifts.SingleAsync()).ClosedUtc);
+    }
+
+    [Fact]
+    public async Task An_idle_shift_is_not_closed_while_a_session_is_still_running()
+    {
+        using (var db = NewDb())
+            await ServiceFor(db).StartPostpayAsync(Pc1);
+        await AgeEverythingAsync(TimeSpan.FromHours(9));
+
+        using (var db = NewDb())
+            Assert.Null(await ShiftHelper.CloseIfIdleAsync(db, DateTime.UtcNow));
+
+        using var check = NewDb();
+        Assert.Null((await check.Shifts.SingleAsync()).ClosedUtc);
+    }
+
+    [Fact]
+    public async Task A_shift_opened_by_hand_and_never_used_is_closed_after_eight_hours()
+    {
+        using (var db = NewDb())
+            await ShiftHelper.OpenAsync(db);
+
+        using (var db = NewDb())
+            Assert.Null(await ShiftHelper.CloseIfIdleAsync(db, DateTime.UtcNow.AddHours(7)));
+        using (var db = NewDb())
+            Assert.NotNull(await ShiftHelper.CloseIfIdleAsync(db, DateTime.UtcNow.AddHours(9)));
+    }
+
     [Fact]
     public async Task Closing_when_no_shift_is_open_is_refused()
     {

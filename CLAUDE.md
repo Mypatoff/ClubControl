@@ -194,7 +194,9 @@ C# .NET 8. WPF for Server (admin panel + hosted ASP.NET Core/SignalR) and Client
 - [x] Post-phase-6 feature: working shifts ("Open shift" / "Close shift", `Shift` table + `Session.ShiftId` + `AddShifts`
       migration, `ShiftHelper`). One button on the main panel and a header chip show the state. Starting a session with no
       shift open opens one by itself; closing is refused while any session is still running (incl. one waiting to be
-      paid). Reports has a new "Shift" view (arrows walk between shifts, opens on the newest shift) that lists exactly the
+      paid) - unless nothing has started or ended for 8 hours (`ShiftHelper.CloseIfIdleAsync`, run by
+      `SessionMonitorService` every tick and so also right after a server restart), then it closes itself at its last
+      activity. Reports has a new "Shift" view (arrows walk between shifts, opens on the newest shift) that lists exactly the
       sessions started in that shift, also past midnight; Day/Week/Month are unchanged. Sessions from before shifts
       existed have no shift and only show in the calendar views. Covered by `ShiftTests`; the new window controls were
       checked by building only, not click-tested.
