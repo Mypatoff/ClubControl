@@ -60,7 +60,10 @@ public static class ShiftHelper
         var lastActivity = shift.OpenedUtc;
         var lastStart = await db.Sessions.Where(s => s.ShiftId == shift.Id).MaxAsync(s => (DateTime?)s.StartUtc);
         var lastEnd = await db.Sessions.Where(s => s.ShiftId == shift.Id).MaxAsync(s => s.ActualEndUtc);
-        foreach (var moment in new[] { lastStart, lastEnd })
+        // Selling at the bar, or being paid a debt, is activity too (a bar-only shift has no sessions at all).
+        var lastSale = await db.BarSales.Where(s => s.ShiftId == shift.Id).MaxAsync(s => (DateTime?)s.CreatedUtc);
+        var lastDebtPaid = await db.BarSales.Where(s => s.PaidShiftId == shift.Id).MaxAsync(s => s.PaidUtc);
+        foreach (var moment in new[] { lastStart, lastEnd, lastSale, lastDebtPaid })
         {
             if (moment is { } m && m > lastActivity)
                 lastActivity = m;

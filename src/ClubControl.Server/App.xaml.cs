@@ -212,6 +212,7 @@ public partial class App : Application
         builder.Services.AddSingleton<ClientUpdateTracker>();
         builder.Services.AddSingleton<ClientMissingTracker>();
         builder.Services.AddSingleton<AuthRejectionTracker>();
+        builder.Services.AddSingleton<HeartbeatTracker>();
         builder.Services.AddScoped<PowerService>();
         builder.Services.AddScoped<ReportsService>();
         builder.Services.AddHostedService<OfflineMonitorService>();
@@ -219,6 +220,7 @@ public partial class App : Application
         builder.Services.AddHostedService<UdpDiscoveryService>();
         builder.Services.AddHostedService<SessionMonitorService>();
         builder.Services.AddHostedService<BackupService>();
+        builder.Services.AddHostedService<BarCleanupService>();
 
         _host = builder.Build();
         _host.MapHub<ClubHub>(NetworkConstants.HubRoute);
@@ -256,6 +258,10 @@ public partial class App : Application
 
             var setting = await SettingsHelper.GetOrCreateAsync(db);
             await TariffsHelper.EnsureDefaultsAsync(db);
+
+            // How big the tables are: next to the "Slow" lines in server-log.txt this shows whether the lag grows with the data.
+            ServerLog.Info("Startup", $"Rows: PCs {await db.Pcs.CountAsync()}, sessions {await db.Sessions.CountAsync()}, " +
+                $"segments {await db.SessionSegments.CountAsync()}, event log {await db.EventLogEntries.CountAsync()}, bar sales {await db.BarSales.CountAsync()}");
 
             Strings.Apply(setting.AdminPanelLanguage);
             ThemeManager.Apply(setting.UiTheme);

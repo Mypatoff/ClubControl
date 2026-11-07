@@ -915,4 +915,19 @@
   <data name="BarTabUnpaidFormat" xml:space="preserve">
     <value>НЕ ОПЛАЧЕНО ({0})</value>
   </data>
+  <data name="ReportsBarNote" xml:space="preserve">
+    <value>Одна строка на каждую смену за последние {0} дней. История бара старше этого срока удаляется автоматически (копия остаётся в ежедневных резервных копиях). Не зависит от Дня / Недели / Месяца.</value>
+  </data>
+  <data name="ReportsBarShift" xml:space="preserve">
+    <value>Смена</value>
+  </data>
+  <data name="ReportsBarCounter" xml:space="preserve">
+    <value>Касса</value>
+  </data>
+  <data name="ReportsBarCredit" xml:space="preserve">
+    <value>Выдано в долг</value>
+  </data>
+  <data name="ReportsBarProductsOf" xml:space="preserve">
+    <value>Товары, проданные за смену №{0}</value>
+  </data>
 </root>

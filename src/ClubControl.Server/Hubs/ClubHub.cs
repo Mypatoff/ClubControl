@@ -26,9 +26,11 @@ public class ClubHub : Hub
     private readonly SessionService _sessionService;
     private readonly ClientUpdateTracker _updates;
     private readonly AuthRejectionTracker _rejections;
+    private readonly HeartbeatTracker _heartbeats;
 
-    public ClubHub(ClubDbContext db, SessionService sessionService, ClientUpdateTracker updates, AuthRejectionTracker rejections)
+    public ClubHub(ClubDbContext db, SessionService sessionService, ClientUpdateTracker updates, AuthRejectionTracker rejections, HeartbeatTracker heartbeats)
     {
+        _heartbeats = heartbeats;
         _db = db;
         _sessionService = sessionService;
         _updates = updates;
@@ -37,6 +39,7 @@ public class ClubHub : Hub
 
     public async Task Heartbeat(HeartbeatRequest request)
     {
+        var timer = SlowLog.Start("Heartbeat");
         var pc = await _db.Pcs.FirstOrDefaultAsync(p => p.MachineGuid == request.MachineGuid);
 
         // Once a PC has been provisioned (AuthTokenHash set - see
@@ -64,6 +67,23 @@ public class ClubHub : Hub
             return;
         }
 
+        // A machine id nobody has seen is only let in while there is room for another "New PC" (see NewPcLimit).
+        if (pc is null && NewPcLimit.IsFull(await NewPcLimit.CountUnassignedAsync(_db)))
+        {
+            if (NewPcLimit.ShouldWarn(DateTime.UtcNow))
+            {
+                _db.EventLogEntries.Add(new EventLogEntry
+                {
+                    Type = EventType.Warning,
+                    Message = $"Ignored a new PC ({request.Hostname}, {request.IpAddress}): {NewPcLimit.MaxUnassigned} new PCs are already waiting to be set up. " +
+                              "Give them a number or delete the unused ones in Settings > Computers",
+                });
+                await _db.SaveChangesAsync();
+            }
+
+            return;
+        }
+
         // Registering a newer connection for this machine (if one already existed) immediately
         // retires the old one, so it can never again be addressed by a command and its eventual
         // disconnect event cannot evict this new, correct mapping.
@@ -78,16 +98,22 @@ public class ClubHub : Hub
             _db.Pcs.Add(pc);
         }
 
+        var now = DateTime.UtcNow;
+        _heartbeats.Record(request.MachineGuid, now);
+
+        // Assigning an unchanged value is not a change, so a normal heartbeat writes nothing at all (see HeartbeatTracker);
+        // the saved heartbeat time is refreshed only about once a minute, or when the PC comes back online.
         pc.IpAddress = request.IpAddress;
         pc.MacAddress = request.MacAddress;
         pc.Hostname = request.Hostname;
-        pc.LastHeartbeatUtc = DateTime.UtcNow;
 
         var wasOnline = pc.IsOnline;
+        if (isNew || !wasOnline || HeartbeatTracker.ShouldSave(pc.LastHeartbeatUtc, now))
+            pc.LastHeartbeatUtc = now;
         pc.IsOnline = true;
 
         // After "Update client": the first heartbeat that shows a new version (or a restart) is the answer.
-        if (!isNew && _updates.OnHeartbeat(request.MachineGuid, request.ClientVersion, Context.ConnectionId, DateTime.UtcNow) is { } update)
+        if (!isNew && _updates.OnHeartbeat(request.MachineGuid, request.ClientVersion, Context.ConnectionId, now) is { } update)
         {
             _db.EventLogEntries.Add(new EventLogEntry
             {
@@ -115,7 +141,10 @@ public class ClubHub : Hub
             });
         }
 
+        timer.Step("load pc");
         await _db.SaveChangesAsync();
+        timer.Step("save");
+        timer.Finish();
 
         // Just came online (first contact, or back from an offline gap / server restart): tell it
         // what it should actually be showing right now, instead of waiting for the next admin action
@@ -202,6 +231,7 @@ public class ClubHub : Hub
             var pc = await _db.Pcs.FirstOrDefaultAsync(p => p.MachineGuid == machineGuid);
             if (pc is not null && pc.IsOnline)
             {
+                pc.LastHeartbeatUtc = _heartbeats.Latest(machineGuid, pc.LastHeartbeatUtc); // the saved one can be up to a minute old
                 pc.IsOnline = false;
                 _db.EventLogEntries.Add(new EventLogEntry
                 {

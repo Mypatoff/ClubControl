@@ -40,6 +40,12 @@ public class BarSale
     public string UnpaidComment { get; set; } = "";
     public DateTime? PaidUtc { get; set; }
 
+    /// <summary>The working shift (smena) that was open when the sale was made; the bar report is kept per shift. Null only for imported history.</summary>
+    public int? ShiftId { get; set; }
+
+    /// <summary>For a sale on credit: the shift that was open when it was paid, which is the shift its money counts for.</summary>
+    public int? PaidShiftId { get; set; }
+
     public bool IsVoided => VoidedUtc.HasValue;
 
     /// <summary>On credit, not settled and not cancelled: what the unpaid tracker counts.</summary>

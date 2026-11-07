@@ -36,7 +36,11 @@ public partial class MainWindow : Window
         RestoreLogHeight();
 
         _refreshTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
-        _refreshTimer.Tick += async (_, _) => await RefreshAsync();
+        _refreshTimer.Tick += async (_, _) =>
+        {
+            if (!_refreshing) // the previous refresh is still loading: skip this tick
+                await RefreshAsync();
+        };
         _refreshTimer.Start();
     }
 
@@ -157,18 +161,86 @@ public partial class MainWindow : Window
         Close();
     }
 
+    // The refresh has two parts: the database is read on a worker thread (SQLite reads are synchronous, and doing them here
+    // froze the window for part of every second), then the results are shown on the UI thread. Only raw data crosses
+    // over: the texts come from Strings, which uses the UI thread's language.
+    private sealed record PanelData(Dictionary<int, string> TariffNames, Dictionary<int, SessionService.ActiveSessionSnapshot> Snapshots,
+        List<Pc> Pcs, Shift? OpenShift, BarService.UnpaidSummary Unpaid, int NewestEventId, List<EventLogEntry>? Events);
+
+    private bool _refreshing;
+    private bool _refreshAgain;
+
+    /// <summary>
+    /// Refreshes the panel. Never two at once: a refresh asked for while one is running (after an action) runs again
+    /// right after it, so the action's result is shown; the timer simply skips its tick instead.
+    /// </summary>
     private async Task RefreshAsync()
+    {
+        if (_refreshing)
+        {
+            _refreshAgain = true;
+            return;
+        }
+
+        _refreshing = true;
+        try
+        {
+            do
+            {
+                _refreshAgain = false;
+                await RefreshOnceAsync();
+            }
+            while (_refreshAgain);
+        }
+        finally
+        {
+            _refreshing = false;
+        }
+    }
+
+    private async Task RefreshOnceAsync()
     {
         // The refresh rebuilds every card, which would break a rectangle selection in progress.
         if (_dragging)
             return;
 
-        using var scope = Services.CreateScope();
-        var db = scope.ServiceProvider.GetRequiredService<ClubDbContext>();
-        var sessionService = scope.ServiceProvider.GetRequiredService<SessionService>();
+        var timer = SlowLog.Start("Panel refresh");
+        var services = Services;
+        var shownEventId = _shownEventId;
+        var culture = CultureInfo.CurrentUICulture.Name;
+        var eventsOutdated = culture != _shownEventCulture;
 
-        var tariffNames = await db.Tariffs.AsNoTracking().ToDictionaryAsync(t => t.Id, t => t.Name);
-        var snapshots = await sessionService.GetActiveSessionSnapshotsAsync();
+        var data = await Task.Run(async () =>
+        {
+            using var scope = services.CreateScope();
+            var db = scope.ServiceProvider.GetRequiredService<ClubDbContext>();
+
+            var tariffNames = await db.Tariffs.AsNoTracking().ToDictionaryAsync(t => t.Id, t => t.Name);
+            var snapshots = await scope.ServiceProvider.GetRequiredService<SessionService>().GetActiveSessionSnapshotsAsync();
+            var pcs = await db.Pcs.AsNoTracking().OrderBy(p => p.Number).ToListAsync();
+            var openShift = await ShiftHelper.GetOpenAsync(db);
+            var unpaid = await scope.ServiceProvider.GetRequiredService<BarService>().GetUnpaidSummaryAsync();
+
+            // The newest id is a one-row read; the 200 lines are fetched only when there is something new.
+            var newestEventId = await db.EventLogEntries.MaxAsync(e => (int?)e.Id) ?? 0;
+            List<EventLogEntry>? events = null;
+            if (newestEventId != shownEventId || eventsOutdated)
+            {
+                events = await db.EventLogEntries.AsNoTracking()
+                    .OrderByDescending(e => e.TimestampUtc)
+                    .Take(200)
+                    .ToListAsync();
+            }
+
+            return new PanelData(tariffNames, snapshots, pcs, openShift, unpaid, newestEventId, events);
+        });
+        timer.Step("database");
+
+        // A rectangle selection may have started while the data was loading.
+        if (_dragging)
+            return;
+
+        var snapshots = data.Snapshots;
 
         // Disabled resources are hidden from this operational panel entirely (SPEC section 8) -
         // they're still locked and excluded from "all" actions, but a disabled PC/resource has no
@@ -176,21 +248,19 @@ public partial class MainWindow : Window
         // actually deleted. The one exception is a disabled PC that somehow still has an active
         // session (e.g. disabled mid-session) - that must stay visible, since hiding it would also
         // hide the only place to free/stop it and collect payment.
-        var pcs = await db.Pcs.AsNoTracking().OrderBy(p => p.Number).ToListAsync();
-        var pcById = pcs.ToDictionary(p => p.Id); // for the event log, which also mentions hidden (disabled) PCs
-        pcs = pcs.Where(p => p.Enabled || snapshots.ContainsKey(p.Id)).ToList();
+        var pcById = data.Pcs.ToDictionary(p => p.Id); // for the event log, which also mentions hidden (disabled) PCs
+        var pcs = data.Pcs.Where(p => p.Enabled || snapshots.ContainsKey(p.Id)).ToList();
 
         var selectedIds = PcList.SelectedItems.Cast<PcRow>().Select(p => p.Id).ToHashSet();
-        var updates = scope.ServiceProvider.GetRequiredService<ClientUpdateTracker>();
-        var clientMissing = scope.ServiceProvider.GetRequiredService<ClientMissingTracker>();
-        var rejections = scope.ServiceProvider.GetRequiredService<AuthRejectionTracker>();
-        var rows = pcs.Select(pc => BuildRow(pc, tariffNames, snapshots.GetValueOrDefault(pc.Id), updates.Get(pc.MachineGuid, DateTime.UtcNow),
+        var updates = services.GetRequiredService<ClientUpdateTracker>();
+        var clientMissing = services.GetRequiredService<ClientMissingTracker>();
+        var rejections = services.GetRequiredService<AuthRejectionTracker>();
+        var rows = pcs.Select(pc => BuildRow(pc, data.TariffNames, snapshots.GetValueOrDefault(pc.Id), updates.Get(pc.MachineGuid, DateTime.UtcNow),
             clientMissing.IsMissing(pc.MachineGuid), rejections.IsRejected(pc.MachineGuid, DateTime.UtcNow))).ToList();
 
         // The same cards in the same order (the usual case, every second): the cards on screen just take the new
         // values, and only those that changed redraw. Rebuilding all of them every second was most of this
         // window's work. Only a different set of cards, a different order or another language rebuilds the list.
-        var culture = CultureInfo.CurrentUICulture.Name;
         if (culture == _shownCulture && SameCards(_shownRows, rows))
         {
             for (var i = 0; i < rows.Count; i++)
@@ -214,27 +284,22 @@ public partial class MainWindow : Window
         }
 
         UpdateCounters(rows);
-        UpdateShiftControls(await ShiftHelper.GetOpenAsync(db));
+        UpdateShiftControls(data.OpenShift);
 
-        var unpaid = await scope.ServiceProvider.GetRequiredService<BarService>().GetUnpaidSummaryAsync();
-        UnpaidChip.Visibility = unpaid.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
-        StatUnpaidText.Text = Strings.Format("UnpaidChipFormat", unpaid.Count, $"{unpaid.TotalUzs:N0}");
+        UnpaidChip.Visibility = data.Unpaid.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+        StatUnpaidText.Text = Strings.Format("UnpaidChipFormat", data.Unpaid.Count, $"{data.Unpaid.TotalUzs:N0}");
 
-        // The newest id is a one-row read; the 200 lines are fetched and redrawn only when there is something new.
-        var newestEventId = await db.EventLogEntries.MaxAsync(e => (int?)e.Id) ?? 0;
-        if (newestEventId != _shownEventId || culture != _shownEventCulture)
+        if (data.Events is not null)
         {
-            var events = await db.EventLogEntries.AsNoTracking()
-                .OrderByDescending(e => e.TimestampUtc)
-                .Take(200)
-                .ToListAsync();
-            EventLogList.ItemsSource = events.Select(e => FormatEvent(e, pcById)).ToList();
-            _shownEventId = newestEventId;
+            EventLogList.ItemsSource = data.Events.Select(e => FormatEvent(e, pcById)).ToList();
+            _shownEventId = data.NewestEventId;
             _shownEventCulture = culture;
         }
 
         StatusText.Text = Strings.Format("StatusListening", NetworkConstants.SignalRPort, NetworkConstants.DiscoveryPort,
             pcs.Count(p => p.IsOnline), pcs.Count);
+        timer.Step("show");
+        timer.Finish();
     }
 
     // What is on screen now, so the next refresh can update it in place (see RefreshAsync).

@@ -40,6 +40,14 @@ public class ClubDbContext : DbContext
         modelBuilder.Entity<Session>()
             .HasIndex(s => s.Status);
 
+        // A PC's tariff must exist. Restrict: a tariff that is still assigned cannot be deleted (SettingsWindow checks
+        // first and says why; this makes the database refuse it too).
+        modelBuilder.Entity<Pc>()
+            .HasOne<Tariff>()
+            .WithMany()
+            .HasForeignKey(p => p.TariffId)
+            .OnDelete(DeleteBehavior.Restrict);
+
         modelBuilder.Entity<Session>()
             .HasMany(s => s.Segments)
             .WithOne(seg => seg.Session)
@@ -95,6 +103,8 @@ public class ClubDbContext : DbContext
         // The bar page and the unpaid chip read these every second or on every refresh.
         modelBuilder.Entity<BarSale>().HasIndex(s => s.CreatedUtc);
         modelBuilder.Entity<BarSale>().HasIndex(s => new { s.IsUnpaid, s.PaidUtc });
+        modelBuilder.Entity<BarSale>().HasIndex(s => s.ShiftId);
+        modelBuilder.Entity<BarSale>().HasIndex(s => s.PaidShiftId);
         modelBuilder.Entity<BarStockMovement>().HasIndex(m => new { m.BarProductId, m.CreatedUtc });
     }
 }

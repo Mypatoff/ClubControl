@@ -32,10 +32,6 @@ C# .NET 8. WPF for Server (admin panel + hosted ASP.NET Core/SignalR) and Client
   trusting them, especially anything touching XAML, EF migrations, or the login/session flow.
 
 ## Known follow-ups
-- `Pc.TariffId` has no EF foreign-key/migration tying it to `Tariff` (unlike every other relation in
-  `ClubDbContext`). The app-level guard in `SettingsWindow.OnDeleteTariff` (blocks deleting a tariff
-  that's currently assigned) closes the practical risk, but the schema itself still doesn't enforce
-  it. Add the FK + migration once this can be built and the migration verified on Windows.
 - No restore-from-backup flow exists (by design, matches SPEC - restore is a manual file-copy while
   the server is stopped), and session reports export to CSV only (`ReportsWindow.OnExport`), no print.
 
@@ -211,3 +207,32 @@ C# .NET 8. WPF for Server (admin panel + hosted ASP.NET Core/SignalR) and Client
       `BarReportTests`, `BarImportTests` and the upgrade test run on SQLite); the XAML and the real window were NOT
       compiled or click-tested - build and click through the Bar page on Windows before releasing (Bar page, Unpaid
       chip and window, Add item > From the bar, Reports > Bar, the import with the real `shop.db`).
+- [x] Bar reports per shift (migration `AddBarShifts`: `BarSale.ShiftId`/`PaidShiftId`, existing sales are given the shift that
+      was open at their time by SQL in the migration; tested in `DatabaseUpgradeTests`). A sale opens a shift when none is
+      open, bar activity keeps a shift from idle auto-close (`ShiftHelper.CloseIfIdleAsync`), Reports > Bar lists the last
+      30 days of shifts (`ReportsService.GetBarShiftHistoryAsync`) instead of a day/week/month total. The Reports window
+      change is XAML that was not compiled or click-tested.
+      `BarCleanupService` (hosted service, daily) deletes bar sales and their stock lines older than those 30 days to keep the
+      database small, except what is still owed; covered by `BarCleanupTests`.
+- [x] Performance + robustness round (GitHub issues #3-#11, "server gets laggy"). Read from the code and tested; the first
+      real-club measurement is still to come (see `SlowLog` below). (1) The panel refresh (`MainWindow.RefreshAsync`) loads its data
+      on a worker thread (`Task.Run`) and shows it on the UI thread - `Microsoft.Data.Sqlite` async calls are really synchronous, so
+      they used to freeze the window every second; never two refreshes at once. Only raw data crosses threads: `Strings` uses the
+      UI thread's language, so rows/texts are built on the UI thread. The Reports window and Bar page load the same way
+      (refresh tickets stop a slow old load overwriting a newer one); Bar loads products once. (2) `SlowLog` writes one
+      "Slow" line to `server-log.txt` (at most once a minute per kind of work, >=150 ms: panel refresh, hub heartbeat, session and
+      offline monitor ticks) plus a "Startup" line with table sizes - check it first on a "laggy" report. (3) Heartbeats no longer
+      write the database every 5 s per PC: `HeartbeatTracker` (memory) keeps the last heartbeat, `Pc.LastHeartbeatUtc` is saved about
+      once a minute and when a PC goes offline; `OfflineMonitorService.CheckAsync` reads three columns and uses the memory time.
+      (4) `SessionService.EndExpiredPrepaySessionsAsync` queries only expired sessions; postpay clients get `UpdateSession` every 30 s
+      (`PostpayUpdateThrottle`) instead of every 2 s (the limit check still runs every tick); the shift idle check runs every 30 s.
+      (5) `PcRow.CopyFrom` has no reflection and a time/amount-only change redraws just `PrimaryDisplay` + `TooltipText`
+      (`PcRowTests` checks by reflection that no stored field is forgotten). (6) Reports read projected columns, `AsNoTracking`.
+      (7) `NewPcLimit`: at most 10 unassigned "New PC" rows; more heartbeats from unknown machine ids are ignored with one Warning per
+      minute. (8) Migration `AddPcTariffForeignKey`: real FK `Pcs.TariffId -> Tariffs` (Restrict); a PC pointing at a deleted tariff is
+      made a "new PC" (TariffId NULL) by the migration. EF note: deleting a tariff while a PC is *tracked* in the same context makes EF
+      clear that PC's TariffId instead of failing; the database itself refuses (tested with a fresh context).
+      Checked on Linux with a scratch harness (Server code + `ClubControl.Server.Tests` compiled against the WPF reference assemblies,
+      WPF-only `PcRowBindingTests` excluded) and a compile-only check of the whole Server with generated XAML stubs; the XAML windows
+      themselves were NOT run - click through the panel (selection by dragging, scrolling, an action while it refreshes), Reports
+      (Day/Week/Month/Shift, fast clicking) and the Bar page on Windows before releasing.

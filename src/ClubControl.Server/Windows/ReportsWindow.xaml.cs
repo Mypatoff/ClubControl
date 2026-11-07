@@ -26,7 +26,10 @@ public partial class ReportsWindow : Window
     private List<ReportsService.ShiftInfo> _shifts = new(); // newest first
     private int _shiftIndex;                                // the shift shown in Shift mode; the arrows move it
     private ReportsService.Report? _lastReport;
-    private ReportsService.BarReport? _lastBarReport;
+    private List<ReportsService.BarShiftReport> _barShifts = new(); // newest first
+
+    private sealed record BarShiftRow(int ShiftId, string ShiftDisplay, string CounterDisplay, string BillsDisplay, string DebtsDisplay,
+        string TotalDisplay, string CreditDisplay, int Units);
 
     public ReportsWindow(IServiceProvider services)
     {
@@ -69,9 +72,17 @@ public partial class ReportsWindow : Window
         ByTypeTab.Header = Strings.Get("BySessionType");
 
         BarReportTab.Header = "🍹 " + Strings.Get("ReportsBarTitle");
+        BarNoteText.Text = Strings.Format("ReportsBarNote", ReportsService.BarHistoryDays);
+        BarShiftColumn.Header = Strings.Get("ReportsBarShift");
+        BarCounterColumn.Header = Strings.Get("ReportsBarCounter");
+        BarBillsColumn.Header = Strings.Get("ReportsBarSessions");
+        BarDebtsColumn.Header = Strings.Get("ReportsBarDebtsPaid");
+        BarTotalColumn.Header = Strings.Get("TotalIncome");
+        BarCreditColumn.Header = Strings.Get("ReportsBarCredit");
+        BarShiftUnitsColumn.Header = Strings.Get("ReportsBarUnits");
         BarProductColumn.Header = Strings.Get("BarColProduct");
         BarUnitsColumn.Header = Strings.Get("ReportsBarUnits");
-        BarIncomeColumn.Header = Strings.Get("ColumnIncome");
+        BarIncomeColumn.Header = Strings.Get("BarColAmount");
 
         SessionResourceColumn.Header = Strings.Get("ColumnPcNumber");
         SessionStartColumn.Header = Strings.Get("ColumnStart");
@@ -198,45 +209,50 @@ public partial class ReportsWindow : Window
         await RefreshAsync();
     }
 
+    // Each refresh gets a number; a slow one that finishes after a newer click must not overwrite the newer result.
+    private int _refreshTicket;
+
     private async Task RefreshAsync()
     {
-        using var scope = _services.CreateScope();
-        var reports = scope.ServiceProvider.GetRequiredService<ReportsService>();
+        var ticket = ++_refreshTicket;
 
-        // Re-read each time: a shift may have been opened or closed since this window opened.
-        _shifts = await reports.GetShiftsAsync();
-        _shiftIndex = Math.Clamp(_shiftIndex, 0, Math.Max(0, _shifts.Count - 1));
+        // What the loading needs, read here on the UI thread.
+        var period = _period;
+        var kind = _kind;
+        var wantedShiftIndex = _shiftIndex;
+        var (fromLocal, toLocalExclusive) = period == Period.Shift ? default : CurrentRange();
+
+        // The queries run on a worker thread: SQLite reads are synchronous, so a month of sessions would freeze the window.
+        var loaded = await Task.Run(async () =>
+        {
+            using var scope = _services.CreateScope();
+            var reports = scope.ServiceProvider.GetRequiredService<ReportsService>();
+
+            // Re-read each time: a shift may have been opened or closed since this window opened.
+            var shifts = await reports.GetShiftsAsync();
+            var shiftIndex = Math.Clamp(wantedShiftIndex, 0, Math.Max(0, shifts.Count - 1));
+
+            // With no shifts at all the report is simply empty (no session has shift id 0).
+            var built = period == Period.Shift
+                ? await reports.BuildShiftReportAsync(shifts.Count == 0 ? 0 : shifts[shiftIndex].Id, kind)
+                : await reports.BuildReportAsync(fromLocal.ToUniversalTime(), toLocalExclusive.ToUniversalTime(), kind);
+
+            var barShifts = await reports.GetBarShiftHistoryAsync(DateTime.UtcNow);
+            var unpaidNow = await reports.GetUnpaidNowAsync();
+            return (shifts, shiftIndex, built, barShifts, unpaidNow);
+        });
+
+        if (ticket != _refreshTicket)
+            return;
+
+        _shifts = loaded.shifts;
+        _shiftIndex = loaded.shiftIndex;
         UpdatePeriodControls();
 
-        ReportsService.Report report;
-        DateTime barFromUtc, barToUtc; // the bar is reported over the same time span as the sessions
-        if (_period == Period.Shift)
-        {
-            // With no shifts at all the report is simply empty (no session has shift id 0).
-            report = await reports.BuildShiftReportAsync(_shifts.Count == 0 ? 0 : _shifts[_shiftIndex].Id, _kind);
-            var shift = _shifts.Count == 0 ? null : _shifts[_shiftIndex];
-            barFromUtc = shift?.OpenedUtc ?? DateTime.UtcNow;
-            barToUtc = shift is null ? barFromUtc : shift.ClosedUtc ?? DateTime.UtcNow.AddMinutes(1);
-        }
-        else
-        {
-            var (fromLocal, toLocalExclusive) = CurrentRange();
-            barFromUtc = fromLocal.ToUniversalTime();
-            barToUtc = toLocalExclusive.ToUniversalTime();
-            report = await reports.BuildReportAsync(barFromUtc, barToUtc, _kind);
-        }
-
+        var report = loaded.built;
         _lastReport = report;
 
-        var bar = await reports.BuildBarReportAsync(barFromUtc, barToUtc);
-        _lastBarReport = bar;
-        BarTotalText.Text = $"{Strings.Get("TotalIncome")}: {bar.TotalIncomeUzs:N0} UZS";
-        BarCounterText.Text = $"{Strings.Get("ReportsBarPaid")}: {bar.CounterPaidUzs:N0} UZS";
-        BarSessionsText.Text = $"{Strings.Get("ReportsBarSessions")}: {bar.SessionItemsUzs:N0} UZS";
-        BarDebtsPaidText.Text = $"{Strings.Get("ReportsBarDebtsPaid")}: {bar.DebtsPaidUzs:N0} UZS";
-        BarUnitsText.Text = $"{Strings.Get("ReportsBarUnits")}: {bar.UnitsSold:N0}";
-        BarUnpaidText.Text = $"{Strings.Get("ReportsBarUnpaid")}: {bar.UnpaidNowUzs:N0} UZS";
-        BarProductsGrid.ItemsSource = bar.ByProduct.Select(r => new { r.ProductName, r.Units, IncomeDisplay = $"{r.IncomeUzs:N0} UZS" }).ToList();
+        ShowBar(loaded.barShifts, loaded.unpaidNow);
 
         TotalIncomeValue.Text = $"{report.Totals.TotalIncomeUzs:N0} UZS";
         TotalSessionsValue.Text = report.Totals.SessionCount.ToString();
@@ -279,6 +295,38 @@ public partial class ReportsWindow : Window
             r.SessionCount,
             HoursDisplay = r.Hours.ToString("N1")
         }).ToList();
+    }
+
+    /// <summary>
+    /// The bar tab: one row per working shift of the last month, newest first, whatever Day / Week / Month is chosen
+    /// for the sessions. The products of the selected shift are listed below.
+    /// </summary>
+    private void ShowBar(List<ReportsService.BarShiftReport> barShifts, long unpaidNow)
+    {
+        _barShifts = barShifts;
+        BarUnpaidText.Text = $"{Strings.Get("ReportsBarUnpaid")}: {unpaidNow:N0} UZS";
+
+        var keep = (BarShiftsGrid.SelectedItem as BarShiftRow)?.ShiftId;
+        var rows = _barShifts.Select(r => new BarShiftRow(r.ShiftId, BarShiftText(r), Money(r.CounterPaidUzs), Money(r.SessionItemsUzs),
+            Money(r.DebtsPaidUzs), Money(r.TotalIncomeUzs), Money(r.CreditGivenUzs), r.UnitsSold)).ToList();
+        BarShiftsGrid.ItemsSource = rows;
+        BarShiftsGrid.SelectedItem = rows.FirstOrDefault(r => r.ShiftId == keep) ?? rows.FirstOrDefault();
+        ShowBarProducts();
+    }
+
+    private static string Money(long uzs) => $"{uzs:N0} UZS";
+
+    private static string BarShiftText(ReportsService.BarShiftReport shift) =>
+        Strings.Format("ShiftLabel", shift.ShiftId, shift.OpenedUtc.ToLocalTime().ToString("dd.MM HH:mm"),
+            shift.ClosedUtc is { } closed ? closed.ToLocalTime().ToString("dd.MM HH:mm") : Strings.Get("ShiftStillOpen"));
+
+    private void OnBarShiftSelected(object sender, System.Windows.Controls.SelectionChangedEventArgs e) => ShowBarProducts();
+
+    private void ShowBarProducts()
+    {
+        var shift = BarShiftsGrid.SelectedItem is BarShiftRow row ? _barShifts.FirstOrDefault(s => s.ShiftId == row.ShiftId) : null;
+        BarProductsTitle.Text = shift is null ? "" : Strings.Format("ReportsBarProductsOf", shift.ShiftId);
+        BarProductsGrid.ItemsSource = shift?.ByProduct.Select(r => new { r.ProductName, r.Units, AmountDisplay = Money(r.AmountUzs) }).ToList();
     }
 
     private const string TimeFormat = "dd.MM.yyyy HH:mm";
@@ -343,16 +391,20 @@ public partial class ReportsWindow : Window
         foreach (var r in report.ByType)
             WriteRow(Strings.SessionTypeName(r.Type, r.Type == SessionType.Free), r.IncomeUzs, r.SessionCount, r.Hours.ToString("F1", CultureInfo.InvariantCulture));
 
-        if (_lastBarReport is { } bar)
+        if (_barShifts.Count > 0)
         {
+            // The bar is always listed per shift, whatever period the sessions above cover.
             sb.AppendLine();
             WriteRow(Strings.Get("ReportsBarTitle"));
-            WriteRow(Strings.Get("TotalIncome"), Strings.Get("ReportsBarPaid"), Strings.Get("ReportsBarSessions"),
-                Strings.Get("ReportsBarDebtsPaid"), Strings.Get("ReportsBarUnpaid"), Strings.Get("ReportsBarUnits"));
-            WriteRow(bar.TotalIncomeUzs, bar.CounterPaidUzs, bar.SessionItemsUzs, bar.DebtsPaidUzs, bar.UnpaidNowUzs, bar.UnitsSold);
-            WriteRow(Strings.Get("BarColProduct"), Strings.Get("ReportsBarUnits"), Strings.Get("ColumnIncome"));
-            foreach (var r in bar.ByProduct)
-                WriteRow(r.ProductName, r.Units, r.IncomeUzs);
+            WriteRow(Strings.Get("ReportsBarShift"), Strings.Get("ReportsBarCounter"), Strings.Get("ReportsBarSessions"),
+                Strings.Get("ReportsBarDebtsPaid"), Strings.Get("TotalIncome"), Strings.Get("ReportsBarCredit"), Strings.Get("ReportsBarUnits"));
+            foreach (var r in _barShifts)
+                WriteRow(BarShiftText(r), r.CounterPaidUzs, r.SessionItemsUzs, r.DebtsPaidUzs, r.TotalIncomeUzs, r.CreditGivenUzs, r.UnitsSold);
+            sb.AppendLine();
+            WriteRow(Strings.Get("ReportsBarShift"), Strings.Get("BarColProduct"), Strings.Get("ReportsBarUnits"), Strings.Get("BarColAmount"));
+            foreach (var r in _barShifts)
+                foreach (var p in r.ByProduct)
+                    WriteRow(BarShiftText(r), p.ProductName, p.Units, p.AmountUzs);
         }
 
         return sb.ToString();

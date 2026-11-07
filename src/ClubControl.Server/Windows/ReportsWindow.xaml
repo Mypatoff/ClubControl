@@ -114,24 +114,40 @@
                         </DataGrid.Columns>
                     </DataGrid>
                 </TabItem>
+                <!-- The bar, one row per working shift (smena) of the last month; not tied to the Day / Week / Month buttons -->
                 <TabItem x:Name="BarReportTab">
-                    <DockPanel Margin="8">
-                        <StackPanel DockPanel.Dock="Top" Margin="0,0,0,10">
-                            <TextBlock x:Name="BarTotalText" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,4" />
-                            <TextBlock x:Name="BarCounterText" Margin="0,0,0,2" />
-                            <TextBlock x:Name="BarSessionsText" Margin="0,0,0,2" />
-                            <TextBlock x:Name="BarDebtsPaidText" Margin="0,0,0,2" />
-                            <TextBlock x:Name="BarUnitsText" Margin="0,0,0,2" />
-                            <TextBlock x:Name="BarUnpaidText" Foreground="{StaticResource ErrorBrush}" FontWeight="SemiBold" />
+                    <Grid Margin="8">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="3*" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="2*" />
+                        </Grid.RowDefinitions>
+                        <StackPanel Grid.Row="0" Margin="0,0,0,8">
+                            <TextBlock x:Name="BarNoteText" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,0,0,4" />
+                            <TextBlock x:Name="BarUnpaidText" Foreground="{StaticResource ErrorBrush}" FontWeight="Bold" />
                         </StackPanel>
-                        <DataGrid x:Name="BarProductsGrid" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False" BorderThickness="0">
+                        <DataGrid x:Name="BarShiftsGrid" Grid.Row="1" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False"
+                                  SelectionMode="Single" BorderThickness="0" SelectionChanged="OnBarShiftSelected">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn x:Name="BarShiftColumn" Binding="{Binding ShiftDisplay}" Width="*" MinWidth="170" />
+                                <DataGridTextColumn x:Name="BarCounterColumn" Binding="{Binding CounterDisplay}" Width="110" />
+                                <DataGridTextColumn x:Name="BarBillsColumn" Binding="{Binding BillsDisplay}" Width="110" />
+                                <DataGridTextColumn x:Name="BarDebtsColumn" Binding="{Binding DebtsDisplay}" Width="110" />
+                                <DataGridTextColumn x:Name="BarTotalColumn" Binding="{Binding TotalDisplay}" Width="120" />
+                                <DataGridTextColumn x:Name="BarCreditColumn" Binding="{Binding CreditDisplay}" Width="110" />
+                                <DataGridTextColumn x:Name="BarShiftUnitsColumn" Binding="{Binding Units}" Width="70" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+                        <TextBlock x:Name="BarProductsTitle" Grid.Row="2" FontWeight="SemiBold" Margin="0,10,0,4" />
+                        <DataGrid x:Name="BarProductsGrid" Grid.Row="3" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False" BorderThickness="0">
                             <DataGrid.Columns>
                                 <DataGridTextColumn x:Name="BarProductColumn" Binding="{Binding ProductName}" Width="*" />
                                 <DataGridTextColumn x:Name="BarUnitsColumn" Binding="{Binding Units}" Width="100" />
-                                <DataGridTextColumn x:Name="BarIncomeColumn" Binding="{Binding IncomeDisplay}" Width="140" />
+                                <DataGridTextColumn x:Name="BarIncomeColumn" Binding="{Binding AmountDisplay}" Width="140" />
                             </DataGrid.Columns>
                         </DataGrid>
-                    </DockPanel>
+                    </Grid>
                 </TabItem>
             </TabControl>
         </Border>

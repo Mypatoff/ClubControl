@@ -25,6 +25,12 @@ public class SessionMonitorService : BackgroundService
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly ILogger<SessionMonitorService> _logger;
 
+    // The shift only ends after 8 idle hours: checking it every 30 seconds is plenty (and it costs several queries).
+    private static readonly TimeSpan ShiftCheckEvery = TimeSpan.FromSeconds(30);
+
+    private readonly PostpayUpdateThrottle _postpayUpdates = new();
+    private DateTime _lastShiftCheckUtc = DateTime.MinValue;
+
     private int _consecutiveFailures;
     private DateTime _lastLoggedFailureUtc = DateTime.MinValue;
 
@@ -71,13 +77,22 @@ public class SessionMonitorService : BackgroundService
 
     private async Task TickOnceAsync()
     {
+        var timer = SlowLog.Start("Session monitor tick");
         using var scope = _scopeFactory.CreateScope();
         var sessionService = scope.ServiceProvider.GetRequiredService<SessionService>();
 
         await sessionService.EndExpiredPrepaySessionsAsync();
-        await sessionService.TickPostpayCostsAsync();
+        timer.Step("prepay expiry");
+        await sessionService.TickPostpayCostsAsync(_postpayUpdates.ShouldSend);
+        timer.Step("postpay costs");
 
-        // A shift staff forgot to close ends by itself (see ShiftHelper.CloseIfIdleAsync).
-        await ShiftHelper.CloseIfIdleAsync(scope.ServiceProvider.GetRequiredService<ClubDbContext>(), DateTime.UtcNow);
+        // A shift staff forgot to close ends by itself (see ShiftHelper.CloseIfIdleAsync). The first tick after a start checks at once.
+        if (DateTime.UtcNow - _lastShiftCheckUtc >= ShiftCheckEvery)
+        {
+            await ShiftHelper.CloseIfIdleAsync(scope.ServiceProvider.GetRequiredService<ClubDbContext>(), DateTime.UtcNow);
+            _lastShiftCheckUtc = DateTime.UtcNow;
+        }
+        timer.Step("shift idle check");
+        timer.Finish();
     }
 }

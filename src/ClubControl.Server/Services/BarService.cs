@@ -66,21 +66,30 @@ public class BarService
         if (!string.IsNullOrEmpty(search))
             products = products.Where(p => p.Name.Contains(search, StringComparison.CurrentCultureIgnoreCase)).ToList();
 
-        var sold = new Dictionary<int, int>();
-        if (popularFirst)
+        if (!popularFirst)
         {
-            sold = await _db.BarSales
-                .Where(s => s.VoidedUtc == null)
-                .GroupBy(s => s.BarProductId)
-                .Select(g => new { Id = g.Key, Units = g.Sum(s => s.Quantity) })
-                .ToDictionaryAsync(x => x.Id, x => x.Units);
+            return products
+                .OrderBy(p => p.Name, StringComparer.CurrentCultureIgnoreCase)
+                .ToList();
         }
 
-        return products
-            .OrderByDescending(p => sold.GetValueOrDefault(p.Id))
+        return SortByPopularity(products, await GetUnitsSoldAsync());
+    }
+
+    /// <summary>Units sold per product id (cancelled sales not counted).</summary>
+    public async Task<Dictionary<int, int>> GetUnitsSoldAsync() =>
+        await _db.BarSales
+            .Where(s => s.VoidedUtc == null)
+            .GroupBy(s => s.BarProductId)
+            .Select(g => new { Id = g.Key, Units = g.Sum(s => s.Quantity) })
+            .ToDictionaryAsync(x => x.Id, x => x.Units);
+
+    /// <summary>Best sellers first; products with the same count, and ones never sold, in A-Z order.</summary>
+    public static List<BarProduct> SortByPopularity(IEnumerable<BarProduct> products, Dictionary<int, int> unitsSold) =>
+        products
+            .OrderByDescending(p => unitsSold.GetValueOrDefault(p.Id))
             .ThenBy(p => p.Name, StringComparer.CurrentCultureIgnoreCase)
             .ToList();
-    }
 
     public async Task<BarProduct> CreateProductAsync(string name, int priceUzs, int stock)
     {
@@ -186,6 +195,9 @@ public class BarService
         if (request.SessionMachineGuid is { } machineGuid)
             (pc, session) = await _sessions.RequireRunningSessionAsync(machineGuid);
 
+        // Like a session, a sale belongs to the open shift; with none open, the sale opens one.
+        var shift = await ShiftHelper.GetOrOpenAsync(_db);
+
         var sale = new BarSale
         {
             BarProduct = product,
@@ -199,7 +211,8 @@ public class BarService
             UnpaidComment = request.Unpaid ? comment : "",
             SessionId = session?.Id,
             PcId = pc?.Id,
-            PcLabel = pc is null ? "" : LabelOf(pc)
+            PcLabel = pc is null ? "" : LabelOf(pc),
+            ShiftId = shift.Id
         };
 
         // Paid at a PC: it goes on that session's bill like any other item.
@@ -299,10 +312,13 @@ public class BarService
 
     public async Task<UnpaidSummary> GetUnpaidSummaryAsync()
     {
-        var rows = _db.BarSales.AsNoTracking().Where(s => s.IsUnpaid && s.PaidUtc == null && s.VoidedUtc == null);
-        var count = await rows.CountAsync();
-        var total = count == 0 ? 0 : await rows.SumAsync(s => (long)s.TotalUzs);
-        return new UnpaidSummary(count, total);
+        // One query for both numbers (the main panel asks every second).
+        var totals = await _db.BarSales.AsNoTracking()
+            .Where(s => s.IsUnpaid && s.PaidUtc == null && s.VoidedUtc == null)
+            .GroupBy(_ => 1)
+            .Select(g => new { Count = g.Count(), Total = g.Sum(s => (long)s.TotalUzs) })
+            .FirstOrDefaultAsync();
+        return totals is null ? new UnpaidSummary(0, 0) : new UnpaidSummary(totals.Count, totals.Total);
     }
 
     /// <summary>The client paid a sale that was on credit; from now on it counts as income.</summary>
@@ -314,6 +330,7 @@ public class BarService
             throw new InvalidOperationException("That sale is not waiting for payment.");
 
         sale.PaidUtc = DateTime.UtcNow;
+        sale.PaidShiftId = (await ShiftHelper.GetOrOpenAsync(_db)).Id; // the money counts for the shift it arrived in
         _db.EventLogEntries.Add(new EventLogEntry
         {
             Type = EventType.BarPaid,

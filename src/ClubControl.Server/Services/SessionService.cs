@@ -384,9 +384,11 @@ public class SessionService
     public async Task EndExpiredPrepaySessionsAsync()
     {
         var now = DateTime.UtcNow;
+
+        // Only the sessions whose time is up are read (usually none): this runs every 2 seconds.
         var expiring = await _db.Sessions
             .Include(s => s.Segments)
-            .Where(s => s.Status == SessionStatus.Active && s.Type == SessionType.Prepay && s.PlannedEndUtc != null)
+            .Where(s => s.Status == SessionStatus.Active && s.Type == SessionType.Prepay && s.PlannedEndUtc != null && s.PlannedEndUtc <= now)
             .ToListAsync();
 
         foreach (var session in expiring)
@@ -396,7 +398,12 @@ public class SessionService
         }
     }
 
-    public async Task TickPostpayCostsAsync()
+    /// <summary>
+    /// Raises every running postpay session's cost, locks the PC at the tariff maximum, and tells the client the
+    /// cost now. <paramref name="shouldSendUpdate"/> (session id, now) lets the caller send that update less often
+    /// than the ticks (see <see cref="PostpayUpdateThrottle"/>); null sends it every time.
+    /// </summary>
+    public async Task TickPostpayCostsAsync(Func<int, DateTime, bool>? shouldSendUpdate = null)
     {
         var now = DateTime.UtcNow;
         var sessions = await _db.Sessions
@@ -441,7 +448,7 @@ public class SessionService
 
                 await SendCommandAsync(pc, new ClientCommand { Type = CommandType.Lock, Lock = await BuildLockInfoAsync(pc, limitReached: true) });
             }
-            else
+            else if (shouldSendUpdate is null || shouldSendUpdate(session.Id, now))
             {
                 await SendCommandAsync(pc, new ClientCommand
                 {
@@ -505,7 +512,8 @@ public class SessionService
 
     public async Task<Dictionary<int, ActiveSessionSnapshot>> GetActiveSessionSnapshotsAsync()
     {
-        var sessions = await _db.Sessions
+        // Read only (nothing here is changed or saved), so nothing needs tracking.
+        var sessions = await _db.Sessions.AsNoTracking()
             .Include(s => s.Segments)
             .Include(s => s.Extras)
             .Include(s => s.Pc)

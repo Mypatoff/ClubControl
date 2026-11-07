@@ -1,7 +1,6 @@
 using System;
 using System.ComponentModel;
 using System.Linq;
-using System.Reflection;
 using System.Windows;
 using System.Windows.Media;
 using ClubControl.Server.Resources;
@@ -25,29 +24,53 @@ public class PcRow : INotifyPropertyChanged
 {
     public event PropertyChangedEventHandler? PropertyChanged;
 
-    // Every plain property above and below (the ones with a setter); the computed ones follow from them.
-    private static readonly PropertyInfo[] StoredProperties = typeof(PcRow).GetProperties()
-        .Where(p => p.CanRead && p.CanWrite).ToArray();
-
     /// <summary>
     /// Takes over the values of a freshly built row for the same PC and, only if something really changed,
-    /// tells the card to redraw (all its bindings, including the computed ones such as the colour).
+    /// tells the card to redraw. Written out field by field on purpose (no reflection: this runs for every card
+    /// every second); <c>PcRowTests</c> checks by reflection that no stored property is forgotten here.
     /// </summary>
     public void CopyFrom(PcRow fresh)
     {
-        var changed = false;
-        foreach (var property in StoredProperties)
+        // The two values a running session changes every second: only what shows them needs to redraw.
+        var timeChanged = false;
+        if (RemainingDisplay != fresh.RemainingDisplay) { RemainingDisplay = fresh.RemainingDisplay; timeChanged = true; }
+        if (AmountDisplay != fresh.AmountDisplay) { AmountDisplay = fresh.AmountDisplay; timeChanged = true; }
+
+        // Everything else changes rarely (state, online, note...), and then the whole card (colour, text, tooltip) is refreshed.
+        var otherChanged = false;
+        if (Id != fresh.Id) { Id = fresh.Id; otherChanged = true; }
+        if (MachineGuid != fresh.MachineGuid) { MachineGuid = fresh.MachineGuid; otherChanged = true; }
+        if (IsOnline != fresh.IsOnline) { IsOnline = fresh.IsOnline; otherChanged = true; }
+        if (Enabled != fresh.Enabled) { Enabled = fresh.Enabled; otherChanged = true; }
+        if (IsManual != fresh.IsManual) { IsManual = fresh.IsManual; otherChanged = true; }
+        if (Kind != fresh.Kind) { Kind = fresh.Kind; otherChanged = true; }
+        if (Number != fresh.Number) { Number = fresh.Number; otherChanged = true; }
+        if (Name != fresh.Name) { Name = fresh.Name; otherChanged = true; }
+        if (TariffId != fresh.TariffId) { TariffId = fresh.TariffId; otherChanged = true; }
+        if (State != fresh.State) { State = fresh.State; otherChanged = true; }
+        if (KindIcon != fresh.KindIcon) { KindIcon = fresh.KindIcon; otherChanged = true; }
+        if (TariffDisplay != fresh.TariffDisplay) { TariffDisplay = fresh.TariffDisplay; otherChanged = true; }
+        if (StateDisplay != fresh.StateDisplay) { StateDisplay = fresh.StateDisplay; otherChanged = true; }
+        if (SessionTypeDisplay != fresh.SessionTypeDisplay) { SessionTypeDisplay = fresh.SessionTypeDisplay; otherChanged = true; }
+        if (StartDisplay != fresh.StartDisplay) { StartDisplay = fresh.StartDisplay; otherChanged = true; }
+        if (EndDisplay != fresh.EndDisplay) { EndDisplay = fresh.EndDisplay; otherChanged = true; }
+        if (ClientVersion != fresh.ClientVersion) { ClientVersion = fresh.ClientVersion; otherChanged = true; }
+        if (!Equals(Update, fresh.Update)) { Update = fresh.Update; otherChanged = true; }
+        if (AuthRejected != fresh.AuthRejected) { AuthRejected = fresh.AuthRejected; otherChanged = true; }
+        if (ClientMissing != fresh.ClientMissing) { ClientMissing = fresh.ClientMissing; otherChanged = true; }
+        if (Note != fresh.Note) { Note = fresh.Note; otherChanged = true; }
+        if (ExtrasUzs != fresh.ExtrasUzs) { ExtrasUzs = fresh.ExtrasUzs; otherChanged = true; }
+
+        if (otherChanged)
         {
-            var value = property.GetValue(fresh);
-            if (Equals(property.GetValue(this), value))
-                continue;
-
-            property.SetValue(this, value);
-            changed = true;
-        }
-
-        if (changed)
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(string.Empty));
+        }
+        else if (timeChanged)
+        {
+            // The big line on the card shows the remaining time (prepay) or the cost, and the tooltip lists the amount.
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(PrimaryDisplay)));
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(TooltipText)));
+        }
     }
 
     public required int Id { get; set; }

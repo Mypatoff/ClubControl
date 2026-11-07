@@ -55,18 +55,46 @@ public class PcRowTests
         Assert.Equal(0, redraws);
 
         shown.CopyFrom(Row("09:59"));
-        Assert.Equal(1, redraws);
+        Assert.True(redraws > 0);
     }
 
     [Fact]
-    public void The_redraw_covers_all_bindings_including_the_computed_ones()
+    public void A_changing_time_or_amount_redraws_only_what_shows_them()
     {
-        var shown = Row();
-        string? changedProperty = "not raised";
-        shown.PropertyChanged += (_, e) => changedProperty = e.PropertyName;
+        var shown = Row("10:00");
+        var changed = new List<string?>();
+        shown.PropertyChanged += (_, e) => changed.Add(e.PropertyName);
 
         shown.CopyFrom(Row("09:59"));
 
-        Assert.Equal(string.Empty, changedProperty);
+        Assert.Equal(new List<string?> { nameof(PcRow.PrimaryDisplay), nameof(PcRow.TooltipText) }, changed);
+    }
+
+    [Fact]
+    public void Any_other_change_redraws_the_whole_card_including_the_computed_properties()
+    {
+        var shown = Row();
+        var changed = new List<string?>();
+        shown.PropertyChanged += (_, e) => changed.Add(e.PropertyName);
+
+        var fresh = Row();
+        fresh.IsOnline = false; // colour and state text are computed from this
+        shown.CopyFrom(fresh);
+
+        Assert.Equal(new List<string?> { string.Empty }, changed);
+    }
+
+    [Fact]
+    public void A_time_change_together_with_another_change_redraws_the_whole_card()
+    {
+        var shown = Row("10:00");
+        var changed = new List<string?>();
+        shown.PropertyChanged += (_, e) => changed.Add(e.PropertyName);
+
+        var fresh = Row("09:59");
+        fresh.Note = "birthday";
+        shown.CopyFrom(fresh);
+
+        Assert.Equal(new List<string?> { string.Empty }, changed);
     }
 }

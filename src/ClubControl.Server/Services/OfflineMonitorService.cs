@@ -76,16 +76,39 @@ public class OfflineMonitorService : BackgroundService
     private async Task CheckOnceAsync()
     {
         using var scope = _scopeFactory.CreateScope();
-        var db = scope.ServiceProvider.GetRequiredService<ClubDbContext>();
+        await CheckAsync(
+            scope.ServiceProvider.GetRequiredService<ClubDbContext>(),
+            scope.ServiceProvider.GetRequiredService<HeartbeatTracker>(),
+            scope.ServiceProvider.GetRequiredService<ClientUpdateTracker>(),
+            DateTime.UtcNow);
+    }
 
-        var now = DateTime.UtcNow;
-        var onlinePcs = await db.Pcs.Where(p => p.IsOnline).ToListAsync();
+    /// <summary>One pass: marks every online PC offline whose last heartbeat is too old. Public and static so a test can run it.</summary>
+    public static async Task CheckAsync(ClubDbContext db, HeartbeatTracker heartbeats, ClientUpdateTracker updates, DateTime now)
+    {
+        var timer = SlowLog.Start("Offline monitor check");
 
-        foreach (var pc in onlinePcs)
+        // Only three columns of the online PCs are read (nothing tracked); a PC is loaded for change only when it has gone quiet.
+        var online = await db.Pcs.AsNoTracking()
+            .Where(p => p.IsOnline)
+            .Select(p => new { p.Id, p.MachineGuid, p.LastHeartbeatUtc })
+            .ToListAsync();
+
+        foreach (var candidate in online)
         {
-            if (!OfflineDetector.IsOffline(pc.LastHeartbeatUtc, now))
+            if (!OfflineDetector.IsOffline(heartbeats.Latest(candidate.MachineGuid, candidate.LastHeartbeatUtc), now))
                 continue;
 
+            var pc = await db.Pcs.FirstOrDefaultAsync(p => p.Id == candidate.Id);
+            if (pc is null || !pc.IsOnline)
+                continue;
+
+            // Heartbeats are saved only about once a minute: keep the real last one, the "client missing" check counts from it.
+            var lastHeard = heartbeats.Latest(pc.MachineGuid, pc.LastHeartbeatUtc);
+            if (!OfflineDetector.IsOffline(lastHeard, now))
+                continue; // it spoke up again while we were looking
+
+            pc.LastHeartbeatUtc = lastHeard;
             pc.IsOnline = false;
             db.EventLogEntries.Add(new EventLogEntry
             {
@@ -101,7 +124,6 @@ public class OfflineMonitorService : BackgroundService
         }
 
         // "Update client" that got no answer in time (no restart, no new version): say so in the log.
-        var updates = scope.ServiceProvider.GetRequiredService<ClientUpdateTracker>();
         foreach (var (machineGuid, info) in updates.CheckTimeouts(now))
         {
             var pc = await db.Pcs.FirstOrDefaultAsync(p => p.MachineGuid == machineGuid);
@@ -113,7 +135,10 @@ public class OfflineMonitorService : BackgroundService
             });
         }
 
+        timer.Step("checks");
         if (db.ChangeTracker.HasChanges())
             await db.SaveChangesAsync();
+        timer.Step("save");
+        timer.Finish();
     }
 }

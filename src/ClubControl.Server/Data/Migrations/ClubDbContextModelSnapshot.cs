@@ -65,6 +65,9 @@ namespace ClubControl.Server.Data.Migrations
                     b.Property<bool>("IsUnpaid")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int?>("PaidShiftId")
+                        .HasColumnType("INTEGER");
+
                     b.Property<DateTime?>("PaidUtc")
                         .HasColumnType("TEXT");
 
@@ -88,6 +91,9 @@ namespace ClubControl.Server.Data.Migrations
                     b.Property<int?>("SessionId")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int?>("ShiftId")
+                        .HasColumnType("INTEGER");
+
                     b.Property<int>("TotalUzs")
                         .HasColumnType("INTEGER");
 
@@ -107,7 +113,11 @@ namespace ClubControl.Server.Data.Migrations
 
                     b.HasIndex("CreatedUtc");
 
+                    b.HasIndex("PaidShiftId");
+
                     b.HasIndex("SessionExtraId");
+
+                    b.HasIndex("ShiftId");
 
                     b.HasIndex("IsUnpaid", "PaidUtc");
 
@@ -240,6 +250,8 @@ namespace ClubControl.Server.Data.Migrations
 
                     b.HasIndex("MachineGuid")
                         .IsUnique();
+
+                    b.HasIndex("TariffId");
 
                     b.ToTable("Pcs");
                 });
@@ -490,6 +502,14 @@ namespace ClubControl.Server.Data.Migrations
                     b.Navigation("BarProduct");
 
                     b.Navigation("BarSale");
+                });
+
+            modelBuilder.Entity("ClubControl.Server.Data.Models.Pc", b =>
+                {
+                    b.HasOne("ClubControl.Server.Data.Models.Tariff", null)
+                        .WithMany()
+                        .HasForeignKey("TariffId")
+                        .OnDelete(DeleteBehavior.Restrict);
                 });
 
             modelBuilder.Entity("ClubControl.Server.Data.Models.Session", b =>

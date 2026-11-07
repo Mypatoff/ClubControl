@@ -64,7 +64,7 @@ public class ClientMissingMonitorService : BackgroundService
         var rejections = scope.ServiceProvider.GetRequiredService<AuthRejectionTracker>();
 
         var now = DateTime.UtcNow;
-        var pcs = await db.Pcs
+        var pcs = await db.Pcs.AsNoTracking() // read only: nothing here changes a PC row
             .Where(p => !p.IsManual && p.Kind == ResourceKind.Computer && p.Enabled && p.Number != null)
             .ToListAsync();
 

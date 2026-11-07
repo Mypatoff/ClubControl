@@ -915,4 +915,19 @@ Mark it as paid?</value>
   <data name="BarTabUnpaidFormat" xml:space="preserve">
     <value>UNPAID ({0})</value>
   </data>
+  <data name="ReportsBarNote" xml:space="preserve">
+    <value>One row per working shift (smena) of the last {0} days. Bar history older than that is deleted automatically (the daily backups keep a copy). Not tied to Day / Week / Month.</value>
+  </data>
+  <data name="ReportsBarShift" xml:space="preserve">
+    <value>Shift</value>
+  </data>
+  <data name="ReportsBarCounter" xml:space="preserve">
+    <value>Counter</value>
+  </data>
+  <data name="ReportsBarCredit" xml:space="preserve">
+    <value>Given on credit</value>
+  </data>
+  <data name="ReportsBarProductsOf" xml:space="preserve">
+    <value>Products sold in shift #{0}</value>
+  </data>
 </root>

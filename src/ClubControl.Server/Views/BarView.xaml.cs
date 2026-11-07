@@ -127,27 +127,54 @@ public partial class BarView : UserControl
 
     // ---- loading ----
 
+    /// <summary>Everything one refresh reads from the database (raw data; the rows are built on the UI thread because the texts need its language).</summary>
+    private sealed record BarData(int CupPrice, List<BarProduct> Products, Dictionary<int, int> UnitsSold, List<BarSale> Sales,
+        List<BarSale> Unpaid, List<BarService.StockLogLine> StockLog, List<Pc> RunningTargets);
+
+    // Each refresh gets a number; a slow one that finishes after a newer one must not overwrite it.
+    private int _refreshTicket;
+
     /// <summary>Reloads everything the page shows. Called when the page is opened, after each action, and when a sale was made elsewhere.</summary>
     public async Task RefreshAsync()
     {
+        var ticket = ++_refreshTicket;
+        var services = Services;
+
         try
         {
-            using var scope = Services.CreateScope();
-            var bar = scope.ServiceProvider.GetRequiredService<BarService>();
-            var db = scope.ServiceProvider.GetRequiredService<ClubDbContext>();
+            // The queries run on a worker thread: SQLite reads are synchronous and would freeze the window, and the
+            // page is the busiest one during a rush. Products are read once (archived too) and both lists come from it.
+            var data = await Task.Run(async () =>
+            {
+                using var scope = services.CreateScope();
+                var bar = scope.ServiceProvider.GetRequiredService<BarService>();
+                var db = scope.ServiceProvider.GetRequiredService<ClubDbContext>();
 
-            _cupPrice = await bar.GetCupPriceAsync();
+                var cupPrice = await bar.GetCupPriceAsync();
+                var products = await bar.ListProductsAsync(includeArchived: true);
+                var unitsSold = await bar.GetUnitsSoldAsync();
+                var sales = await bar.GetRecentSalesAsync(SalesShown);
+                var unpaid = await bar.GetUnpaidAsync();
+                var stockLog = await bar.GetStockLogAsync();
+                var running = await LoadRunningTargetsAsync(db);
+                return new BarData(cupPrice, products, unitsSold, sales, unpaid, stockLog, running);
+            });
+
+            if (ticket != _refreshTicket)
+                return;
+
+            _cupPrice = data.CupPrice;
 
             // Sell list: best sellers first. Management list: A-Z, optionally with the archived ones.
-            _sellable = (await bar.ListProductsAsync(popularFirst: true)).Select(ToProductRow).ToList();
+            _sellable = BarService.SortByPopularity(data.Products.Where(p => !p.Archived), data.UnitsSold).Select(ToProductRow).ToList();
             ApplySearch();
 
-            var all = await bar.ListProductsAsync(includeArchived: ShowArchivedCheck.IsChecked == true);
-            ProductsGrid.ItemsSource = all.Select(ToProductRow).ToList();
+            var showArchived = ShowArchivedCheck.IsChecked == true;
+            ProductsGrid.ItemsSource = data.Products.Where(p => showArchived || !p.Archived).Select(ToProductRow).ToList();
 
-            SalesGrid.ItemsSource = (await bar.GetRecentSalesAsync(SalesShown)).Select(ToSaleRow).ToList();
+            SalesGrid.ItemsSource = data.Sales.Select(ToSaleRow).ToList();
 
-            var unpaid = await bar.GetUnpaidAsync();
+            var unpaid = data.Unpaid;
             var selectedUnpaid = (UnpaidGrid.SelectedItem as UnpaidRow)?.Id;
             var unpaidRows = unpaid.Select(ToUnpaidRow).ToList();
             UnpaidGrid.ItemsSource = unpaidRows;
@@ -156,12 +183,12 @@ public partial class BarView : UserControl
             UnpaidEmptyText.Visibility = unpaid.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
             UnpaidPaidButton.IsEnabled = UnpaidVoidButton.IsEnabled = unpaid.Count > 0;
             ShowUnpaidTabHeader(unpaid.Count);
-            StockLogGrid.ItemsSource = (await bar.GetStockLogAsync()).Select(ToLogRow).ToList();
+            StockLogGrid.ItemsSource = data.StockLog.Select(ToLogRow).ToList();
 
             if (!CupPriceBox.IsKeyboardFocusWithin)
                 CupPriceBox.Text = _cupPrice.ToString();
 
-            await LoadSellTargetsAsync(db);
+            ShowSellTargets(data.RunningTargets);
             UpdateTotal();
         }
         catch (Exception ex)
@@ -170,15 +197,17 @@ public partial class BarView : UserControl
         }
     }
 
-    private async Task LoadSellTargetsAsync(ClubDbContext db)
-    {
-        var chosen = (SellToBox.SelectedItem as SellTarget)?.MachineGuid;
-
-        var running = await db.Sessions.AsNoTracking()
+    /// <summary>The PCs and resources with a running session, which a sale can be added to.</summary>
+    private static Task<List<Pc>> LoadRunningTargetsAsync(ClubDbContext db) =>
+        db.Sessions.AsNoTracking()
             .Where(s => s.Status == SessionStatus.Active)
             .Select(s => s.Pc!)
             .Distinct()
             .ToListAsync();
+
+    private void ShowSellTargets(List<Pc> running)
+    {
+        var chosen = (SellToBox.SelectedItem as SellTarget)?.MachineGuid;
 
         var targets = new List<SellTarget> { new(Strings.Get("BarSellToCounter"), null) };
         targets.AddRange(running

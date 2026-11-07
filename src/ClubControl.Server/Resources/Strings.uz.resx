@@ -915,4 +915,19 @@ To'langan deb belgilansinmi?</value>
   <data name="BarTabUnpaidFormat" xml:space="preserve">
     <value>TO'LANMAGAN ({0})</value>
   </data>
+  <data name="ReportsBarNote" xml:space="preserve">
+    <value>Oxirgi {0} kundagi har bir smena uchun bitta qator. Bundan eski bar tarixi avtomatik o'chiriladi (nusxasi kunlik zaxira nusxalarida qoladi). Kun / Hafta / Oy tugmalariga bog'liq emas.</value>
+  </data>
+  <data name="ReportsBarShift" xml:space="preserve">
+    <value>Smena</value>
+  </data>
+  <data name="ReportsBarCounter" xml:space="preserve">
+    <value>Kassa</value>
+  </data>
+  <data name="ReportsBarCredit" xml:space="preserve">
+    <value>Qarzga berilgan</value>
+  </data>
+  <data name="ReportsBarProductsOf" xml:space="preserve">
+    <value>#{0}-smenada sotilgan mahsulotlar</value>
+  </data>
 </root>
