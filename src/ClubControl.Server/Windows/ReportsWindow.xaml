@@ -122,7 +122,7 @@
                             <TextBlock x:Name="BarSessionsText" Margin="0,0,0,2" />
                             <TextBlock x:Name="BarDebtsPaidText" Margin="0,0,0,2" />
                             <TextBlock x:Name="BarUnitsText" Margin="0,0,0,2" />
-                            <TextBlock x:Name="BarUnpaidText" Foreground="{StaticResource StateLimitBrush}" FontWeight="SemiBold" />
+                            <TextBlock x:Name="BarUnpaidText" Foreground="{StaticResource ErrorBrush}" FontWeight="SemiBold" />
                         </StackPanel>
                         <DataGrid x:Name="BarProductsGrid" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False" BorderThickness="0">
                             <DataGrid.Columns>

@@ -119,10 +119,10 @@
             </StackPanel>
             <!-- Bar sales nobody has paid yet; shown on both pages, only while there are some -->
             <Border x:Name="UnpaidChip" DockPanel.Dock="Left" Style="{StaticResource ChipStyle}" Margin="12,0,0,0" Cursor="Hand"
-                    BorderBrush="{StaticResource StateLimitBrush}" Visibility="Collapsed" MouseLeftButtonUp="OnUnpaidChipClick">
+                    BorderBrush="{StaticResource ErrorBrush}" BorderThickness="2" Visibility="Collapsed" MouseLeftButtonUp="OnUnpaidChipClick">
                 <StackPanel Orientation="Horizontal">
-                    <Ellipse Width="9" Height="9" Fill="{StaticResource StateLimitBrush}" />
-                    <TextBlock x:Name="StatUnpaidText" Style="{StaticResource ChipTextStyle}" />
+                    <Ellipse Width="9" Height="9" Fill="{StaticResource ErrorBrush}" />
+                    <TextBlock x:Name="StatUnpaidText" Style="{StaticResource ChipTextStyle}" Foreground="{StaticResource ErrorBrush}" FontWeight="Bold" />
                 </StackPanel>
             </Border>
             <TextBlock x:Name="SelectionCountText" DockPanel.Dock="Right" VerticalAlignment="Center"

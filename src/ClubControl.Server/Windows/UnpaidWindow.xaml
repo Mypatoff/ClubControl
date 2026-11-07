@@ -3,8 +3,19 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Unpaid" Width="820" Height="460" MinWidth="620" MinHeight="300"
         WindowStartupLocation="CenterOwner" ShowInTaskbar="False">
+    <Window.Resources>
+        <!-- Every row here is owed money: red. The theme colours cells itself, so the cells follow their row. -->
+        <Style x:Key="UnpaidRowStyle" TargetType="DataGridRow" BasedOn="{StaticResource {x:Type DataGridRow}}">
+            <Setter Property="Foreground" Value="{StaticResource ErrorBrush}" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+        </Style>
+        <Style x:Key="RowColourCellStyle" TargetType="DataGridCell" BasedOn="{StaticResource {x:Type DataGridCell}}">
+            <Setter Property="Foreground" Value="{Binding Foreground, RelativeSource={RelativeSource AncestorType=DataGridRow}}" />
+            <Setter Property="FontWeight" Value="{Binding FontWeight, RelativeSource={RelativeSource AncestorType=DataGridRow}}" />
+        </Style>
+    </Window.Resources>
     <DockPanel Margin="20">
-        <TextBlock x:Name="TotalText" DockPanel.Dock="Top" FontSize="18" FontWeight="Bold" Margin="0,0,0,10" />
+        <TextBlock x:Name="TotalText" DockPanel.Dock="Top" Foreground="{StaticResource ErrorBrush}" FontSize="18" FontWeight="Bold" Margin="0,0,0,10" />
 
         <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0">
             <Button x:Name="VoidButton" Height="38" Margin="0,0,10,0" Padding="16,0" Style="{StaticResource DangerButtonStyle}" Click="OnVoid" />
@@ -15,7 +26,7 @@
         <TextBlock x:Name="EmptyText" DockPanel.Dock="Top" Foreground="{StaticResource TextSecondaryBrush}" Visibility="Collapsed" />
 
         <DataGrid x:Name="UnpaidGrid" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False"
-                  SelectionMode="Single" BorderThickness="0">
+                  SelectionMode="Single" BorderThickness="0" RowStyle="{StaticResource UnpaidRowStyle}" CellStyle="{StaticResource RowColourCellStyle}">
             <DataGrid.Columns>
                 <DataGridTextColumn x:Name="TimeColumn" Binding="{Binding TimeDisplay}" Width="100" />
                 <DataGridTextColumn x:Name="ProductColumn" Binding="{Binding Product}" Width="*" />

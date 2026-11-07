@@ -35,9 +35,14 @@ public partial class BarView : UserControl
     private sealed record SaleRow(int Id, string TimeDisplay, string Product, int Quantity, int Cups, string AmountDisplay,
         string Where, string Status, string Comment, bool IsCancelled, bool IsOutstanding, string Summary);
 
+    private sealed record UnpaidRow(int Id, string TimeDisplay, string Product, string AmountDisplay, string Where, string Comment, int Amount, string Summary);
+
     private sealed record LogRow(string TimeDisplay, string Product, string TypeDisplay, string ChangeDisplay, int StockAfter, string ReasonDisplay, string Note);
 
     private sealed record SellTarget(string Label, Guid? MachineGuid);
+
+    /// <summary>The sales tab shows only the newest sales, so it stays short; everything is still in the stock log and the reports.</summary>
+    private const int SalesShown = 30;
 
     private IServiceProvider Services => ((App)Application.Current).Services!;
 
@@ -76,6 +81,7 @@ public partial class BarView : UserControl
         ListStockColumn.Header = Strings.Get("BarColStock");
 
         SalesTab.Header = Strings.Get("BarTabSales");
+        ShowUnpaidTabHeader(0);
         ProductsTab.Header = Strings.Get("BarTabProducts");
         StockLogTab.Header = Strings.Get("BarTabStockLog");
 
@@ -88,6 +94,15 @@ public partial class BarView : UserControl
         SaleStatusColumn.Header = Strings.Get("BarColStatus");
         SaleCommentColumn.Header = Strings.Get("BarColComment");
         VoidButton.Content = Strings.Get("BarVoidButton");
+
+        UnpaidTimeColumn.Header = Strings.Get("BarColTime");
+        UnpaidProductColumn.Header = Strings.Get("BarColProduct");
+        UnpaidAmountColumn.Header = Strings.Get("BarColAmount");
+        UnpaidWhereColumn.Header = Strings.Get("BarColWhere");
+        UnpaidCommentColumn.Header = Strings.Get("BarColComment");
+        UnpaidPaidButton.Content = Strings.Get("UnpaidMarkPaid");
+        UnpaidVoidButton.Content = Strings.Get("BarVoidButton");
+        UnpaidEmptyText.Text = Strings.Get("UnpaidNone");
 
         AddProductButton.Content = "＋ " + Strings.Get("BarAddProduct");
         EditProductButton.Content = Strings.Get("BarEditProduct");
@@ -130,7 +145,17 @@ public partial class BarView : UserControl
             var all = await bar.ListProductsAsync(includeArchived: ShowArchivedCheck.IsChecked == true);
             ProductsGrid.ItemsSource = all.Select(ToProductRow).ToList();
 
-            SalesGrid.ItemsSource = (await bar.GetRecentSalesAsync()).Select(ToSaleRow).ToList();
+            SalesGrid.ItemsSource = (await bar.GetRecentSalesAsync(SalesShown)).Select(ToSaleRow).ToList();
+
+            var unpaid = await bar.GetUnpaidAsync();
+            var selectedUnpaid = (UnpaidGrid.SelectedItem as UnpaidRow)?.Id;
+            var unpaidRows = unpaid.Select(ToUnpaidRow).ToList();
+            UnpaidGrid.ItemsSource = unpaidRows;
+            UnpaidGrid.SelectedItem = unpaidRows.FirstOrDefault(r => r.Id == selectedUnpaid);
+            UnpaidTotalText.Text = unpaid.Count == 0 ? "" : Strings.Format("UnpaidTotalFormat", $"{unpaid.Sum(s => (long)s.TotalUzs):N0}");
+            UnpaidEmptyText.Visibility = unpaid.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+            UnpaidPaidButton.IsEnabled = UnpaidVoidButton.IsEnabled = unpaid.Count > 0;
+            ShowUnpaidTabHeader(unpaid.Count);
             StockLogGrid.ItemsSource = (await bar.GetStockLogAsync()).Select(ToLogRow).ToList();
 
             if (!CupPriceBox.IsKeyboardFocusWithin)
@@ -178,6 +203,21 @@ public partial class BarView : UserControl
         s.Id, s.CreatedUtc.ToLocalTime().ToString("dd.MM HH:mm"), s.ProductName, s.Quantity, s.Cups, Money(s.TotalUzs),
         s.PcLabel == "" ? Strings.Get("BarWhereCounter") : s.PcLabel, StatusOf(s), s.UnpaidComment,
         s.IsVoided, s.IsOutstanding, $"{BarService.Describe(s)} — {Money(s.TotalUzs)}");
+
+    private static UnpaidRow ToUnpaidRow(BarSale s) => new(
+        s.Id, s.CreatedUtc.ToLocalTime().ToString("dd.MM HH:mm"), BarService.Describe(s), Money(s.TotalUzs),
+        s.PcLabel == "" ? Strings.Get("BarWhereCounter") : s.PcLabel, s.UnpaidComment, s.TotalUzs, $"{BarService.Describe(s)} — {s.UnpaidComment}");
+
+    /// <summary>The tab is named "UNPAID (n)" and turns red while something is owed, so it is hard to forget.</summary>
+    private void ShowUnpaidTabHeader(int count)
+    {
+        UnpaidTab.Header = new TextBlock
+        {
+            Text = count > 0 ? Strings.Format("BarTabUnpaidFormat", count) : Strings.Get("BarTabUnpaid"),
+            FontWeight = count > 0 ? FontWeights.Bold : FontWeights.Normal,
+            Foreground = count > 0 ? (Brush)FindResource("ErrorBrush") : (Brush)FindResource("TextPrimaryBrush")
+        };
+    }
 
     private static LogRow ToLogRow(BarService.StockLogLine l) => new(
         l.CreatedUtc.ToLocalTime().ToString("dd.MM HH:mm"), l.ProductName, TypeName(l.Type), l.Delta > 0 ? $"+{l.Delta}" : l.Delta.ToString(),
@@ -346,6 +386,56 @@ public partial class BarView : UserControl
         {
             using var scope = Services.CreateScope();
             await scope.ServiceProvider.GetRequiredService<BarService>().VoidSaleAsync(sale.Id);
+        }
+        catch (InvalidOperationException ex)
+        {
+            MessageBox.Show(ex.Message, Strings.Get("ConfirmTitle"), MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
+
+        await RefreshAsync();
+    }
+
+    // ---- unpaid ----
+
+    private UnpaidRow? SelectedUnpaid()
+    {
+        if (UnpaidGrid.SelectedItem is UnpaidRow row)
+            return row;
+
+        MessageBox.Show(Strings.Get("BarSelectSale"), Strings.Get("ConfirmTitle"), MessageBoxButton.OK, MessageBoxImage.Information);
+        return null;
+    }
+
+    private async void OnUnpaidMarkPaid(object sender, RoutedEventArgs e)
+    {
+        if (SelectedUnpaid() is not { } row)
+            return;
+
+        if (MessageBox.Show(Strings.Format("UnpaidMarkPaidConfirm", $"{row.Amount:N0}", row.Summary), Strings.Get("ConfirmTitle"),
+                MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes)
+            return;
+
+        await RunUnpaidAsync(bar => bar.MarkPaidAsync(row.Id));
+    }
+
+    private async void OnUnpaidVoid(object sender, RoutedEventArgs e)
+    {
+        if (SelectedUnpaid() is not { } row)
+            return;
+
+        if (MessageBox.Show(Strings.Format("BarVoidConfirmFormat", row.Summary), Strings.Get("ConfirmTitle"),
+                MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes)
+            return;
+
+        await RunUnpaidAsync(bar => bar.VoidSaleAsync(row.Id));
+    }
+
+    private async Task RunUnpaidAsync(Func<BarService, Task> action)
+    {
+        try
+        {
+            using var scope = Services.CreateScope();
+            await action(scope.ServiceProvider.GetRequiredService<BarService>());
         }
         catch (InvalidOperationException ex)
         {

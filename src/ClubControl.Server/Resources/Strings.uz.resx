@@ -909,4 +909,10 @@ To'langan deb belgilansinmi?</value>
   <data name="ReportsBarUnits" xml:space="preserve">
     <value>Sotilgan dona</value>
   </data>
+  <data name="BarTabUnpaid" xml:space="preserve">
+    <value>To'lanmagan</value>
+  </data>
+  <data name="BarTabUnpaidFormat" xml:space="preserve">
+    <value>TO'LANMAGAN ({0})</value>
+  </data>
 </root>

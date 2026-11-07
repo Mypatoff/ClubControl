@@ -909,4 +909,10 @@ Mark it as paid?</value>
   <data name="ReportsBarUnits" xml:space="preserve">
     <value>Units sold</value>
   </data>
+  <data name="BarTabUnpaid" xml:space="preserve">
+    <value>Unpaid</value>
+  </data>
+  <data name="BarTabUnpaidFormat" xml:space="preserve">
+    <value>UNPAID ({0})</value>
+  </data>
 </root>

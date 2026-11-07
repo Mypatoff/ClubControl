@@ -11,6 +11,18 @@
             <Setter Property="Padding" Value="14" />
         </Style>
 
+        <!-- The theme colours every cell itself, which would hide a row's colour: cells take the colour of their row -->
+        <Style x:Key="RowColourCellStyle" TargetType="DataGridCell" BasedOn="{StaticResource {x:Type DataGridCell}}">
+            <Setter Property="Foreground" Value="{Binding Foreground, RelativeSource={RelativeSource AncestorType=DataGridRow}}" />
+            <Setter Property="FontWeight" Value="{Binding FontWeight, RelativeSource={RelativeSource AncestorType=DataGridRow}}" />
+        </Style>
+
+        <!-- Everything in the unpaid tab is owed money: red -->
+        <Style x:Key="UnpaidRowStyle" TargetType="DataGridRow" BasedOn="{StaticResource {x:Type DataGridRow}}">
+            <Setter Property="Foreground" Value="{StaticResource ErrorBrush}" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+        </Style>
+
         <!-- Sold-out and archived products are greyed out -->
         <Style x:Key="ProductRowStyle" TargetType="DataGridRow" BasedOn="{StaticResource {x:Type DataGridRow}}">
             <Style.Triggers>
@@ -27,7 +39,8 @@
                     <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}" />
                 </DataTrigger>
                 <DataTrigger Binding="{Binding IsOutstanding}" Value="True">
-                    <Setter Property="Foreground" Value="{StaticResource StateLimitBrush}" />
+                    <Setter Property="Foreground" Value="{StaticResource ErrorBrush}" />
+                    <Setter Property="FontWeight" Value="Bold" />
                 </DataTrigger>
             </Style.Triggers>
         </Style>
@@ -92,7 +105,7 @@
                 <!-- Best sellers first -->
                 <DataGrid x:Name="ProductList" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False"
                           SelectionMode="Single" HeadersVisibility="Column" BorderThickness="0"
-                          RowStyle="{StaticResource ProductRowStyle}" SelectionChanged="OnProductSelected">
+                          RowStyle="{StaticResource ProductRowStyle}" CellStyle="{StaticResource RowColourCellStyle}" SelectionChanged="OnProductSelected">
                     <DataGrid.Columns>
                         <DataGridTextColumn x:Name="ListNameColumn" Binding="{Binding Name}" Width="*" />
                         <DataGridTextColumn x:Name="ListPriceColumn" Binding="{Binding PriceDisplay}" Width="100" />
@@ -111,7 +124,7 @@
                             <Button x:Name="VoidButton" Style="{StaticResource DangerButtonStyle}" Click="OnVoidSale" />
                         </StackPanel>
                         <DataGrid x:Name="SalesGrid" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False"
-                                  SelectionMode="Single" BorderThickness="0" RowStyle="{StaticResource SaleRowStyle}">
+                                  SelectionMode="Single" BorderThickness="0" RowStyle="{StaticResource SaleRowStyle}" CellStyle="{StaticResource RowColourCellStyle}">
                             <DataGrid.Columns>
                                 <DataGridTextColumn x:Name="SaleTimeColumn" Binding="{Binding TimeDisplay}" Width="100" />
                                 <DataGridTextColumn x:Name="SaleProductColumn" Binding="{Binding Product}" Width="*" />
@@ -121,6 +134,29 @@
                                 <DataGridTextColumn x:Name="SaleWhereColumn" Binding="{Binding Where}" Width="90" />
                                 <DataGridTextColumn x:Name="SaleStatusColumn" Binding="{Binding Status}" Width="110" />
                                 <DataGridTextColumn x:Name="SaleCommentColumn" Binding="{Binding Comment}" Width="130" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </DockPanel>
+                </TabItem>
+
+                <!-- Only what is still owed, in red, so it is not forgotten -->
+                <TabItem x:Name="UnpaidTab">
+                    <DockPanel Margin="4">
+                        <TextBlock x:Name="UnpaidTotalText" DockPanel.Dock="Top" Foreground="{StaticResource ErrorBrush}"
+                                   FontSize="16" FontWeight="Bold" Margin="0,0,0,8" />
+                        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Margin="0,8,0,0">
+                            <Button x:Name="UnpaidPaidButton" Margin="0,0,8,0" Style="{StaticResource SuccessButtonStyle}" Click="OnUnpaidMarkPaid" />
+                            <Button x:Name="UnpaidVoidButton" Style="{StaticResource DangerButtonStyle}" Click="OnUnpaidVoid" />
+                        </StackPanel>
+                        <TextBlock x:Name="UnpaidEmptyText" DockPanel.Dock="Top" Foreground="{StaticResource TextSecondaryBrush}" Visibility="Collapsed" />
+                        <DataGrid x:Name="UnpaidGrid" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False"
+                                  SelectionMode="Single" BorderThickness="0" RowStyle="{StaticResource UnpaidRowStyle}" CellStyle="{StaticResource RowColourCellStyle}">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn x:Name="UnpaidTimeColumn" Binding="{Binding TimeDisplay}" Width="100" />
+                                <DataGridTextColumn x:Name="UnpaidProductColumn" Binding="{Binding Product}" Width="*" />
+                                <DataGridTextColumn x:Name="UnpaidAmountColumn" Binding="{Binding AmountDisplay}" Width="100" />
+                                <DataGridTextColumn x:Name="UnpaidWhereColumn" Binding="{Binding Where}" Width="90" />
+                                <DataGridTextColumn x:Name="UnpaidCommentColumn" Binding="{Binding Comment}" Width="160" />
                             </DataGrid.Columns>
                         </DataGrid>
                     </DockPanel>
@@ -143,7 +179,7 @@
                             <CheckBox x:Name="ShowArchivedCheck" VerticalAlignment="Center" Margin="0,0,0,4" Checked="OnShowArchivedToggled" Unchecked="OnShowArchivedToggled" />
                         </WrapPanel>
                         <DataGrid x:Name="ProductsGrid" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False"
-                                  SelectionMode="Single" BorderThickness="0" RowStyle="{StaticResource ProductRowStyle}">
+                                  SelectionMode="Single" BorderThickness="0" RowStyle="{StaticResource ProductRowStyle}" CellStyle="{StaticResource RowColourCellStyle}">
                             <DataGrid.Columns>
                                 <DataGridTextColumn x:Name="ProductNameColumn" Binding="{Binding NameDisplay}" Width="*" />
                                 <DataGridTextColumn x:Name="ProductPriceColumn" Binding="{Binding PriceDisplay}" Width="110" />

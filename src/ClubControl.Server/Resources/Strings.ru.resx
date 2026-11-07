@@ -909,4 +909,10 @@
   <data name="ReportsBarUnits" xml:space="preserve">
     <value>Продано штук</value>
   </data>
+  <data name="BarTabUnpaid" xml:space="preserve">
+    <value>Не оплачено</value>
+  </data>
+  <data name="BarTabUnpaidFormat" xml:space="preserve">
+    <value>НЕ ОПЛАЧЕНО ({0})</value>
+  </data>
 </root>
