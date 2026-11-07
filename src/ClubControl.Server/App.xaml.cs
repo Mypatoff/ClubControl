@@ -207,6 +207,8 @@ public partial class App : Application
         // the caller.
         builder.Services.AddSignalR(options => options.EnableDetailedErrors = builder.Environment.IsDevelopment());
         builder.Services.AddScoped<SessionService>();
+        builder.Services.AddScoped<BarService>();
+        builder.Services.AddScoped<BarImportService>();
         builder.Services.AddSingleton<ClientUpdateTracker>();
         builder.Services.AddSingleton<ClientMissingTracker>();
         builder.Services.AddSingleton<AuthRejectionTracker>();

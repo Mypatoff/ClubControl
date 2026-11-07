@@ -14,6 +14,9 @@ public class DatabaseUpgradeTests : IDisposable
     // The last schema before Pc.Name and ResourceKind.Other existed.
     private const string PreviousMigration = "20261026162846_AddClientUnlockPasswordHash";
 
+    // The last schema before the bar (AddBar).
+    private const string BeforeBarMigration = "20261028181744_AddQueryIndexes";
+
     private readonly SqliteConnection _connection = new("DataSource=:memory:");
     private readonly string _backupDirectory = Path.Combine(Path.GetTempPath(), "clubcontrol-upgrade-" + Guid.NewGuid());
 
@@ -51,6 +54,35 @@ public class DatabaseUpgradeTests : IDisposable
         Assert.Empty(await upgraded.Database.GetPendingMigrationsAsync());
 
         // A copy of the old database was saved first.
+        Assert.Single(Directory.GetFiles(_backupDirectory, "club_before-upgrade_*.db"));
+    }
+
+    [Fact]
+    public async Task A_database_from_before_the_bar_gets_the_bar_tables_and_keeps_its_sessions_and_items()
+    {
+        using (var old = NewDb())
+            await old.GetService<IMigrator>().MigrateAsync(BeforeBarMigration);
+
+        // Written by the build before the bar: a PC with a finished session that had one item on it.
+        Exec("INSERT INTO Tariffs (Name, Kind, PricePerHourUzs, MinPaymentUzs, MaxPaymentUzs) VALUES ('Standard', 0, 10000, 500, 50000)");
+        Exec("INSERT INTO Pcs (MachineGuid, Kind, IsManual, Number, Name, TariffId, Enabled, IpAddress, MacAddress, Hostname, State, IsOnline, LastHeartbeatUtc) " +
+             "VALUES ('5A65BF0C-0BB8-4129-A8BE-EE1FB00332AF', 0, 0, 1, '', 1, 1, '', '', '', 0, 0, '0001-01-01 00:00:00')");
+        Exec("INSERT INTO Sessions (PcId, Type, Status, StartUtc, AmountUzs, IsFree, CreatedAtUtc) VALUES (1, 1, 1, '2026-10-30 10:00:00', 4000, 0, '2026-10-30 10:00:00')");
+        Exec("INSERT INTO SessionExtras (SessionId, Description, AmountUzs, CreatedUtc) VALUES (1, 'Cola', 5000, '2026-10-30 10:30:00')");
+
+        using (var db = NewDb())
+            await DatabaseUpgrade.MigrateAsync(db, _backupDirectory);
+
+        using var upgraded = NewDb();
+        Assert.Empty(await upgraded.Database.GetPendingMigrationsAsync());
+        Assert.Equal("Cola", (await upgraded.SessionExtras.AsNoTracking().SingleAsync()).Description);
+        Assert.Equal(4_000, (await upgraded.Sessions.AsNoTracking().SingleAsync()).AmountUzs);
+
+        // The bar is there and usable, and the new setting starts at 0.
+        Assert.Empty(upgraded.BarProducts);
+        Assert.Empty(upgraded.BarSales);
+        Assert.Empty(upgraded.BarStockMovements);
+        Assert.Equal(0, (await SettingsHelper.GetOrCreateAsync(upgraded)).BarCupPriceUzs);
         Assert.Single(Directory.GetFiles(_backupDirectory, "club_before-upgrade_*.db"));
     }
 

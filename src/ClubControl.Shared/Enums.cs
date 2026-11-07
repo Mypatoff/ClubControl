@@ -46,7 +46,9 @@ public enum EventType
     ManualUnlock,
     ItemAdded,
     ShiftOpened,
-    ShiftClosed
+    ShiftClosed,
+    BarSale,
+    BarPaid
 }
 
 public enum LockScreenLanguage

@@ -36,4 +36,7 @@ public class Setting
     public int AutoShutdownAfterMinutes { get; set; } = 1;
 
     public string? AdminPasswordHash { get; set; }
+
+    /// <summary>What one cup (stakan) costs when sold with a bar drink. 0 until the admin sets it.</summary>
+    public int BarCupPriceUzs { get; set; }
 }

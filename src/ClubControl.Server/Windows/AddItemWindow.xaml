@@ -1,7 +1,7 @@
 <Window x:Class="ClubControl.Server.Windows.AddItemWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Add item" Width="440" SizeToContent="Height"
+        Title="Add item" Width="480" SizeToContent="Height"
         WindowStartupLocation="CenterOwner" ResizeMode="NoResize" ShowInTaskbar="False">
     <StackPanel Margin="24">
         <TextBlock x:Name="TargetText" FontSize="16" FontWeight="Bold" Margin="0,0,0,12" TextWrapping="Wrap" />
@@ -31,12 +31,51 @@
             <TextBlock x:Name="AddedTotalText" FontWeight="Bold" HorizontalAlignment="Right" Margin="0,4,0,0" />
         </StackPanel>
 
-        <TextBlock x:Name="NameLabel" Margin="0,0,0,2" />
-        <TextBox x:Name="NameBox" MaxLength="60" Margin="0,0,0,10" />
+        <TabControl x:Name="SourceTabs" Margin="0,0,0,10">
+            <!-- A bar product: it is also a bar sale (stock goes down), on the session's bill unless it is unpaid -->
+            <TabItem x:Name="BarTab">
+                <StackPanel Margin="4,10,4,4">
+                    <TextBlock x:Name="ProductLabel" Margin="0,0,0,2" />
+                    <ComboBox x:Name="ProductBox" DisplayMemberPath="Display" Margin="0,0,0,10" SelectionChanged="OnBarInputChanged" />
 
-        <TextBlock x:Name="AmountLabel" Margin="0,0,0,2" />
-        <TextBox x:Name="AmountBox" Margin="0,0,0,10" />
+                    <Grid Margin="0,0,0,10">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0" Margin="0,0,6,0">
+                            <TextBlock x:Name="QuantityLabel" Margin="0,0,0,2" />
+                            <TextBox x:Name="QuantityBox" Text="1" TextChanged="OnBarTextChanged" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" Margin="6,0,0,0">
+                            <TextBlock x:Name="CupsLabel" Margin="0,0,0,2" />
+                            <TextBox x:Name="CupsBox" Text="0" TextChanged="OnBarTextChanged" />
+                        </StackPanel>
+                    </Grid>
 
+                    <CheckBox x:Name="UnpaidCheck" Margin="0,0,0,6" Checked="OnUnpaidToggled" Unchecked="OnUnpaidToggled" />
+                    <StackPanel x:Name="CommentPanel" Visibility="Collapsed" Margin="0,0,0,8">
+                        <TextBlock x:Name="CommentLabel" Margin="0,0,0,2" />
+                        <TextBox x:Name="CommentBox" MaxLength="200" />
+                    </StackPanel>
+
+                    <TextBlock x:Name="BarTotalText" FontWeight="Bold" HorizontalAlignment="Right" />
+                </StackPanel>
+            </TabItem>
+
+            <!-- Anything that is not in the bar: just a name and a price, as before -->
+            <TabItem x:Name="OtherTab">
+                <StackPanel Margin="4,10,4,4">
+                    <TextBlock x:Name="NameLabel" Margin="0,0,0,2" />
+                    <TextBox x:Name="NameBox" MaxLength="60" Margin="0,0,0,10" />
+
+                    <TextBlock x:Name="AmountLabel" Margin="0,0,0,2" />
+                    <TextBox x:Name="AmountBox" Margin="0,0,0,4" />
+                </StackPanel>
+            </TabItem>
+        </TabControl>
+
+        <TextBlock x:Name="ResultText" Foreground="{StaticResource SuccessBrush}" TextWrapping="Wrap" />
         <TextBlock x:Name="ErrorText" Foreground="{StaticResource ErrorBrush}" TextWrapping="Wrap" />
 
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">

@@ -17,6 +17,144 @@ namespace ClubControl.Server.Data.Migrations
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "8.0.10");
 
+            modelBuilder.Entity("ClubControl.Server.Data.Models.BarProduct", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("Archived")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("PriceUzs")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Stock")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("BarProducts");
+                });
+
+            modelBuilder.Entity("ClubControl.Server.Data.Models.BarSale", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("BarProductId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("CupPriceUzs")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Cups")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsUnpaid")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("PaidUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("PcId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("PcLabel")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ProductName")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("SessionExtraId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("SessionId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("TotalUzs")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("UnitPriceUzs")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("UnpaidComment")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("VoidedUtc")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BarProductId");
+
+                    b.HasIndex("CreatedUtc");
+
+                    b.HasIndex("SessionExtraId");
+
+                    b.HasIndex("IsUnpaid", "PaidUtc");
+
+                    b.ToTable("BarSales");
+                });
+
+            modelBuilder.Entity("ClubControl.Server.Data.Models.BarStockMovement", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("BarProductId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("BarSaleId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Delta")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Note")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("StockAfter")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BarSaleId");
+
+                    b.HasIndex("BarProductId", "CreatedUtc");
+
+                    b.ToTable("BarStockMovements");
+                });
+
             modelBuilder.Entity("ClubControl.Server.Data.Models.EventLogEntry", b =>
                 {
                     b.Property<int>("Id")
@@ -230,6 +368,9 @@ namespace ClubControl.Server.Data.Migrations
                     b.Property<int>("AutoShutdownAfterMinutes")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int>("BarCupPriceUzs")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("ClientUnlockPasswordHash")
                         .HasColumnType("TEXT");
 
@@ -313,6 +454,42 @@ namespace ClubControl.Server.Data.Migrations
                         .IsUnique();
 
                     b.ToTable("Tariffs");
+                });
+
+            modelBuilder.Entity("ClubControl.Server.Data.Models.BarSale", b =>
+                {
+                    b.HasOne("ClubControl.Server.Data.Models.BarProduct", "BarProduct")
+                        .WithMany()
+                        .HasForeignKey("BarProductId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("ClubControl.Server.Data.Models.SessionExtra", "SessionExtra")
+                        .WithMany()
+                        .HasForeignKey("SessionExtraId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("BarProduct");
+
+                    b.Navigation("SessionExtra");
+                });
+
+            modelBuilder.Entity("ClubControl.Server.Data.Models.BarStockMovement", b =>
+                {
+                    b.HasOne("ClubControl.Server.Data.Models.BarProduct", "BarProduct")
+                        .WithMany()
+                        .HasForeignKey("BarProductId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("ClubControl.Server.Data.Models.BarSale", "BarSale")
+                        .WithMany()
+                        .HasForeignKey("BarSaleId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("BarProduct");
+
+                    b.Navigation("BarSale");
                 });
 
             modelBuilder.Entity("ClubControl.Server.Data.Models.Session", b =>

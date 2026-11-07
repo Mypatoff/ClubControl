@@ -49,6 +49,16 @@ It publishes both programs self-contained and writes `dist\ClubControl-Setup.exe
 it contains the .NET runtime twice). The installer script is `installer/ClubControl.iss`; the
 product name and version are at its top, the icon is `assets/ClubControl.ico`.
 
+## Bar (shop)
+
+The main window has two pages, **Computers** and **Bar**. The bar sells drinks and snacks from the same
+database, so it is backed up, restored and updated together with the rest. Tick **Unpaid** when selling to
+write a sale on credit with a comment; the orange chip at the top lists what is still owed.
+
+To bring over the data of the old ShopKeeper program: Bar > Products > **Import old shop database** and pick its
+`shop.db` (it sits next to `ShopKeeper.exe`; use ShopKeeper 1.3 or newer). It works once, on an empty bar,
+and makes a copy of `club.db` first.
+
 ## Building without the setup
 
 ```

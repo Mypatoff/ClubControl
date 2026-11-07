@@ -26,6 +26,7 @@ public partial class ReportsWindow : Window
     private List<ReportsService.ShiftInfo> _shifts = new(); // newest first
     private int _shiftIndex;                                // the shift shown in Shift mode; the arrows move it
     private ReportsService.Report? _lastReport;
+    private ReportsService.BarReport? _lastBarReport;
 
     public ReportsWindow(IServiceProvider services)
     {
@@ -66,6 +67,11 @@ public partial class ReportsWindow : Window
         ByPcTab.Header = Strings.Get("ByPc");
         ByTariffTab.Header = Strings.Get("ByTariff");
         ByTypeTab.Header = Strings.Get("BySessionType");
+
+        BarReportTab.Header = "🍹 " + Strings.Get("ReportsBarTitle");
+        BarProductColumn.Header = Strings.Get("BarColProduct");
+        BarUnitsColumn.Header = Strings.Get("ReportsBarUnits");
+        BarIncomeColumn.Header = Strings.Get("ColumnIncome");
 
         SessionResourceColumn.Header = Strings.Get("ColumnPcNumber");
         SessionStartColumn.Header = Strings.Get("ColumnStart");
@@ -203,18 +209,34 @@ public partial class ReportsWindow : Window
         UpdatePeriodControls();
 
         ReportsService.Report report;
+        DateTime barFromUtc, barToUtc; // the bar is reported over the same time span as the sessions
         if (_period == Period.Shift)
         {
             // With no shifts at all the report is simply empty (no session has shift id 0).
             report = await reports.BuildShiftReportAsync(_shifts.Count == 0 ? 0 : _shifts[_shiftIndex].Id, _kind);
+            var shift = _shifts.Count == 0 ? null : _shifts[_shiftIndex];
+            barFromUtc = shift?.OpenedUtc ?? DateTime.UtcNow;
+            barToUtc = shift is null ? barFromUtc : shift.ClosedUtc ?? DateTime.UtcNow.AddMinutes(1);
         }
         else
         {
             var (fromLocal, toLocalExclusive) = CurrentRange();
-            report = await reports.BuildReportAsync(fromLocal.ToUniversalTime(), toLocalExclusive.ToUniversalTime(), _kind);
+            barFromUtc = fromLocal.ToUniversalTime();
+            barToUtc = toLocalExclusive.ToUniversalTime();
+            report = await reports.BuildReportAsync(barFromUtc, barToUtc, _kind);
         }
 
         _lastReport = report;
+
+        var bar = await reports.BuildBarReportAsync(barFromUtc, barToUtc);
+        _lastBarReport = bar;
+        BarTotalText.Text = $"{Strings.Get("TotalIncome")}: {bar.TotalIncomeUzs:N0} UZS";
+        BarCounterText.Text = $"{Strings.Get("ReportsBarPaid")}: {bar.CounterPaidUzs:N0} UZS";
+        BarSessionsText.Text = $"{Strings.Get("ReportsBarSessions")}: {bar.SessionItemsUzs:N0} UZS";
+        BarDebtsPaidText.Text = $"{Strings.Get("ReportsBarDebtsPaid")}: {bar.DebtsPaidUzs:N0} UZS";
+        BarUnitsText.Text = $"{Strings.Get("ReportsBarUnits")}: {bar.UnitsSold:N0}";
+        BarUnpaidText.Text = $"{Strings.Get("ReportsBarUnpaid")}: {bar.UnpaidNowUzs:N0} UZS";
+        BarProductsGrid.ItemsSource = bar.ByProduct.Select(r => new { r.ProductName, r.Units, IncomeDisplay = $"{r.IncomeUzs:N0} UZS" }).ToList();
 
         TotalIncomeValue.Text = $"{report.Totals.TotalIncomeUzs:N0} UZS";
         TotalSessionsValue.Text = report.Totals.SessionCount.ToString();
@@ -320,6 +342,18 @@ public partial class ReportsWindow : Window
         WriteRow(Strings.Get("ColumnType"), Strings.Get("ColumnIncome"), Strings.Get("TotalSessions"), Strings.Get("ColumnHours"));
         foreach (var r in report.ByType)
             WriteRow(Strings.SessionTypeName(r.Type, r.Type == SessionType.Free), r.IncomeUzs, r.SessionCount, r.Hours.ToString("F1", CultureInfo.InvariantCulture));
+
+        if (_lastBarReport is { } bar)
+        {
+            sb.AppendLine();
+            WriteRow(Strings.Get("ReportsBarTitle"));
+            WriteRow(Strings.Get("TotalIncome"), Strings.Get("ReportsBarPaid"), Strings.Get("ReportsBarSessions"),
+                Strings.Get("ReportsBarDebtsPaid"), Strings.Get("ReportsBarUnpaid"), Strings.Get("ReportsBarUnits"));
+            WriteRow(bar.TotalIncomeUzs, bar.CounterPaidUzs, bar.SessionItemsUzs, bar.DebtsPaidUzs, bar.UnpaidNowUzs, bar.UnitsSold);
+            WriteRow(Strings.Get("BarColProduct"), Strings.Get("ReportsBarUnits"), Strings.Get("ColumnIncome"));
+            foreach (var r in bar.ByProduct)
+                WriteRow(r.ProductName, r.Units, r.IncomeUzs);
+        }
 
         return sb.ToString();
     }

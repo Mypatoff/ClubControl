@@ -126,6 +126,11 @@ public partial class MainWindow : Window
 
         EventLogHeaderText.Text = Strings.Get("EventLogHeader");
 
+        NavComputersButton.Content = "🖥 " + Strings.Get("NavComputers");
+        NavBarButton.Content = "🍹 " + Strings.Get("NavBar");
+        UnpaidChip.ToolTip = Strings.Get("UnpaidChipTooltip");
+        ShowPage(bar: false);
+
     }
 
     private bool _allowClose;
@@ -210,6 +215,10 @@ public partial class MainWindow : Window
 
         UpdateCounters(rows);
         UpdateShiftControls(await ShiftHelper.GetOpenAsync(db));
+
+        var unpaid = await scope.ServiceProvider.GetRequiredService<BarService>().GetUnpaidSummaryAsync();
+        UnpaidChip.Visibility = unpaid.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+        StatUnpaidText.Text = Strings.Format("UnpaidChipFormat", unpaid.Count, $"{unpaid.TotalUzs:N0}");
 
         // The newest id is a one-row read; the 200 lines are fetched and redrawn only when there is something new.
         var newestEventId = await db.EventLogEntries.MaxAsync(e => (int?)e.Id) ?? 0;
@@ -556,6 +565,10 @@ public partial class MainWindow : Window
     // otherwise Enter would "click" a toolbar button that was focused by an earlier click.
     private void Window_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
     {
+        // Enter, Delete and the arrows drive the computer cards; the bar page has its own lists.
+        if (BarPage.Visibility == Visibility.Visible)
+            return;
+
         var isArrow = e.Key is System.Windows.Input.Key.Up or System.Windows.Input.Key.Down
             or System.Windows.Input.Key.Left or System.Windows.Input.Key.Right;
         if (!isArrow && e.Key is not (System.Windows.Input.Key.Enter or System.Windows.Input.Key.Delete))
@@ -1020,6 +1033,36 @@ public partial class MainWindow : Window
 
     private void OnUpdateServer(object sender, RoutedEventArgs e) =>
         new ServerUpdateWindow { Owner = this }.ShowDialog();
+
+    // ---- the two main pages ----
+
+    private void OnShowComputers(object sender, RoutedEventArgs e) => ShowPage(bar: false);
+
+    private void OnShowBar(object sender, RoutedEventArgs e) => ShowPage(bar: true);
+
+    /// <summary>Shows the computers or the bar. The bar page refreshes itself when it appears.</summary>
+    private void ShowPage(bool bar)
+    {
+        ComputersPage.Visibility = bar ? Visibility.Collapsed : Visibility.Visible;
+        ComputerChips.Visibility = bar ? Visibility.Collapsed : Visibility.Visible;
+        SelectionCountText.Visibility = bar ? Visibility.Collapsed : Visibility.Visible;
+        BarPage.Visibility = bar ? Visibility.Visible : Visibility.Collapsed;
+
+        // The page being shown is the filled (accent) button, the other one is the quiet kind.
+        var active = FindResource(typeof(Button));
+        var quiet = FindResource("SecondaryButtonStyle");
+        NavComputersButton.Style = (Style)(bar ? quiet : active);
+        NavBarButton.Style = (Style)(bar ? active : quiet);
+    }
+
+    private async void OnUnpaidChipClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
+    {
+        new UnpaidWindow(Services) { Owner = this }.ShowDialog();
+        await RefreshAsync();
+
+        if (BarPage.Visibility == Visibility.Visible)
+            await BarPage.RefreshAsync();
+    }
 
     private void OnReports(object sender, RoutedEventArgs e)
     {

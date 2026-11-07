@@ -114,6 +114,25 @@
                         </DataGrid.Columns>
                     </DataGrid>
                 </TabItem>
+                <TabItem x:Name="BarReportTab">
+                    <DockPanel Margin="8">
+                        <StackPanel DockPanel.Dock="Top" Margin="0,0,0,10">
+                            <TextBlock x:Name="BarTotalText" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,4" />
+                            <TextBlock x:Name="BarCounterText" Margin="0,0,0,2" />
+                            <TextBlock x:Name="BarSessionsText" Margin="0,0,0,2" />
+                            <TextBlock x:Name="BarDebtsPaidText" Margin="0,0,0,2" />
+                            <TextBlock x:Name="BarUnitsText" Margin="0,0,0,2" />
+                            <TextBlock x:Name="BarUnpaidText" Foreground="{StaticResource StateLimitBrush}" FontWeight="SemiBold" />
+                        </StackPanel>
+                        <DataGrid x:Name="BarProductsGrid" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False" BorderThickness="0">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn x:Name="BarProductColumn" Binding="{Binding ProductName}" Width="*" />
+                                <DataGridTextColumn x:Name="BarUnitsColumn" Binding="{Binding Units}" Width="100" />
+                                <DataGridTextColumn x:Name="BarIncomeColumn" Binding="{Binding IncomeDisplay}" Width="140" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </DockPanel>
+                </TabItem>
             </TabControl>
         </Border>
     </DockPanel>

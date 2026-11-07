@@ -634,4 +634,279 @@
   <data name="ShiftStillOpen" xml:space="preserve">
     <value>open</value>
   </data>
+  <data name="NavComputers" xml:space="preserve">
+    <value>Computers</value>
+  </data>
+  <data name="NavBar" xml:space="preserve">
+    <value>Bar</value>
+  </data>
+  <data name="UnpaidChipFormat" xml:space="preserve">
+    <value>Unpaid: {0} · {1} UZS</value>
+  </data>
+  <data name="UnpaidChipTooltip" xml:space="preserve">
+    <value>Bar sales waiting for payment. Click to see them.</value>
+  </data>
+  <data name="BarSellTitle" xml:space="preserve">
+    <value>Sell</value>
+  </data>
+  <data name="BarSearchLabel" xml:space="preserve">
+    <value>Search product</value>
+  </data>
+  <data name="BarQuantity" xml:space="preserve">
+    <value>Quantity</value>
+  </data>
+  <data name="BarCups" xml:space="preserve">
+    <value>Cups (stakan)</value>
+  </data>
+  <data name="BarSellTo" xml:space="preserve">
+    <value>Sell to</value>
+  </data>
+  <data name="BarSellToCounter" xml:space="preserve">
+    <value>Counter (paid now)</value>
+  </data>
+  <data name="BarUnpaid" xml:space="preserve">
+    <value>Unpaid (on credit)</value>
+  </data>
+  <data name="BarUnpaidComment" xml:space="preserve">
+    <value>Comment (who has to pay it)</value>
+  </data>
+  <data name="BarTotalFormat" xml:space="preserve">
+    <value>Total: {0} UZS</value>
+  </data>
+  <data name="BarSellButton" xml:space="preserve">
+    <value>Sell</value>
+  </data>
+  <data name="BarChooseProduct" xml:space="preserve">
+    <value>Choose a product from the list.</value>
+  </data>
+  <data name="BarProductLine" xml:space="preserve">
+    <value>{0} — {1} UZS — {2} in stock</value>
+  </data>
+  <data name="BarSoldFormat" xml:space="preserve">
+    <value>Sold {0} × {1}, {2} left</value>
+  </data>
+  <data name="BarTabSales" xml:space="preserve">
+    <value>Sales</value>
+  </data>
+  <data name="BarTabProducts" xml:space="preserve">
+    <value>Products</value>
+  </data>
+  <data name="BarTabStockLog" xml:space="preserve">
+    <value>Stock log</value>
+  </data>
+  <data name="BarColTime" xml:space="preserve">
+    <value>Time</value>
+  </data>
+  <data name="BarColProduct" xml:space="preserve">
+    <value>Product</value>
+  </data>
+  <data name="BarColQty" xml:space="preserve">
+    <value>Qty</value>
+  </data>
+  <data name="BarColCups" xml:space="preserve">
+    <value>Cups</value>
+  </data>
+  <data name="BarColAmount" xml:space="preserve">
+    <value>Amount</value>
+  </data>
+  <data name="BarColStatus" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="BarColWhere" xml:space="preserve">
+    <value>Where</value>
+  </data>
+  <data name="BarColComment" xml:space="preserve">
+    <value>Comment</value>
+  </data>
+  <data name="BarColPrice" xml:space="preserve">
+    <value>Price</value>
+  </data>
+  <data name="BarColStock" xml:space="preserve">
+    <value>Stock</value>
+  </data>
+  <data name="BarColChange" xml:space="preserve">
+    <value>Change</value>
+  </data>
+  <data name="BarColAfter" xml:space="preserve">
+    <value>Stock after</value>
+  </data>
+  <data name="BarColType" xml:space="preserve">
+    <value>Type</value>
+  </data>
+  <data name="BarColReason" xml:space="preserve">
+    <value>Reason</value>
+  </data>
+  <data name="BarColNote" xml:space="preserve">
+    <value>Note</value>
+  </data>
+  <data name="BarWhereCounter" xml:space="preserve">
+    <value>Counter</value>
+  </data>
+  <data name="BarStatusPaid" xml:space="preserve">
+    <value>Paid</value>
+  </data>
+  <data name="BarStatusUnpaid" xml:space="preserve">
+    <value>UNPAID</value>
+  </data>
+  <data name="BarStatusPaidLater" xml:space="preserve">
+    <value>Paid later</value>
+  </data>
+  <data name="BarStatusCancelled" xml:space="preserve">
+    <value>Cancelled</value>
+  </data>
+  <data name="BarVoidButton" xml:space="preserve">
+    <value>Cancel sale</value>
+  </data>
+  <data name="BarVoidConfirmFormat" xml:space="preserve">
+    <value>Cancel this sale and put the stock back?
+
+{0}</value>
+  </data>
+  <data name="BarSelectSale" xml:space="preserve">
+    <value>Select a sale first.</value>
+  </data>
+  <data name="BarSelectProduct" xml:space="preserve">
+    <value>Select a product first.</value>
+  </data>
+  <data name="BarAddProduct" xml:space="preserve">
+    <value>Add product</value>
+  </data>
+  <data name="BarEditProduct" xml:space="preserve">
+    <value>Edit product</value>
+  </data>
+  <data name="BarAdjustStock" xml:space="preserve">
+    <value>Adjust stock</value>
+  </data>
+  <data name="BarArchive" xml:space="preserve">
+    <value>Archive</value>
+  </data>
+  <data name="BarUnarchive" xml:space="preserve">
+    <value>Unarchive</value>
+  </data>
+  <data name="BarShowArchived" xml:space="preserve">
+    <value>Show archived</value>
+  </data>
+  <data name="BarArchivedMark" xml:space="preserve">
+    <value>archived</value>
+  </data>
+  <data name="BarProductName" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="BarProductPrice" xml:space="preserve">
+    <value>Price (UZS)</value>
+  </data>
+  <data name="BarProductStart" xml:space="preserve">
+    <value>Starting stock</value>
+  </data>
+  <data name="BarEnterNumbers" xml:space="preserve">
+    <value>Enter whole numbers for the price and the stock.</value>
+  </data>
+  <data name="BarAdjustFor" xml:space="preserve">
+    <value>Adjust stock: {0}</value>
+  </data>
+  <data name="BarAdjustDelta" xml:space="preserve">
+    <value>Change stock by (e.g. 10 or -2)</value>
+  </data>
+  <data name="BarAdjustDeltaInvalid" xml:space="preserve">
+    <value>Enter a whole number like 10 or -2.</value>
+  </data>
+  <data name="BarAdjustReason" xml:space="preserve">
+    <value>Reason</value>
+  </data>
+  <data name="BarAdjustNote" xml:space="preserve">
+    <value>Note (optional)</value>
+  </data>
+  <data name="BarReasonRestock" xml:space="preserve">
+    <value>Restock</value>
+  </data>
+  <data name="BarReasonRecount" xml:space="preserve">
+    <value>Recount</value>
+  </data>
+  <data name="BarReasonDamaged" xml:space="preserve">
+    <value>Damaged</value>
+  </data>
+  <data name="BarReasonOther" xml:space="preserve">
+    <value>Other</value>
+  </data>
+  <data name="BarMoveInitial" xml:space="preserve">
+    <value>Initial</value>
+  </data>
+  <data name="BarMoveSale" xml:space="preserve">
+    <value>Sale</value>
+  </data>
+  <data name="BarMoveVoid" xml:space="preserve">
+    <value>Cancelled sale</value>
+  </data>
+  <data name="BarMoveAdjust" xml:space="preserve">
+    <value>Adjustment</value>
+  </data>
+  <data name="BarCupPriceLabel" xml:space="preserve">
+    <value>Price per cup (UZS)</value>
+  </data>
+  <data name="BarCupPriceSaved" xml:space="preserve">
+    <value>Cup price saved.</value>
+  </data>
+  <data name="BarCupPriceInvalid" xml:space="preserve">
+    <value>Enter the cup price as a whole number.</value>
+  </data>
+  <data name="BarImportButton" xml:space="preserve">
+    <value>Import old shop database…</value>
+  </data>
+  <data name="BarImportFilter" xml:space="preserve">
+    <value>ShopKeeper database (*.db)|*.db|All files (*.*)|*.*</value>
+  </data>
+  <data name="BarImportConfirm" xml:space="preserve">
+    <value>Import products, sales and stock history from this file into ClubControl?
+
+A backup of the current database is made first. This can only be done once.</value>
+  </data>
+  <data name="BarImportDoneFormat" xml:space="preserve">
+    <value>Imported {0} products, {1} sales and {2} stock records.</value>
+  </data>
+  <data name="BarImportFailed" xml:space="preserve">
+    <value>The import failed: {0}</value>
+  </data>
+  <data name="UnpaidTitle" xml:space="preserve">
+    <value>Unpaid bar sales</value>
+  </data>
+  <data name="UnpaidNone" xml:space="preserve">
+    <value>Nothing is unpaid.</value>
+  </data>
+  <data name="UnpaidTotalFormat" xml:space="preserve">
+    <value>Total owed: {0} UZS</value>
+  </data>
+  <data name="UnpaidMarkPaid" xml:space="preserve">
+    <value>Mark paid</value>
+  </data>
+  <data name="UnpaidMarkPaidConfirm" xml:space="preserve">
+    <value>The client paid {0} UZS for:
+
+{1}
+
+Mark it as paid?</value>
+  </data>
+  <data name="AddItemFromBar" xml:space="preserve">
+    <value>From the bar</value>
+  </data>
+  <data name="AddItemOther" xml:space="preserve">
+    <value>Something else</value>
+  </data>
+  <data name="ReportsBarTitle" xml:space="preserve">
+    <value>Bar</value>
+  </data>
+  <data name="ReportsBarPaid" xml:space="preserve">
+    <value>Counter sales (paid)</value>
+  </data>
+  <data name="ReportsBarSessions" xml:space="preserve">
+    <value>Sold to PCs (on their bills)</value>
+  </data>
+  <data name="ReportsBarDebtsPaid" xml:space="preserve">
+    <value>Credit paid in this period</value>
+  </data>
+  <data name="ReportsBarUnpaid" xml:space="preserve">
+    <value>Unpaid now</value>
+  </data>
+  <data name="ReportsBarUnits" xml:space="preserve">
+    <value>Units sold</value>
+  </data>
 </root>

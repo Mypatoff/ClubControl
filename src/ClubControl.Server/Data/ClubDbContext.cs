@@ -17,6 +17,9 @@ public class ClubDbContext : DbContext
     public DbSet<Shift> Shifts => Set<Shift>();
     public DbSet<EventLogEntry> EventLogEntries => Set<EventLogEntry>();
     public DbSet<Setting> Settings => Set<Setting>();
+    public DbSet<BarProduct> BarProducts => Set<BarProduct>();
+    public DbSet<BarSale> BarSales => Set<BarSale>();
+    public DbSet<BarStockMovement> BarStockMovements => Set<BarStockMovement>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -61,5 +64,37 @@ public class ClubDbContext : DbContext
             .HasOne(seg => seg.Pc)
             .WithMany()
             .HasForeignKey(seg => seg.PcId);
+
+        // Bar. Products are archived, never deleted, so history keeps pointing at them (Restrict).
+        modelBuilder.Entity<BarSale>()
+            .HasOne(s => s.BarProduct)
+            .WithMany()
+            .HasForeignKey(s => s.BarProductId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // Removing a session item must not delete the bar sale it came from (the service voids the
+        // sale first); SetNull just keeps the database consistent if an item ever goes.
+        modelBuilder.Entity<BarSale>()
+            .HasOne(s => s.SessionExtra)
+            .WithMany()
+            .HasForeignKey(s => s.SessionExtraId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<BarStockMovement>()
+            .HasOne(m => m.BarProduct)
+            .WithMany()
+            .HasForeignKey(m => m.BarProductId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<BarStockMovement>()
+            .HasOne(m => m.BarSale)
+            .WithMany()
+            .HasForeignKey(m => m.BarSaleId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // The bar page and the unpaid chip read these every second or on every refresh.
+        modelBuilder.Entity<BarSale>().HasIndex(s => s.CreatedUtc);
+        modelBuilder.Entity<BarSale>().HasIndex(s => new { s.IsUnpaid, s.PaidUtc });
+        modelBuilder.Entity<BarStockMovement>().HasIndex(m => new { m.BarProductId, m.CreatedUtc });
     }
 }

@@ -98,6 +98,19 @@ One club, one admin laptop (server), up to ~30 gaming PCs (clients) on the same 
   - Card colours: offline (switched off / not connected) = red, connected and free = blue, session running (prepay or postpay) = green, limit reached = orange. Offline overrides the others; nothing is greyed out.
   - Event log panel at the bottom; drag the bar above it to resize it, down to the edge to hide it, double-click the bar to hide / show (the height is remembered in `%ProgramData%\ClubControl\log-panel-height.txt`). It lists (PC connected/disconnected, session started/ended/extended/moved, warnings, limit reached, manual unlock, power commands). Events are also saved in the database.
 - Separate windows: Start session, Move, Postpay payment, Settings, Reports.
+- **Two pages:** the title row has a "Computers | Bar" switch. Computers is everything above; Bar is section 7a. The orange **Unpaid** chip in the title row (both pages) shows how many bar sales are waiting for payment and the amount; clicking it opens the list.
+
+## 7a. Bar (shop)
+
+A small shop for drinks and snacks, in the same `club.db` (a port of the useful parts of the old ShopKeeper program; its billiard page is not ported, "Other" resources cover that). Logic in `BarService`, tests in `BarServiceTests`.
+
+- **Products:** name, price (UZS), stock. Archived instead of deleted, so history keeps pointing at them. Stock only changes by a sale, a cancelled sale, or "Adjust stock" (restock / recount / damaged / other, with a note); each change is a row in the **stock log**.
+- **Selling:** search, the list shows the **best sellers first** (units sold, cancelled sales not counted; ties and unsold products A-Z). Quantity, optional **cups (stakan)** at the cup price set on the Products tab (the price is copied into the sale), and **Sell to**: the counter, or a PC / resource with a running session. A sale is checked and saved in one transaction (stock, sale, stock log, event log).
+- **Sell to a PC:** it is always also a bar sale (stock goes down, shown in sales, stock log and reports). Paid, it is added to that session's bill as an item (`SessionExtra`), and removing the item from the session cancels the bar sale. In the Add item window the "From the bar" tab does this; "Something else" is the old free-text item.
+- **Unpaid:** tick **Unpaid** and write a **comment** (who owes it; required), at the counter or for a PC. An unpaid sale to a PC is **not** on the session's bill. It stays in the unpaid list (the title-row chip) until **Mark paid**, and counts as income the day it is paid. It can also be cancelled.
+- **Cancelling a sale** puts its stock back. A sale on a PC's bill can only be cancelled while that session is running.
+- **Reports:** a Bar tab: counter sales, sales on PC bills (also inside the sessions report's "Items sold"), credit paid in the period, what is unpaid now, units, per product. Also in the CSV.
+- **Import:** Products tab, "Import old shop database": reads a ShopKeeper v1.3 `shop.db` (schema version 5, read-only) and copies products, sales, the stock log and the cup price into an empty bar. Makes a copy of `club.db` first (`club_before-bar-import_*.db`), runs in one transaction, and refuses a second import.
 
 ## 8. Settings
 

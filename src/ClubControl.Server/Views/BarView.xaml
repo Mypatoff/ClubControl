@@ -1,0 +1,173 @@
+<UserControl x:Class="ClubControl.Server.Views.BarView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <UserControl.Resources>
+        <!-- Panel look shared by the sell panel and the tabs panel -->
+        <Style x:Key="PanelStyle" TargetType="Border">
+            <Setter Property="Background" Value="{StaticResource SurfaceBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource DividerBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="12" />
+            <Setter Property="Padding" Value="14" />
+        </Style>
+
+        <!-- Sold-out and archived products are greyed out -->
+        <Style x:Key="ProductRowStyle" TargetType="DataGridRow" BasedOn="{StaticResource {x:Type DataGridRow}}">
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsAvailable}" Value="False">
+                    <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- Cancelled sales are greyed out, unpaid ones stand out -->
+        <Style x:Key="SaleRowStyle" TargetType="DataGridRow" BasedOn="{StaticResource {x:Type DataGridRow}}">
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsCancelled}" Value="True">
+                    <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding IsOutstanding}" Value="True">
+                    <Setter Property="Foreground" Value="{StaticResource StateLimitBrush}" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+    </UserControl.Resources>
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="5*" MinWidth="380" />
+            <ColumnDefinition Width="6*" />
+        </Grid.ColumnDefinitions>
+
+        <!-- Sell panel -->
+        <Border Grid.Column="0" Margin="0,0,6,0" Style="{StaticResource PanelStyle}">
+            <DockPanel>
+                <TextBlock x:Name="SellTitleText" DockPanel.Dock="Top" FontSize="18" FontWeight="Bold" Margin="0,0,0,8" />
+                <TextBlock x:Name="SearchLabel" DockPanel.Dock="Top" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,2" />
+                <TextBox x:Name="SearchBox" DockPanel.Dock="Top" Margin="0,0,0,8" TextChanged="OnSearchChanged" />
+
+                <!-- The sale being made -->
+                <StackPanel DockPanel.Dock="Bottom" Margin="0,10,0,0">
+                    <TextBlock x:Name="SelectedText" FontWeight="Bold" FontSize="15" TextWrapping="Wrap" Margin="0,0,0,8" />
+
+                    <Grid Margin="0,0,0,8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0" Margin="0,0,6,0">
+                            <TextBlock x:Name="QuantityLabel" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,2" />
+                            <DockPanel>
+                                <Button DockPanel.Dock="Left" Content="−" Width="34" Padding="0,5" Style="{StaticResource SecondaryButtonStyle}" Click="OnQuantityMinus" />
+                                <Button DockPanel.Dock="Right" Content="+" Width="34" Padding="0,5" Style="{StaticResource SecondaryButtonStyle}" Click="OnQuantityPlus" />
+                                <TextBox x:Name="QuantityBox" Text="1" TextAlignment="Center" Margin="4,0" TextChanged="OnAmountsChanged" />
+                            </DockPanel>
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" Margin="6,0,0,0">
+                            <TextBlock x:Name="CupsLabel" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,2" />
+                            <DockPanel>
+                                <Button DockPanel.Dock="Left" Content="−" Width="34" Padding="0,5" Style="{StaticResource SecondaryButtonStyle}" Click="OnCupsMinus" />
+                                <Button DockPanel.Dock="Right" Content="+" Width="34" Padding="0,5" Style="{StaticResource SecondaryButtonStyle}" Click="OnCupsPlus" />
+                                <TextBox x:Name="CupsBox" Text="0" TextAlignment="Center" Margin="4,0" TextChanged="OnAmountsChanged" />
+                            </DockPanel>
+                        </StackPanel>
+                    </Grid>
+
+                    <TextBlock x:Name="SellToLabel" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,2" />
+                    <ComboBox x:Name="SellToBox" DisplayMemberPath="Label" Margin="0,0,0,8" />
+
+                    <CheckBox x:Name="UnpaidCheck" Margin="0,0,0,6" Checked="OnUnpaidToggled" Unchecked="OnUnpaidToggled" />
+                    <StackPanel x:Name="CommentPanel" Visibility="Collapsed" Margin="0,0,0,8">
+                        <TextBlock x:Name="CommentLabel" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,2" />
+                        <TextBox x:Name="CommentBox" MaxLength="200" />
+                    </StackPanel>
+
+                    <DockPanel Margin="0,4,0,0">
+                        <Button x:Name="SellButton" DockPanel.Dock="Right" Width="130" Height="40" Click="OnSell" />
+                        <TextBlock x:Name="TotalText" FontSize="18" FontWeight="Bold" VerticalAlignment="Center" />
+                    </DockPanel>
+                    <TextBlock x:Name="SellMessageText" Margin="0,8,0,0" TextWrapping="Wrap" />
+                </StackPanel>
+
+                <!-- Best sellers first -->
+                <DataGrid x:Name="ProductList" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False"
+                          SelectionMode="Single" HeadersVisibility="Column" BorderThickness="0"
+                          RowStyle="{StaticResource ProductRowStyle}" SelectionChanged="OnProductSelected">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn x:Name="ListNameColumn" Binding="{Binding Name}" Width="*" />
+                        <DataGridTextColumn x:Name="ListPriceColumn" Binding="{Binding PriceDisplay}" Width="100" />
+                        <DataGridTextColumn x:Name="ListStockColumn" Binding="{Binding Stock}" Width="70" />
+                    </DataGrid.Columns>
+                </DataGrid>
+            </DockPanel>
+        </Border>
+
+        <!-- Sales, products, stock log -->
+        <Border Grid.Column="1" Margin="6,0,0,0" Style="{StaticResource PanelStyle}" Padding="8">
+            <TabControl>
+                <TabItem x:Name="SalesTab">
+                    <DockPanel Margin="4">
+                        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Margin="0,8,0,0">
+                            <Button x:Name="VoidButton" Style="{StaticResource DangerButtonStyle}" Click="OnVoidSale" />
+                        </StackPanel>
+                        <DataGrid x:Name="SalesGrid" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False"
+                                  SelectionMode="Single" BorderThickness="0" RowStyle="{StaticResource SaleRowStyle}">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn x:Name="SaleTimeColumn" Binding="{Binding TimeDisplay}" Width="100" />
+                                <DataGridTextColumn x:Name="SaleProductColumn" Binding="{Binding Product}" Width="*" />
+                                <DataGridTextColumn x:Name="SaleQtyColumn" Binding="{Binding Quantity}" Width="50" />
+                                <DataGridTextColumn x:Name="SaleCupsColumn" Binding="{Binding Cups}" Width="60" />
+                                <DataGridTextColumn x:Name="SaleAmountColumn" Binding="{Binding AmountDisplay}" Width="100" />
+                                <DataGridTextColumn x:Name="SaleWhereColumn" Binding="{Binding Where}" Width="90" />
+                                <DataGridTextColumn x:Name="SaleStatusColumn" Binding="{Binding Status}" Width="110" />
+                                <DataGridTextColumn x:Name="SaleCommentColumn" Binding="{Binding Comment}" Width="130" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </DockPanel>
+                </TabItem>
+
+                <TabItem x:Name="ProductsTab">
+                    <DockPanel Margin="4">
+                        <!-- Cup price and the one-time import of the old shop database -->
+                        <WrapPanel DockPanel.Dock="Bottom" Margin="0,8,0,0">
+                            <TextBlock x:Name="CupPriceLabel" VerticalAlignment="Center" Margin="0,0,8,0" />
+                            <TextBox x:Name="CupPriceBox" Width="100" Margin="0,0,6,0" />
+                            <Button x:Name="CupPriceSaveButton" Margin="0,0,24,0" Style="{StaticResource SecondaryButtonStyle}" Click="OnSaveCupPrice" />
+                            <Button x:Name="ImportButton" Style="{StaticResource SecondaryButtonStyle}" Click="OnImport" />
+                        </WrapPanel>
+                        <WrapPanel DockPanel.Dock="Top" Margin="0,0,0,8">
+                            <Button x:Name="AddProductButton" Margin="0,0,6,4" Style="{StaticResource SuccessButtonStyle}" Click="OnAddProduct" />
+                            <Button x:Name="EditProductButton" Margin="0,0,6,4" Style="{StaticResource SecondaryButtonStyle}" Click="OnEditProduct" />
+                            <Button x:Name="AdjustStockButton" Margin="0,0,6,4" Style="{StaticResource SecondaryButtonStyle}" Click="OnAdjustStock" />
+                            <Button x:Name="ArchiveButton" Margin="0,0,14,4" Style="{StaticResource SecondaryButtonStyle}" Click="OnArchive" />
+                            <CheckBox x:Name="ShowArchivedCheck" VerticalAlignment="Center" Margin="0,0,0,4" Checked="OnShowArchivedToggled" Unchecked="OnShowArchivedToggled" />
+                        </WrapPanel>
+                        <DataGrid x:Name="ProductsGrid" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False"
+                                  SelectionMode="Single" BorderThickness="0" RowStyle="{StaticResource ProductRowStyle}">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn x:Name="ProductNameColumn" Binding="{Binding NameDisplay}" Width="*" />
+                                <DataGridTextColumn x:Name="ProductPriceColumn" Binding="{Binding PriceDisplay}" Width="110" />
+                                <DataGridTextColumn x:Name="ProductStockColumn" Binding="{Binding Stock}" Width="80" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </DockPanel>
+                </TabItem>
+
+                <TabItem x:Name="StockLogTab">
+                    <DataGrid x:Name="StockLogGrid" Margin="4" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False"
+                              BorderThickness="0">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn x:Name="LogTimeColumn" Binding="{Binding TimeDisplay}" Width="100" />
+                            <DataGridTextColumn x:Name="LogProductColumn" Binding="{Binding Product}" Width="*" />
+                            <DataGridTextColumn x:Name="LogTypeColumn" Binding="{Binding TypeDisplay}" Width="110" />
+                            <DataGridTextColumn x:Name="LogChangeColumn" Binding="{Binding ChangeDisplay}" Width="70" />
+                            <DataGridTextColumn x:Name="LogAfterColumn" Binding="{Binding StockAfter}" Width="80" />
+                            <DataGridTextColumn x:Name="LogReasonColumn" Binding="{Binding ReasonDisplay}" Width="100" />
+                            <DataGridTextColumn x:Name="LogNoteColumn" Binding="{Binding Note}" Width="120" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </TabItem>
+            </TabControl>
+        </Border>
+    </Grid>
+</UserControl>

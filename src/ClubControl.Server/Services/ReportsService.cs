@@ -34,6 +34,46 @@ public class ReportsService
         string TariffName, int AmountUzs, int ExtrasUzs, string Note);
     public record Report(Totals Totals, List<PcRow> ByPc, List<TariffRow> ByTariff, List<TypeRow> ByType, List<SessionLine> Sessions);
 
+    /// <summary>Units and income of one bar product in the period.</summary>
+    public record BarProductRow(string ProductName, int Units, long IncomeUzs);
+
+    /// <summary>
+    /// The bar for a date range. Income: a normal sale counts the day it is made, a sale on credit the day it
+    /// is paid; cancelled sales never count. Sales added to a PC's bill are also inside that PC's "Items sold"
+    /// in the sessions report, they are only shown separately here. UnpaidNow is everything still owed, whenever it was sold.
+    /// </summary>
+    public record BarReport(long CounterPaidUzs, long SessionItemsUzs, long DebtsPaidUzs, long UnpaidNowUzs, int UnitsSold, List<BarProductRow> ByProduct)
+    {
+        public long TotalIncomeUzs => CounterPaidUzs + SessionItemsUzs + DebtsPaidUzs;
+    }
+
+    public async Task<BarReport> BuildBarReportAsync(DateTime startUtc, DateTime endUtc)
+    {
+        var counted = await _db.BarSales.AsNoTracking()
+            .Where(s => s.VoidedUtc == null
+                && ((!s.IsUnpaid && s.CreatedUtc >= startUtc && s.CreatedUtc < endUtc)
+                    || (s.IsUnpaid && s.PaidUtc != null && s.PaidUtc >= startUtc && s.PaidUtc < endUtc)))
+            .ToListAsync();
+
+        var unpaidNow = await _db.BarSales.AsNoTracking()
+            .Where(s => s.IsUnpaid && s.PaidUtc == null && s.VoidedUtc == null)
+            .SumAsync(s => (long?)s.TotalUzs) ?? 0;
+
+        var byProduct = counted
+            .GroupBy(s => s.ProductName)
+            .Select(g => new BarProductRow(g.Key, g.Sum(s => s.Quantity), g.Sum(s => (long)s.TotalUzs)))
+            .OrderByDescending(r => r.Units).ThenBy(r => r.ProductName, StringComparer.CurrentCultureIgnoreCase)
+            .ToList();
+
+        return new BarReport(
+            CounterPaidUzs: counted.Where(s => !s.IsUnpaid && s.SessionId == null).Sum(s => (long)s.TotalUzs),
+            SessionItemsUzs: counted.Where(s => !s.IsUnpaid && s.SessionId != null).Sum(s => (long)s.TotalUzs),
+            DebtsPaidUzs: counted.Where(s => s.IsUnpaid).Sum(s => (long)s.TotalUzs),
+            UnpaidNowUzs: unpaidNow,
+            UnitsSold: counted.Sum(s => s.Quantity),
+            ByProduct: byProduct);
+    }
+
     /// <summary>A shift for the report's shift picker; ClosedUtc is null while it is still open.</summary>
     public record ShiftInfo(int Id, DateTime OpenedUtc, DateTime? ClosedUtc);
 

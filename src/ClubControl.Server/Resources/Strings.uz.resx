@@ -634,4 +634,279 @@
   <data name="ShiftStillOpen" xml:space="preserve">
     <value>ochiq</value>
   </data>
+  <data name="NavComputers" xml:space="preserve">
+    <value>Kompyuterlar</value>
+  </data>
+  <data name="NavBar" xml:space="preserve">
+    <value>Bar</value>
+  </data>
+  <data name="UnpaidChipFormat" xml:space="preserve">
+    <value>To'lanmagan: {0} · {1} UZS</value>
+  </data>
+  <data name="UnpaidChipTooltip" xml:space="preserve">
+    <value>To'lovni kutayotgan bar sotuvlari. Ko'rish uchun bosing.</value>
+  </data>
+  <data name="BarSellTitle" xml:space="preserve">
+    <value>Sotish</value>
+  </data>
+  <data name="BarSearchLabel" xml:space="preserve">
+    <value>Mahsulot qidirish</value>
+  </data>
+  <data name="BarQuantity" xml:space="preserve">
+    <value>Soni</value>
+  </data>
+  <data name="BarCups" xml:space="preserve">
+    <value>Stakan</value>
+  </data>
+  <data name="BarSellTo" xml:space="preserve">
+    <value>Kimga sotish</value>
+  </data>
+  <data name="BarSellToCounter" xml:space="preserve">
+    <value>Kassa (hozir to'lanadi)</value>
+  </data>
+  <data name="BarUnpaid" xml:space="preserve">
+    <value>To'lanmagan (qarzga)</value>
+  </data>
+  <data name="BarUnpaidComment" xml:space="preserve">
+    <value>Izoh (kim to'laydi)</value>
+  </data>
+  <data name="BarTotalFormat" xml:space="preserve">
+    <value>Jami: {0} UZS</value>
+  </data>
+  <data name="BarSellButton" xml:space="preserve">
+    <value>Sotish</value>
+  </data>
+  <data name="BarChooseProduct" xml:space="preserve">
+    <value>Ro'yxatdan mahsulotni tanlang.</value>
+  </data>
+  <data name="BarProductLine" xml:space="preserve">
+    <value>{0} — {1} UZS — omborda {2} ta</value>
+  </data>
+  <data name="BarSoldFormat" xml:space="preserve">
+    <value>Sotildi: {0} × {1}, {2} ta qoldi</value>
+  </data>
+  <data name="BarTabSales" xml:space="preserve">
+    <value>Sotuvlar</value>
+  </data>
+  <data name="BarTabProducts" xml:space="preserve">
+    <value>Mahsulotlar</value>
+  </data>
+  <data name="BarTabStockLog" xml:space="preserve">
+    <value>Ombor tarixi</value>
+  </data>
+  <data name="BarColTime" xml:space="preserve">
+    <value>Vaqt</value>
+  </data>
+  <data name="BarColProduct" xml:space="preserve">
+    <value>Mahsulot</value>
+  </data>
+  <data name="BarColQty" xml:space="preserve">
+    <value>Soni</value>
+  </data>
+  <data name="BarColCups" xml:space="preserve">
+    <value>Stakan</value>
+  </data>
+  <data name="BarColAmount" xml:space="preserve">
+    <value>Summa</value>
+  </data>
+  <data name="BarColStatus" xml:space="preserve">
+    <value>Holat</value>
+  </data>
+  <data name="BarColWhere" xml:space="preserve">
+    <value>Qayerda</value>
+  </data>
+  <data name="BarColComment" xml:space="preserve">
+    <value>Izoh</value>
+  </data>
+  <data name="BarColPrice" xml:space="preserve">
+    <value>Narxi</value>
+  </data>
+  <data name="BarColStock" xml:space="preserve">
+    <value>Zaxira</value>
+  </data>
+  <data name="BarColChange" xml:space="preserve">
+    <value>O'zgarish</value>
+  </data>
+  <data name="BarColAfter" xml:space="preserve">
+    <value>Keyingi zaxira</value>
+  </data>
+  <data name="BarColType" xml:space="preserve">
+    <value>Turi</value>
+  </data>
+  <data name="BarColReason" xml:space="preserve">
+    <value>Sabab</value>
+  </data>
+  <data name="BarColNote" xml:space="preserve">
+    <value>Izoh</value>
+  </data>
+  <data name="BarWhereCounter" xml:space="preserve">
+    <value>Kassa</value>
+  </data>
+  <data name="BarStatusPaid" xml:space="preserve">
+    <value>To'langan</value>
+  </data>
+  <data name="BarStatusUnpaid" xml:space="preserve">
+    <value>TO'LANMAGAN</value>
+  </data>
+  <data name="BarStatusPaidLater" xml:space="preserve">
+    <value>Keyin to'langan</value>
+  </data>
+  <data name="BarStatusCancelled" xml:space="preserve">
+    <value>Bekor qilingan</value>
+  </data>
+  <data name="BarVoidButton" xml:space="preserve">
+    <value>Sotuvni bekor qilish</value>
+  </data>
+  <data name="BarVoidConfirmFormat" xml:space="preserve">
+    <value>Bu sotuv bekor qilinib, mahsulot omborga qaytarilsinmi?
+
+{0}</value>
+  </data>
+  <data name="BarSelectSale" xml:space="preserve">
+    <value>Avval sotuvni tanlang.</value>
+  </data>
+  <data name="BarSelectProduct" xml:space="preserve">
+    <value>Avval mahsulotni tanlang.</value>
+  </data>
+  <data name="BarAddProduct" xml:space="preserve">
+    <value>Mahsulot qo'shish</value>
+  </data>
+  <data name="BarEditProduct" xml:space="preserve">
+    <value>Mahsulotni tahrirlash</value>
+  </data>
+  <data name="BarAdjustStock" xml:space="preserve">
+    <value>Zaxirani sozlash</value>
+  </data>
+  <data name="BarArchive" xml:space="preserve">
+    <value>Arxivlash</value>
+  </data>
+  <data name="BarUnarchive" xml:space="preserve">
+    <value>Arxivdan chiqarish</value>
+  </data>
+  <data name="BarShowArchived" xml:space="preserve">
+    <value>Arxivdagilarni ko'rsatish</value>
+  </data>
+  <data name="BarArchivedMark" xml:space="preserve">
+    <value>arxivda</value>
+  </data>
+  <data name="BarProductName" xml:space="preserve">
+    <value>Nomi</value>
+  </data>
+  <data name="BarProductPrice" xml:space="preserve">
+    <value>Narxi (UZS)</value>
+  </data>
+  <data name="BarProductStart" xml:space="preserve">
+    <value>Boshlang'ich zaxira</value>
+  </data>
+  <data name="BarEnterNumbers" xml:space="preserve">
+    <value>Narx va zaxira uchun butun son kiriting.</value>
+  </data>
+  <data name="BarAdjustFor" xml:space="preserve">
+    <value>Zaxirani sozlash: {0}</value>
+  </data>
+  <data name="BarAdjustDelta" xml:space="preserve">
+    <value>Zaxirani o'zgartirish (masalan 10 yoki -2)</value>
+  </data>
+  <data name="BarAdjustDeltaInvalid" xml:space="preserve">
+    <value>10 yoki -2 kabi butun son kiriting.</value>
+  </data>
+  <data name="BarAdjustReason" xml:space="preserve">
+    <value>Sabab</value>
+  </data>
+  <data name="BarAdjustNote" xml:space="preserve">
+    <value>Izoh (ixtiyoriy)</value>
+  </data>
+  <data name="BarReasonRestock" xml:space="preserve">
+    <value>Kirim</value>
+  </data>
+  <data name="BarReasonRecount" xml:space="preserve">
+    <value>Qayta sanash</value>
+  </data>
+  <data name="BarReasonDamaged" xml:space="preserve">
+    <value>Shikastlangan</value>
+  </data>
+  <data name="BarReasonOther" xml:space="preserve">
+    <value>Boshqa</value>
+  </data>
+  <data name="BarMoveInitial" xml:space="preserve">
+    <value>Boshlang'ich</value>
+  </data>
+  <data name="BarMoveSale" xml:space="preserve">
+    <value>Sotuv</value>
+  </data>
+  <data name="BarMoveVoid" xml:space="preserve">
+    <value>Bekor qilish</value>
+  </data>
+  <data name="BarMoveAdjust" xml:space="preserve">
+    <value>Tuzatish</value>
+  </data>
+  <data name="BarCupPriceLabel" xml:space="preserve">
+    <value>Bitta stakan narxi (UZS)</value>
+  </data>
+  <data name="BarCupPriceSaved" xml:space="preserve">
+    <value>Stakan narxi saqlandi.</value>
+  </data>
+  <data name="BarCupPriceInvalid" xml:space="preserve">
+    <value>Stakan narxini butun son bilan kiriting.</value>
+  </data>
+  <data name="BarImportButton" xml:space="preserve">
+    <value>Eski do'kon bazasini import qilish…</value>
+  </data>
+  <data name="BarImportFilter" xml:space="preserve">
+    <value>ShopKeeper bazasi (*.db)|*.db|Barcha fayllar (*.*)|*.*</value>
+  </data>
+  <data name="BarImportConfirm" xml:space="preserve">
+    <value>Mahsulotlar, sotuvlar va ombor tarixi shu fayldan ClubControl'ga import qilinsinmi?
+
+Avval joriy bazaning zaxira nusxasi olinadi. Buni faqat bir marta qilish mumkin.</value>
+  </data>
+  <data name="BarImportDoneFormat" xml:space="preserve">
+    <value>Import qilindi: mahsulot {0}, sotuv {1}, ombor yozuvi {2}.</value>
+  </data>
+  <data name="BarImportFailed" xml:space="preserve">
+    <value>Import amalga oshmadi: {0}</value>
+  </data>
+  <data name="UnpaidTitle" xml:space="preserve">
+    <value>To'lanmagan bar sotuvlari</value>
+  </data>
+  <data name="UnpaidNone" xml:space="preserve">
+    <value>To'lanmagan sotuv yo'q.</value>
+  </data>
+  <data name="UnpaidTotalFormat" xml:space="preserve">
+    <value>Jami qarz: {0} UZS</value>
+  </data>
+  <data name="UnpaidMarkPaid" xml:space="preserve">
+    <value>To'langan deb belgilash</value>
+  </data>
+  <data name="UnpaidMarkPaidConfirm" xml:space="preserve">
+    <value>Mijoz {0} UZS to'ladi:
+
+{1}
+
+To'langan deb belgilansinmi?</value>
+  </data>
+  <data name="AddItemFromBar" xml:space="preserve">
+    <value>Bardan</value>
+  </data>
+  <data name="AddItemOther" xml:space="preserve">
+    <value>Boshqa narsa</value>
+  </data>
+  <data name="ReportsBarTitle" xml:space="preserve">
+    <value>Bar</value>
+  </data>
+  <data name="ReportsBarPaid" xml:space="preserve">
+    <value>Kassa sotuvlari (to'langan)</value>
+  </data>
+  <data name="ReportsBarSessions" xml:space="preserve">
+    <value>Kompyuterlarga sotilgan (hisobida)</value>
+  </data>
+  <data name="ReportsBarDebtsPaid" xml:space="preserve">
+    <value>Davrda to'langan qarzlar</value>
+  </data>
+  <data name="ReportsBarUnpaid" xml:space="preserve">
+    <value>Hozir to'lanmagan</value>
+  </data>
+  <data name="ReportsBarUnits" xml:space="preserve">
+    <value>Sotilgan dona</value>
+  </data>
 </root>

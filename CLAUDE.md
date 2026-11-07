@@ -200,3 +200,14 @@ C# .NET 8. WPF for Server (admin panel + hosted ASP.NET Core/SignalR) and Client
       sessions started in that shift, also past midnight; Day/Week/Month are unchanged. Sessions from before shifts
       existed have no shift and only show in the calendar views. Covered by `ShiftTests`; the new window controls were
       checked by building only, not click-tested.
+- [x] Post-phase-6 feature: **Bar** (shop) inside ClubControl, replacing the separate ShopKeeper program (SPEC 7a).
+      New tables `BarProducts`, `BarSales`, `BarStockMovements` and `Setting.BarCupPriceUzs`, migration `AddBar`
+      (create-table/add-column only). `BarService` (products, sell, cancel, unpaid, stock log), `BarImportService`
+      (one-time import of a ShopKeeper `shop.db`), second main page `Views/BarView`, `UnpaidWindow` + the Unpaid chip in
+      the main title row, `ProductWindow`, `AdjustStockWindow`, a "From the bar" tab in `AddItemWindow` (paid: also a
+      session item; unpaid: bar sale only), a Bar tab in Reports, `EventType.BarSale/BarPaid`.
+      `SessionService.RemoveExtraAsync` also cancels the bar sale an item came from. Written and checked on Linux with
+      a scratch harness (the Server C# compiled against the WPF reference assemblies, `BarServiceTests`,
+      `BarReportTests`, `BarImportTests` and the upgrade test run on SQLite); the XAML and the real window were NOT
+      compiled or click-tested - build and click through the Bar page on Windows before releasing (Bar page, Unpaid
+      chip and window, Add item > From the bar, Reports > Bar, the import with the real `shop.db`).

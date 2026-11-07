@@ -634,4 +634,279 @@
   <data name="ShiftStillOpen" xml:space="preserve">
     <value>открыта</value>
   </data>
+  <data name="NavComputers" xml:space="preserve">
+    <value>Компьютеры</value>
+  </data>
+  <data name="NavBar" xml:space="preserve">
+    <value>Бар</value>
+  </data>
+  <data name="UnpaidChipFormat" xml:space="preserve">
+    <value>Не оплачено: {0} · {1} UZS</value>
+  </data>
+  <data name="UnpaidChipTooltip" xml:space="preserve">
+    <value>Продажи бара, ожидающие оплаты. Нажмите, чтобы посмотреть.</value>
+  </data>
+  <data name="BarSellTitle" xml:space="preserve">
+    <value>Продать</value>
+  </data>
+  <data name="BarSearchLabel" xml:space="preserve">
+    <value>Поиск товара</value>
+  </data>
+  <data name="BarQuantity" xml:space="preserve">
+    <value>Количество</value>
+  </data>
+  <data name="BarCups" xml:space="preserve">
+    <value>Стаканы</value>
+  </data>
+  <data name="BarSellTo" xml:space="preserve">
+    <value>Кому продать</value>
+  </data>
+  <data name="BarSellToCounter" xml:space="preserve">
+    <value>Касса (оплата сейчас)</value>
+  </data>
+  <data name="BarUnpaid" xml:space="preserve">
+    <value>Не оплачено (в долг)</value>
+  </data>
+  <data name="BarUnpaidComment" xml:space="preserve">
+    <value>Комментарий (кто должен оплатить)</value>
+  </data>
+  <data name="BarTotalFormat" xml:space="preserve">
+    <value>Итого: {0} UZS</value>
+  </data>
+  <data name="BarSellButton" xml:space="preserve">
+    <value>Продать</value>
+  </data>
+  <data name="BarChooseProduct" xml:space="preserve">
+    <value>Выберите товар из списка.</value>
+  </data>
+  <data name="BarProductLine" xml:space="preserve">
+    <value>{0} — {1} UZS — на складе: {2}</value>
+  </data>
+  <data name="BarSoldFormat" xml:space="preserve">
+    <value>Продано: {0} × {1}, осталось {2}</value>
+  </data>
+  <data name="BarTabSales" xml:space="preserve">
+    <value>Продажи</value>
+  </data>
+  <data name="BarTabProducts" xml:space="preserve">
+    <value>Товары</value>
+  </data>
+  <data name="BarTabStockLog" xml:space="preserve">
+    <value>Журнал склада</value>
+  </data>
+  <data name="BarColTime" xml:space="preserve">
+    <value>Время</value>
+  </data>
+  <data name="BarColProduct" xml:space="preserve">
+    <value>Товар</value>
+  </data>
+  <data name="BarColQty" xml:space="preserve">
+    <value>Кол-во</value>
+  </data>
+  <data name="BarColCups" xml:space="preserve">
+    <value>Стаканы</value>
+  </data>
+  <data name="BarColAmount" xml:space="preserve">
+    <value>Сумма</value>
+  </data>
+  <data name="BarColStatus" xml:space="preserve">
+    <value>Статус</value>
+  </data>
+  <data name="BarColWhere" xml:space="preserve">
+    <value>Где</value>
+  </data>
+  <data name="BarColComment" xml:space="preserve">
+    <value>Комментарий</value>
+  </data>
+  <data name="BarColPrice" xml:space="preserve">
+    <value>Цена</value>
+  </data>
+  <data name="BarColStock" xml:space="preserve">
+    <value>Остаток</value>
+  </data>
+  <data name="BarColChange" xml:space="preserve">
+    <value>Изменение</value>
+  </data>
+  <data name="BarColAfter" xml:space="preserve">
+    <value>Остаток после</value>
+  </data>
+  <data name="BarColType" xml:space="preserve">
+    <value>Тип</value>
+  </data>
+  <data name="BarColReason" xml:space="preserve">
+    <value>Причина</value>
+  </data>
+  <data name="BarColNote" xml:space="preserve">
+    <value>Примечание</value>
+  </data>
+  <data name="BarWhereCounter" xml:space="preserve">
+    <value>Касса</value>
+  </data>
+  <data name="BarStatusPaid" xml:space="preserve">
+    <value>Оплачено</value>
+  </data>
+  <data name="BarStatusUnpaid" xml:space="preserve">
+    <value>НЕ ОПЛАЧЕНО</value>
+  </data>
+  <data name="BarStatusPaidLater" xml:space="preserve">
+    <value>Оплачено позже</value>
+  </data>
+  <data name="BarStatusCancelled" xml:space="preserve">
+    <value>Аннулировано</value>
+  </data>
+  <data name="BarVoidButton" xml:space="preserve">
+    <value>Аннулировать продажу</value>
+  </data>
+  <data name="BarVoidConfirmFormat" xml:space="preserve">
+    <value>Аннулировать эту продажу и вернуть товар на склад?
+
+{0}</value>
+  </data>
+  <data name="BarSelectSale" xml:space="preserve">
+    <value>Сначала выберите продажу.</value>
+  </data>
+  <data name="BarSelectProduct" xml:space="preserve">
+    <value>Сначала выберите товар.</value>
+  </data>
+  <data name="BarAddProduct" xml:space="preserve">
+    <value>Добавить товар</value>
+  </data>
+  <data name="BarEditProduct" xml:space="preserve">
+    <value>Изменить товар</value>
+  </data>
+  <data name="BarAdjustStock" xml:space="preserve">
+    <value>Корректировка остатка</value>
+  </data>
+  <data name="BarArchive" xml:space="preserve">
+    <value>В архив</value>
+  </data>
+  <data name="BarUnarchive" xml:space="preserve">
+    <value>Из архива</value>
+  </data>
+  <data name="BarShowArchived" xml:space="preserve">
+    <value>Показать архивные</value>
+  </data>
+  <data name="BarArchivedMark" xml:space="preserve">
+    <value>в архиве</value>
+  </data>
+  <data name="BarProductName" xml:space="preserve">
+    <value>Название</value>
+  </data>
+  <data name="BarProductPrice" xml:space="preserve">
+    <value>Цена (UZS)</value>
+  </data>
+  <data name="BarProductStart" xml:space="preserve">
+    <value>Начальный остаток</value>
+  </data>
+  <data name="BarEnterNumbers" xml:space="preserve">
+    <value>Введите целые числа для цены и остатка.</value>
+  </data>
+  <data name="BarAdjustFor" xml:space="preserve">
+    <value>Корректировка остатка: {0}</value>
+  </data>
+  <data name="BarAdjustDelta" xml:space="preserve">
+    <value>Изменить остаток на (например, 10 или -2)</value>
+  </data>
+  <data name="BarAdjustDeltaInvalid" xml:space="preserve">
+    <value>Введите целое число, например 10 или -2.</value>
+  </data>
+  <data name="BarAdjustReason" xml:space="preserve">
+    <value>Причина</value>
+  </data>
+  <data name="BarAdjustNote" xml:space="preserve">
+    <value>Примечание (необязательно)</value>
+  </data>
+  <data name="BarReasonRestock" xml:space="preserve">
+    <value>Поступление</value>
+  </data>
+  <data name="BarReasonRecount" xml:space="preserve">
+    <value>Пересчёт</value>
+  </data>
+  <data name="BarReasonDamaged" xml:space="preserve">
+    <value>Повреждено</value>
+  </data>
+  <data name="BarReasonOther" xml:space="preserve">
+    <value>Другое</value>
+  </data>
+  <data name="BarMoveInitial" xml:space="preserve">
+    <value>Начальный остаток</value>
+  </data>
+  <data name="BarMoveSale" xml:space="preserve">
+    <value>Продажа</value>
+  </data>
+  <data name="BarMoveVoid" xml:space="preserve">
+    <value>Аннулирование</value>
+  </data>
+  <data name="BarMoveAdjust" xml:space="preserve">
+    <value>Корректировка</value>
+  </data>
+  <data name="BarCupPriceLabel" xml:space="preserve">
+    <value>Цена одного стакана (UZS)</value>
+  </data>
+  <data name="BarCupPriceSaved" xml:space="preserve">
+    <value>Цена стакана сохранена.</value>
+  </data>
+  <data name="BarCupPriceInvalid" xml:space="preserve">
+    <value>Введите цену стакана целым числом.</value>
+  </data>
+  <data name="BarImportButton" xml:space="preserve">
+    <value>Импорт старой базы магазина…</value>
+  </data>
+  <data name="BarImportFilter" xml:space="preserve">
+    <value>База ShopKeeper (*.db)|*.db|Все файлы (*.*)|*.*</value>
+  </data>
+  <data name="BarImportConfirm" xml:space="preserve">
+    <value>Импортировать товары, продажи и историю склада из этого файла в ClubControl?
+
+Сначала будет сделана резервная копия текущей базы. Это можно сделать только один раз.</value>
+  </data>
+  <data name="BarImportDoneFormat" xml:space="preserve">
+    <value>Импортировано: товаров {0}, продаж {1}, записей склада {2}.</value>
+  </data>
+  <data name="BarImportFailed" xml:space="preserve">
+    <value>Импорт не удался: {0}</value>
+  </data>
+  <data name="UnpaidTitle" xml:space="preserve">
+    <value>Неоплаченные продажи бара</value>
+  </data>
+  <data name="UnpaidNone" xml:space="preserve">
+    <value>Неоплаченных продаж нет.</value>
+  </data>
+  <data name="UnpaidTotalFormat" xml:space="preserve">
+    <value>Всего должны: {0} UZS</value>
+  </data>
+  <data name="UnpaidMarkPaid" xml:space="preserve">
+    <value>Отметить оплаченным</value>
+  </data>
+  <data name="UnpaidMarkPaidConfirm" xml:space="preserve">
+    <value>Клиент оплатил {0} UZS за:
+
+{1}
+
+Отметить как оплаченное?</value>
+  </data>
+  <data name="AddItemFromBar" xml:space="preserve">
+    <value>Из бара</value>
+  </data>
+  <data name="AddItemOther" xml:space="preserve">
+    <value>Другое</value>
+  </data>
+  <data name="ReportsBarTitle" xml:space="preserve">
+    <value>Бар</value>
+  </data>
+  <data name="ReportsBarPaid" xml:space="preserve">
+    <value>Продажи на кассе (оплачено)</value>
+  </data>
+  <data name="ReportsBarSessions" xml:space="preserve">
+    <value>Проданное на ПК (в их счетах)</value>
+  </data>
+  <data name="ReportsBarDebtsPaid" xml:space="preserve">
+    <value>Оплачено долгов за период</value>
+  </data>
+  <data name="ReportsBarUnpaid" xml:space="preserve">
+    <value>Не оплачено сейчас</value>
+  </data>
+  <data name="ReportsBarUnits" xml:space="preserve">
+    <value>Продано штук</value>
+  </data>
 </root>

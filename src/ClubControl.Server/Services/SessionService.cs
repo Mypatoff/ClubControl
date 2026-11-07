@@ -218,16 +218,26 @@ public class SessionService
         if (amountUzs <= 0 || amountUzs > MaxExtraUzs)
             throw new InvalidOperationException($"The price must be between 1 and {MaxExtraUzs} UZS.");
 
-        var pc = await GetPcAsync(machineGuid);
-        var session = await GetActiveSessionAsync(pc.Id)
-            ?? throw new InvalidOperationException("Items can only be added to a running session.");
+        var (pc, session) = await RequireRunningSessionAsync(machineGuid);
 
         _db.SessionExtras.Add(new SessionExtra { SessionId = session.Id, Description = description, AmountUzs = amountUzs });
         LogEvent(EventType.ItemAdded, pc.Id, session.Id, $"Item added: {description}, {amountUzs} UZS");
         await _db.SaveChangesAsync(); // the item and its event log entry are saved together
     }
 
-    /// <summary>Removes an item added by mistake. Only while its session is still running - after that it is part of the bill.</summary>
+    /// <summary>The PC and its running session, or an error when there is none. Used to add items, including bar sales.</summary>
+    public async Task<(Pc Pc, Session Session)> RequireRunningSessionAsync(Guid machineGuid)
+    {
+        var pc = await GetPcAsync(machineGuid);
+        var session = await GetActiveSessionAsync(pc.Id)
+            ?? throw new InvalidOperationException("Items can only be added to a running session.");
+        return (pc, session);
+    }
+
+    /// <summary>
+    /// Removes an item added by mistake. Only while its session is still running - after that it is part of the bill.
+    /// An item that came from a bar sale cancels that sale too, so the stock goes back on the shelf.
+    /// </summary>
     public async Task RemoveExtraAsync(int extraId)
     {
         var extra = await _db.SessionExtras.Include(x => x.Session).FirstOrDefaultAsync(x => x.Id == extraId)
@@ -235,9 +245,16 @@ public class SessionService
         if (extra.Session!.Status != SessionStatus.Active)
             throw new InvalidOperationException("The session has already ended.");
 
+        await using var transaction = await _db.Database.BeginTransactionAsync();
+
+        var barSale = await _db.BarSales.FirstOrDefaultAsync(b => b.SessionExtraId == extraId && b.VoidedUtc == null);
+        if (barSale is not null)
+            await BarService.CancelSaleAsync(_db, barSale);
+
         _db.SessionExtras.Remove(extra);
         LogEvent(EventType.ItemAdded, extra.Session.PcId, extra.SessionId, $"Item removed: {extra.Description}, {extra.AmountUzs} UZS");
         await _db.SaveChangesAsync();
+        await transaction.CommitAsync();
     }
 
     public async Task<List<ExtraLine>> GetExtrasAsync(Guid machineGuid)
@@ -249,7 +266,8 @@ public class SessionService
             : session.Extras.OrderBy(x => x.Id).Select(x => new ExtraLine(x.Id, x.Description, x.AmountUzs)).ToList();
     }
 
-    private const int MaxExtraUzs = 100_000_000;
+    /// <summary>The most one item (or one bar sale) can cost, in UZS.</summary>
+    public const int MaxExtraUzs = 100_000_000;
 
     // ---- move ----
 
