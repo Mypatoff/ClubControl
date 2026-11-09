@@ -110,6 +110,7 @@ public partial class MainWindow : Window
         StopButton.ToolTip = Strings.Get("TooltipStop");
         MoveButton.Content = "↔ " + Strings.Get("ToolbarMove");
         AddItemButton.Content = "🛒 " + Strings.Get("AddItemTitle");
+        SellButton.Content = "💰 " + Strings.Get("BarSellTitle");
         TurnOnButton.Content = "⚡ " + Strings.Get("ToolbarTurnOn");
         RestartButton.Content = "🔁 " + Strings.Get("ToolbarRestart");
         ShutDownButton.Content = "⏻ " + Strings.Get("ToolbarShutDown");
@@ -843,6 +844,13 @@ public partial class MainWindow : Window
 
         new AddItemWindow(Services, pc) { Owner = this }.ShowDialog();
         await RefreshAsync();
+    }
+
+    // A counter sale that is not connected to any PC (Add item is the one for a running session).
+    private async void OnSell(object sender, RoutedEventArgs e)
+    {
+        new SellWindow(Services) { Owner = this }.ShowDialog();
+        await RefreshAsync(); // the Unpaid chip and the Bar page's stock
     }
 
     private async void OnMove(object sender, RoutedEventArgs e)
