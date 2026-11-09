@@ -17,7 +17,25 @@
                                     <TextBlock Text="{Binding Title}" FontSize="16" FontWeight="Bold" />
                                     <TextBlock Text="{Binding Started}" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,2,0,0" />
                                     <TextBlock Text="{Binding TimeLeft}" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,2,0,0" />
-                                    <TextBlock Text="{Binding Items}" Foreground="{StaticResource TextSecondaryBrush}" FontSize="11" Margin="0,2,0,0" TextWrapping="Wrap" />
+                                    <ItemsControl ItemsSource="{Binding Items}" Margin="0,2,0,0">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding Text}" FontSize="11" TextWrapping="Wrap">
+                                                    <TextBlock.Style>
+                                                        <Style TargetType="TextBlock">
+                                                            <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}" />
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding IsUnpaid}" Value="True">
+                                                                    <Setter Property="Foreground" Value="{StaticResource ErrorBrush}" />
+                                                                    <Setter Property="FontWeight" Value="SemiBold" />
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </TextBlock.Style>
+                                                </TextBlock>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
                                 </StackPanel>
                                 <StackPanel HorizontalAlignment="Right" VerticalAlignment="Center">
                                     <TextBlock Text="{Binding UnusedLabel}" Foreground="{StaticResource TextSecondaryBrush}"

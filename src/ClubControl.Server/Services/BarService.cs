@@ -160,9 +160,10 @@ public class BarService
 
     /// <summary>
     /// Sells a product. At the counter it is just a sale. For a PC (<see cref="SaleRequest.SessionMachineGuid"/>)
-    /// it must have a running session: paid, it is added to the session's bill as an item; unpaid,
-    /// it is NOT in the bill and waits in the unpaid list instead. Unpaid needs a comment. Stock goes
-    /// down, and the sale is checked and saved in one transaction.
+    /// it must have a running session: paid (the client already paid for it), it is only a bar sale and
+    /// is NOT added to the session's bill; unpaid, it is added to the bill as an item (shown in red) so
+    /// the client pays it when the session is stopped, and it waits in the unpaid list until then.
+    /// Unpaid needs a comment. Stock goes down, and the sale is checked and saved in one transaction.
     /// </summary>
     public async Task<BarSale> SellAsync(SaleRequest request)
     {
@@ -215,8 +216,9 @@ public class BarService
             ShiftId = shift.Id
         };
 
-        // Paid at a PC: it goes on that session's bill like any other item.
-        if (session is not null && !request.Unpaid)
+        // Unpaid at a PC: it goes on that session's bill, to be paid when the session is stopped.
+        // Paid at a PC: the client already paid, so the bill is not touched.
+        if (session is not null && request.Unpaid)
             sale.SessionExtra = new SessionExtra { SessionId = session.Id, Description = Describe(sale), AmountUzs = sale.TotalUzs };
 
         product.Stock -= request.Quantity;
@@ -329,16 +331,46 @@ public class BarService
         if (!sale.IsOutstanding)
             throw new InvalidOperationException("That sale is not waiting for payment.");
 
+        // Paid here while its session still runs: it must leave that bill, or the client would pay it twice.
+        if (sale.SessionExtraId is { } extraId)
+        {
+            var extra = await _db.SessionExtras.Include(x => x.Session).FirstOrDefaultAsync(x => x.Id == extraId);
+            if (extra is not null && extra.Session!.Status == SessionStatus.Active)
+            {
+                sale.SessionExtraId = null;
+                sale.SessionExtra = null;
+                _db.SessionExtras.Remove(extra);
+            }
+        }
+
+        await SettleAsync(_db, sale);
+        await _db.SaveChangesAsync();
+    }
+
+    /// <summary>
+    /// The session was stopped and its bill (which included these unpaid items) was paid: every
+    /// outstanding sale on that session is now paid. Does not save; the caller saves it with the session.
+    /// </summary>
+    public static async Task SettleSessionSalesAsync(ClubDbContext db, int sessionId)
+    {
+        var sales = await db.BarSales
+            .Where(s => s.SessionId == sessionId && s.SessionExtraId != null && s.IsUnpaid && s.PaidUtc == null && s.VoidedUtc == null)
+            .ToListAsync();
+        foreach (var sale in sales)
+            await SettleAsync(db, sale);
+    }
+
+    private static async Task SettleAsync(ClubDbContext db, BarSale sale)
+    {
         sale.PaidUtc = DateTime.UtcNow;
-        sale.PaidShiftId = (await ShiftHelper.GetOrOpenAsync(_db)).Id; // the money counts for the shift it arrived in
-        _db.EventLogEntries.Add(new EventLogEntry
+        sale.PaidShiftId = (await ShiftHelper.GetOrOpenAsync(db)).Id; // the money counts for the shift it arrived in
+        db.EventLogEntries.Add(new EventLogEntry
         {
             Type = EventType.BarPaid,
             PcId = sale.PcId,
             SessionId = sale.SessionId,
             Message = $"Bar sale paid: {Describe(sale)}, {sale.TotalUzs} UZS ({sale.UnpaidComment})"
         });
-        await _db.SaveChangesAsync();
     }
 
     // ---- history ----

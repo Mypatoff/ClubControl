@@ -24,8 +24,9 @@ public class BarSale
     public DateTime? VoidedUtc { get; set; }
 
     /// <summary>
-    /// Set when the sale was added to a running PC session and is part of that session's bill.
-    /// An unpaid sale made at a PC has no extra: it is not in the bill, only in the unpaid list.
+    /// Set when an UNPAID sale was added to a running PC session: it is part of that session's bill
+    /// (shown in red) and is settled when the session is stopped. A sale paid at once at a PC has no
+    /// extra: the client already paid, so the bill is not touched.
     /// </summary>
     public int? SessionExtraId { get; set; }
     public SessionExtra? SessionExtra { get; set; }

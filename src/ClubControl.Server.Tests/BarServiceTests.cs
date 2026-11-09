@@ -214,43 +214,103 @@ public class BarServiceTests : SessionTestBase
     // ---- selling to a PC ----
 
     [Fact]
-    public async Task A_paid_sale_to_a_session_is_a_bar_sale_and_an_item_on_its_bill()
+    public async Task A_paid_sale_to_a_session_is_a_bar_sale_but_not_on_the_bill()
     {
         var id = await NewProductAsync();
         using var db = NewDb();
         await ServiceFor(db).StartPostpayAsync(Pc1);
 
-        var sale = await BarFor(db).SellAsync(new BarService.SaleRequest(id, 2, Cups: 1, SessionMachineGuid: Pc1));
+        await BarFor(db).SellAsync(new BarService.SaleRequest(id, 2, Cups: 1, SessionMachineGuid: Pc1));
 
         using var check = NewDb();
         Assert.Equal(8, (await check.BarProducts.SingleAsync()).Stock);          // stock down: it is a bar sale
         var stored = await check.BarSales.SingleAsync();
         Assert.Equal("PC 1", stored.PcLabel);
-        Assert.NotNull(stored.SessionExtraId);
+        Assert.Null(stored.SessionExtraId);                                       // the client already paid: not on the bill
         Assert.False(stored.IsUnpaid);
 
-        var items = await ServiceFor(check).GetExtrasAsync(Pc1);                  // and an item on the bill
-        Assert.Equal(sale.TotalUzs, items.Single().AmountUzs);
-        Assert.Contains("Cola", items.Single().Description);
-        Assert.Equal(sale.TotalUzs, (await ServiceFor(check).GetActiveSessionSnapshotAsync(Pc1))!.ExtrasUzs);
+        Assert.Empty(await ServiceFor(check).GetExtrasAsync(Pc1));
+        Assert.Equal(0, (await ServiceFor(check).GetActiveSessionSnapshotAsync(Pc1))!.ExtrasUzs);
+        Assert.Equal(new BarService.UnpaidSummary(0, 0), await BarFor(check).GetUnpaidSummaryAsync());
     }
 
     [Fact]
-    public async Task An_unpaid_sale_to_a_session_is_a_bar_sale_but_not_on_the_bill()
+    public async Task An_unpaid_sale_to_a_session_is_a_bar_sale_and_a_red_item_on_the_bill()
     {
         var id = await NewProductAsync();
         using var db = NewDb();
         await ServiceFor(db).StartPostpayAsync(Pc1);
 
-        await BarFor(db).SellAsync(new BarService.SaleRequest(id, 1, SessionMachineGuid: Pc1, Unpaid: true, Comment: "pays tomorrow"));
+        var sale = await BarFor(db).SellAsync(new BarService.SaleRequest(id, 1, Cups: 1, SessionMachineGuid: Pc1, Unpaid: true, Comment: "pays at the end"));
 
         using var check = NewDb();
         Assert.Equal(9, (await check.BarProducts.SingleAsync()).Stock);
-        Assert.Empty(await ServiceFor(check).GetExtrasAsync(Pc1));                // session total unchanged
-        var summary = await BarFor(check).GetUnpaidSummaryAsync();
-        Assert.Equal(new BarService.UnpaidSummary(1, 5_000), summary);
         var stored = await check.BarSales.SingleAsync();
         Assert.Equal("PC 1", stored.PcLabel);
+        Assert.NotNull(stored.SessionExtraId);
+        Assert.True(stored.IsUnpaid);
+
+        var item = (await ServiceFor(check).GetExtrasAsync(Pc1)).Single();       // on the bill, flagged so it shows in red
+        Assert.Equal(sale.TotalUzs, item.AmountUzs);
+        Assert.Contains("Cola", item.Description);
+        Assert.True(item.IsUnpaid);
+        Assert.Equal(sale.TotalUzs, (await ServiceFor(check).GetActiveSessionSnapshotAsync(Pc1))!.ExtrasUzs);
+        Assert.Equal(1, (await BarFor(check).GetUnpaidSummaryAsync()).Count);     // still owed until the session is stopped
+    }
+
+    [Fact]
+    public async Task Other_items_are_not_red()
+    {
+        using var db = NewDb();
+        await ServiceFor(db).StartPostpayAsync(Pc1);
+        await ServiceFor(db).AddExtraAsync(Pc1, "Charger", 3_000);
+
+        Assert.False((await ServiceFor(db).GetExtrasAsync(Pc1)).Single().IsUnpaid);
+    }
+
+    [Fact]
+    public async Task Stopping_the_session_settles_its_unpaid_sales_and_leaves_paid_ones_alone()
+    {
+        var id = await NewProductAsync();
+        using (var db = NewDb())
+        {
+            await ServiceFor(db).StartPostpayAsync(Pc1);
+            await BarFor(db).SellAsync(new BarService.SaleRequest(id, 1, SessionMachineGuid: Pc1));                                  // paid at once
+            await BarFor(db).SellAsync(new BarService.SaleRequest(id, 2, SessionMachineGuid: Pc1, Unpaid: true, Comment: "later")); // on the bill
+            await BarFor(db).SellAsync(new BarService.SaleRequest(id, 1, Unpaid: true, Comment: "Ali owes"));                       // counter debt, unrelated
+        }
+
+        using (var db = NewDb())
+            await ServiceFor(db).EndSessionEarlyAsync(Pc1);
+
+        using var check = NewDb();
+        var sales = await check.BarSales.OrderBy(s => s.Id).ToListAsync();
+        Assert.Null(sales[0].PaidUtc);                   // paid sale: untouched
+        Assert.NotNull(sales[1].PaidUtc);                // its bill was paid
+        Assert.NotNull(sales[1].PaidShiftId);
+        Assert.Null(sales[2].PaidUtc);                   // the counter debt is still owed
+        Assert.Equal(new BarService.UnpaidSummary(1, 5_000), await BarFor(check).GetUnpaidSummaryAsync());
+    }
+
+    [Fact]
+    public async Task Marking_an_unpaid_sale_paid_while_the_session_runs_takes_it_off_the_bill()
+    {
+        var id = await NewProductAsync();
+        int saleId;
+        using (var db = NewDb())
+        {
+            await ServiceFor(db).StartPostpayAsync(Pc1);
+            saleId = (await BarFor(db).SellAsync(new BarService.SaleRequest(id, 1, SessionMachineGuid: Pc1, Unpaid: true, Comment: "paid at the counter"))).Id;
+        }
+
+        using (var db = NewDb())
+            await BarFor(db).MarkPaidAsync(saleId);
+
+        using var check = NewDb();
+        Assert.Empty(await ServiceFor(check).GetExtrasAsync(Pc1));                // or the client would pay twice
+        Assert.Equal(0, (await ServiceFor(check).GetActiveSessionSnapshotAsync(Pc1))!.ExtrasUzs);
+        var stored = await check.BarSales.SingleAsync();
+        Assert.NotNull(stored.PaidUtc);
         Assert.Null(stored.SessionExtraId);
     }
 
@@ -277,8 +337,8 @@ public class BarServiceTests : SessionTestBase
         int first, second;
         using (var db = NewDb())
         {
-            first = (await BarFor(db).SellAsync(new BarService.SaleRequest(id, 1, SessionMachineGuid: Pc1))).Id;
-            second = (await BarFor(db).SellAsync(new BarService.SaleRequest(id, 2, SessionMachineGuid: Pc1))).Id;
+            first = (await BarFor(db).SellAsync(new BarService.SaleRequest(id, 1, SessionMachineGuid: Pc1, Unpaid: true, Comment: "later"))).Id;
+            second = (await BarFor(db).SellAsync(new BarService.SaleRequest(id, 2, SessionMachineGuid: Pc1, Unpaid: true, Comment: "later"))).Id;
         }
 
         using (var db = NewDb())
@@ -306,7 +366,7 @@ public class BarServiceTests : SessionTestBase
         using (var db = NewDb())
         {
             await ServiceFor(db).StartPostpayAsync(Pc1);
-            await BarFor(db).SellAsync(new BarService.SaleRequest(id, 3, SessionMachineGuid: Pc1));
+            await BarFor(db).SellAsync(new BarService.SaleRequest(id, 3, SessionMachineGuid: Pc1, Unpaid: true, Comment: "later"));
         }
 
         using (var db = NewDb())

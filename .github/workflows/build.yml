@@ -3,6 +3,7 @@ name: Build
 on:
   push:
     branches: [main]
+    tags: ['v*']
   workflow_dispatch: {}
 
 permissions:
@@ -41,8 +42,15 @@ jobs:
       - name: Install Inno Setup
         run: choco install innosetup -y --no-progress
 
+      - name: Read the version
+        id: version
+        shell: pwsh
+        run: |
+          $v = ([xml](Get-Content Directory.Build.props)).Project.PropertyGroup.Version
+          "value=$v" >> $env:GITHUB_OUTPUT
+
       - name: Build the installer (ClubControl-Setup.exe)
-        run: '& "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" "/DAppVersion=1.0.${{ github.run_number }}" installer\ClubControl.iss'
+        run: '& "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" "/DAppVersion=${{ steps.version.outputs.value }}" installer\ClubControl.iss'
 
       - name: Upload installer
         uses: actions/upload-artifact@v4
@@ -87,13 +95,26 @@ jobs:
       # Keeps one rolling "latest" release with the newest .exe builds attached, so there is
       # always a stable download link in the repo instead of having to dig through Actions runs.
       - name: Publish "latest" release
-        if: github.event_name == 'push'
+        if: github.ref_type == 'branch' && github.event_name == 'push'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: latest
           name: Latest build
           body: Automatically built from the latest commit on main (${{ github.sha }}). Not a stability guarantee - just the newest build.
           prerelease: true
+          files: |
+            dist/ClubControl-Setup.exe
+            ClubControl-Server-win-x64.zip
+            ClubControl-Client-win-x64.zip
+            SHA256SUMS.txt
+
+      # A pushed tag like v1.1.0 gets its own permanent release (the "latest" one above keeps moving).
+      - name: Publish the versioned release
+        if: github.ref_type == 'tag'
+        uses: softprops/action-gh-release@v2
+        with:
+          name: ClubControl ${{ github.ref_name }}
+          generate_release_notes: true
           files: |
             dist/ClubControl-Setup.exe
             ClubControl-Server-win-x64.zip

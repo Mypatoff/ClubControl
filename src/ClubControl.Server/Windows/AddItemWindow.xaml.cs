@@ -11,8 +11,9 @@ namespace ClubControl.Server.Windows;
 
 /// <summary>
 /// Adds something the client bought to a running session. Either a bar product (it is also a bar
-/// sale: stock goes down, and it can be marked unpaid so it stays off the bill) or anything else as
-/// a name + price. Items are listed in the stop / payment dialog and added to the total. The dialog
+/// sale: stock goes down; paid at once it stays off the bill, marked unpaid it is added to the bill
+/// in red and paid when the session is stopped) or anything else as a name + price. Items on the bill
+/// are listed in the stop / payment dialog and added to the total. The dialog
 /// stays open after each item so several can be entered in a row; Close finishes.
 /// </summary>
 public partial class AddItemWindow : Window
@@ -100,7 +101,7 @@ public partial class AddItemWindow : Window
         var sessionService = scope.ServiceProvider.GetRequiredService<SessionService>();
         var items = await sessionService.GetExtrasAsync(_pc.MachineGuid);
 
-        ItemsList.ItemsSource = items.Select(i => new { i.Id, i.Description, AmountDisplay = $"{i.AmountUzs:N0} UZS" }).ToList();
+        ItemsList.ItemsSource = items.Select(i => new { i.Id, i.Description, i.IsUnpaid, AmountDisplay = $"{i.AmountUzs:N0} UZS" }).ToList();
         AddedPanel.Visibility = items.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
         AddedTotalText.Text = $"{items.Sum(i => i.AmountUzs):N0} UZS";
     }

@@ -178,6 +178,9 @@ public class SessionService
                 reason += $", {paid - session.AmountUzs} UZS refunded";
         }
 
+        // The admin collected the bill, unpaid bar products on it included: they are paid now.
+        await BarService.SettleSessionSalesAsync(_db, session.Id);
+
         await CloseSessionAsync(session, now, reason);
     }
 
@@ -202,8 +205,11 @@ public class SessionService
 
     // ---- items bought during a session ----
 
-    /// <summary>One thing the client bought, as shown in the add-item and stop dialogs.</summary>
-    public record ExtraLine(int Id, string Description, int AmountUzs);
+    /// <summary>
+    /// One thing the client bought, as shown in the add-item and stop dialogs. <paramref name="IsUnpaid"/> marks a bar
+    /// product that was sold on credit: it is on the bill, paid when the session is stopped, and shown in red.
+    /// </summary>
+    public record ExtraLine(int Id, string Description, int AmountUzs, bool IsUnpaid = false);
 
     /// <summary>
     /// Adds something the client bought to the PC's running session (any time before it is stopped).
@@ -261,9 +267,20 @@ public class SessionService
     {
         var pc = await GetPcAsync(machineGuid);
         var session = await GetActiveSessionAsync(pc.Id);
-        return session is null
-            ? new List<ExtraLine>()
-            : session.Extras.OrderBy(x => x.Id).Select(x => new ExtraLine(x.Id, x.Description, x.AmountUzs)).ToList();
+        if (session is null)
+            return new List<ExtraLine>();
+
+        // Which items came from an unpaid bar sale (one small query; a session has a handful of items).
+        var extraIds = session.Extras.Select(x => (int?)x.Id).ToList();
+        var unpaidIds = (await _db.BarSales.AsNoTracking()
+                .Where(b => b.IsUnpaid && b.VoidedUtc == null && extraIds.Contains(b.SessionExtraId))
+                .Select(b => b.SessionExtraId)
+                .ToListAsync())
+            .ToHashSet();
+
+        return session.Extras.OrderBy(x => x.Id)
+            .Select(x => new ExtraLine(x.Id, x.Description, x.AmountUzs, unpaidIds.Contains(x.Id)))
+            .ToList();
     }
 
     /// <summary>The most one item (or one bar sale) can cost, in UZS.</summary>

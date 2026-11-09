@@ -1,0 +1,6 @@
+<Project>
+  <!-- The one place the app version lives. Change it for each release, then tag the commit v<version>. -->
+  <PropertyGroup>
+    <Version>1.1.0</Version>
+  </PropertyGroup>
+</Project>

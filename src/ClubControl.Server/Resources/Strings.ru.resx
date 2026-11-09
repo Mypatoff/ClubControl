@@ -898,7 +898,7 @@
     <value>Продажи на кассе (оплачено)</value>
   </data>
   <data name="ReportsBarSessions" xml:space="preserve">
-    <value>Проданное на ПК (в их счетах)</value>
+    <value>Проданное на ПК (оплачено)</value>
   </data>
   <data name="ReportsBarDebtsPaid" xml:space="preserve">
     <value>Оплачено долгов за период</value>

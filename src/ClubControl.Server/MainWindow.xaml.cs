@@ -1013,7 +1013,7 @@ public partial class MainWindow : Window
                 $"{snapshot.RemainingMoneyUzs:N0} UZS",
                 $"{Strings.Get("ColumnRemaining")}: {FormatTimeLeft(snapshot.RemainingSeconds)}",
                 Strings.Get("StopPrepayUnused"),
-                string.Join("\n", items.Select(i => $"{i.Description}: {i.AmountUzs:N0} UZS")),
+                items.Select(i => new ItemLineDisplay($"{i.Description}: {i.AmountUzs:N0} UZS", i.IsUnpaid)).ToList(),
                 Strings.Format("StopStartedFormat", TimeText.StartedAt(snapshot.StartUtc), TimeText.Duration(DateTime.UtcNow - snapshot.StartUtc))));
         }
 

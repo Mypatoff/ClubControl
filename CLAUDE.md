@@ -236,3 +236,12 @@ C# .NET 8. WPF for Server (admin panel + hosted ASP.NET Core/SignalR) and Client
       WPF-only `PcRowBindingTests` excluded) and a compile-only check of the whole Server with generated XAML stubs; the XAML windows
       themselves were NOT run - click through the panel (selection by dragging, scrolling, an action while it refreshes), Reports
       (Day/Week/Month/Shift, fast clicking) and the Bar page on Windows before releasing.
+- [x] Bar sale on a PC: paid/unpaid meaning fixed (v1.1.0). Paid (not ticked "Unpaid") = the client already paid, so it is only a
+      bar sale and is NOT added to the session's bill. Unpaid = added to the bill as a `SessionExtra` (`BarSale.SessionExtraId`)
+      and shown in red (`ExtraLine.IsUnpaid`) in the Add item, Stop (`ItemLineDisplay`) and Payment windows; stopping the session
+      (`EndSessionEarlyAsync` -> `BarService.SettleSessionSalesAsync`) marks those sales paid. A prepay session that just runs out
+      by itself does not settle them (nobody collected the bill), they stay in the Unpaid list. "Mark paid" in the Unpaid list while
+      the session runs removes the item from the bill. No schema change. Tests in `BarServiceTests`; XAML not click-tested.
+- [x] Real version number: `Directory.Build.props` holds `<Version>` (1.1.0); the assembly reports "1.1.0+<commit>", the installer
+      uses it, and pushing a `vX.Y.Z` tag makes a versioned GitHub release (the rolling "latest" release is unchanged and is still
+      what "Update server" reads). Bump the number in that one file for each release.

@@ -52,7 +52,7 @@ public class BarReportTests : SessionTestBase
             await ShiftHelper.OpenAsync(db);
             await ServiceFor(db).StartPostpayAsync(Pc1);
             await bar.SellAsync(new BarService.SaleRequest(cola, 2));                                             // counter: 10 000
-            await bar.SellAsync(new BarService.SaleRequest(cola, 1, SessionMachineGuid: Pc1));                    // on a bill: 5 000
+            await bar.SellAsync(new BarService.SaleRequest(cola, 1, SessionMachineGuid: Pc1));                    // paid at a PC: 5 000
             debtId = (await bar.SellAsync(new BarService.SaleRequest(cola, 3, Unpaid: true, Comment: "Aziz"))).Id; // credit: 15 000
             var cancelled = await bar.SellAsync(new BarService.SaleRequest(cola, 4));
             await bar.VoidSaleAsync(cancelled.Id);

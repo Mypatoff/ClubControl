@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Documents;
 using ClubControl.Server.Resources;
 using ClubControl.Server.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -39,7 +40,7 @@ public partial class PostpayPaymentWindow : Window
         using var scope = _services.CreateScope();
         var sessionService = scope.ServiceProvider.GetRequiredService<SessionService>();
 
-        var lines = new List<string>();
+        var lines = new List<ItemLineDisplay>();
         var total = 0;
 
         foreach (var target in _targets)
@@ -52,12 +53,28 @@ public partial class PostpayPaymentWindow : Window
             total += snapshot.AmountOrCostUzs + items.Sum(i => i.AmountUzs);
 
             // "PC #3: 10 000 UZS", when it started and how long it ran, then one indented line per item.
-            lines.Add($"{target.Label}: {snapshot.AmountOrCostUzs:N0} UZS");
-            lines.Add("    " + Strings.Format("StopStartedFormat", TimeText.StartedAt(snapshot.StartUtc), TimeText.Duration(DateTime.UtcNow - snapshot.StartUtc)));
-            lines.AddRange(items.Select(i => $"    {i.Description}: {i.AmountUzs:N0} UZS"));
+            lines.Add(new ItemLineDisplay($"{target.Label}: {snapshot.AmountOrCostUzs:N0} UZS", false));
+            lines.Add(new ItemLineDisplay("    " + Strings.Format("StopStartedFormat", TimeText.StartedAt(snapshot.StartUtc), TimeText.Duration(DateTime.UtcNow - snapshot.StartUtc)), false));
+            lines.AddRange(items.Select(i => new ItemLineDisplay($"    {i.Description}: {i.AmountUzs:N0} UZS", i.IsUnpaid)));
         }
 
-        BreakdownText.Text = string.Join("\n", lines);
+        // Unpaid bar products are in red, so the admin sees what is being collected for them.
+        BreakdownText.Inlines.Clear();
+        for (var i = 0; i < lines.Count; i++)
+        {
+            if (i > 0)
+                BreakdownText.Inlines.Add(new LineBreak());
+
+            var run = new Run(lines[i].Text);
+            if (lines[i].IsUnpaid)
+            {
+                run.SetResourceReference(TextElement.ForegroundProperty, "ErrorBrush");
+                run.FontWeight = FontWeights.SemiBold;
+            }
+
+            BreakdownText.Inlines.Add(run);
+        }
+
         AmountText.Text = $"{total:N0} UZS";
         PaidButton.IsEnabled = true;
     }

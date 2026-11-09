@@ -898,7 +898,7 @@ Mark it as paid?</value>
     <value>Counter sales (paid)</value>
   </data>
   <data name="ReportsBarSessions" xml:space="preserve">
-    <value>Sold to PCs (on their bills)</value>
+    <value>Sold to PCs (paid)</value>
   </data>
   <data name="ReportsBarDebtsPaid" xml:space="preserve">
     <value>Credit paid in this period</value>

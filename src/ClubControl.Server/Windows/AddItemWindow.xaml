@@ -13,14 +13,24 @@
                 <ItemsControl x:Name="ItemsList">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
+                            <DataTemplate.Resources>
+                                <!-- An unpaid bar product is on the bill but not paid yet: red -->
+                                <Style x:Key="ItemTextStyle" TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsUnpaid}" Value="True">
+                                            <Setter Property="Foreground" Value="{StaticResource ErrorBrush}" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </DataTemplate.Resources>
                             <Grid Margin="0,2">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*" />
                                     <ColumnDefinition Width="Auto" />
                                     <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
-                                <TextBlock Text="{Binding Description}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
-                                <TextBlock Grid.Column="1" Text="{Binding AmountDisplay}" FontWeight="SemiBold" Margin="10,0" VerticalAlignment="Center" />
+                                <TextBlock Text="{Binding Description}" Style="{StaticResource ItemTextStyle}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+                                <TextBlock Grid.Column="1" Text="{Binding AmountDisplay}" Style="{StaticResource ItemTextStyle}" FontWeight="SemiBold" Margin="10,0" VerticalAlignment="Center" />
                                 <Button Grid.Column="2" Content="✕" Width="28" Height="26" Padding="0"
                                         Style="{StaticResource SecondaryButtonStyle}" Tag="{Binding Id}" Click="OnRemove" />
                             </Grid>
@@ -32,7 +42,7 @@
         </StackPanel>
 
         <TabControl x:Name="SourceTabs" Margin="0,0,0,10">
-            <!-- A bar product: it is also a bar sale (stock goes down), on the session's bill unless it is unpaid -->
+            <!-- A bar product: it is also a bar sale (stock goes down), on the session's bill only when it is unpaid (paid at once = not on the bill) -->
             <TabItem x:Name="BarTab">
                 <StackPanel Margin="4,10,4,4">
                     <TextBlock x:Name="ProductLabel" Margin="0,0,0,2" />

@@ -898,7 +898,7 @@ To'langan deb belgilansinmi?</value>
     <value>Kassa sotuvlari (to'langan)</value>
   </data>
   <data name="ReportsBarSessions" xml:space="preserve">
-    <value>Kompyuterlarga sotilgan (hisobida)</value>
+    <value>Kompyuterlarga sotilgan (to'langan)</value>
   </data>
   <data name="ReportsBarDebtsPaid" xml:space="preserve">
     <value>Davrda to'langan qarzlar</value>

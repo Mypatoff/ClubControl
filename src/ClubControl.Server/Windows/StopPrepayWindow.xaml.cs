@@ -5,7 +5,10 @@ using ClubControl.Server.Resources;
 namespace ClubControl.Server.Windows;
 
 /// <summary>One PC in the stop dialog: its name, when it started and how long it ran, the unused money and the time left (already formatted for display).</summary>
-public record StopPrepayLine(string Title, string Money, string TimeLeft, string UnusedLabel, string Items = "", string Started = "");
+public record StopPrepayLine(string Title, string Money, string TimeLeft, string UnusedLabel, IReadOnlyList<ItemLineDisplay>? Items = null, string Started = "");
+
+/// <summary>One item bought during a session, as a line of text. <paramref name="IsUnpaid"/> items (bar products added on credit) are shown in red.</summary>
+public record ItemLineDisplay(string Text, bool IsUnpaid);
 
 /// <summary>
 /// Confirms stopping prepay sessions early and shows how much prepaid money is still unused on each
