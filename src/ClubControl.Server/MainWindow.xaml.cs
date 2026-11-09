@@ -146,10 +146,19 @@ public partial class MainWindow : Window
         }
 
         ApplyToolbarMode(chosen);
+
+        // The real layout pass must run again with the real width, not trust the measuring done above.
+        ActionLeft.InvalidateMeasure();
+        ActionRight.InvalidateMeasure();
     }
 
     private double ToolbarWidth()
     {
+        // WPF hands back the size from the last layout when a panel is not marked dirty, and a button changed here
+        // does not mark its panel dirty by itself. Without this the answer is one look behind and the bar picks the wrong one.
+        ActionLeft.InvalidateMeasure();
+        ActionRight.InvalidateMeasure();
+
         var infinite = new Size(double.PositiveInfinity, double.PositiveInfinity);
         ActionLeft.Measure(infinite);
         ActionRight.Measure(infinite);
