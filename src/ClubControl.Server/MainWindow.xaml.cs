@@ -102,22 +102,95 @@ public partial class MainWindow : Window
         Dispatcher.BeginInvoke(SaveLogHeight, DispatcherPriority.Loaded);
     }
 
+    // ---- the action bar: always one row ----
+
+    // The label of each toolbar button, kept apart so the bar can show "icon text", a tighter "icon text", or the icon alone.
+    private sealed record ToolbarLabel(string Icon, string Text, string? OriginalTip);
+
+    private readonly Dictionary<Button, ToolbarLabel> _toolbarLabels = new();
+    private int _toolbarMode = -1; // 0 = icon + text, 1 = icon + text with less padding, 2 = icon only
+
+    private void SetToolbarLabel(Button button, string icon, string text, string? tip = null)
+    {
+        var label = new ToolbarLabel(icon, text, tip);
+        if (_toolbarLabels.TryGetValue(button, out var old) && old == label)
+            return; // the shift button asks every second; nothing to redo when the text is the same
+
+        _toolbarLabels[button] = label;
+        ApplyToolbarMode(Math.Max(_toolbarMode, 0));
+        FitToolbar(); // a longer text (another language, "Close shift") may need a tighter look; does nothing before the first layout
+    }
+
+    private void OnActionBarSizeChanged(object sender, SizeChangedEventArgs e)
+    {
+        if (e.WidthChanged)
+            FitToolbar();
+    }
+
+    /// <summary>Picks the roomiest look whose buttons all fit in one row; the icon-only look when none does.</summary>
+    private void FitToolbar()
+    {
+        if (ActionBar.ActualWidth <= 0 || _toolbarLabels.Count == 0)
+            return;
+
+        var available = ActionBar.ActualWidth - ActionBar.Padding.Left - ActionBar.Padding.Right - ActionBar.BorderThickness.Left - ActionBar.BorderThickness.Right;
+        var chosen = 2;
+        for (var mode = 0; mode < 2; mode++)
+        {
+            ApplyToolbarMode(mode);
+            if (ToolbarWidth() <= available)
+            {
+                chosen = mode;
+                break;
+            }
+        }
+
+        ApplyToolbarMode(chosen);
+    }
+
+    private double ToolbarWidth()
+    {
+        var infinite = new Size(double.PositiveInfinity, double.PositiveInfinity);
+        ActionLeft.Measure(infinite);
+        ActionRight.Measure(infinite);
+        return ActionLeft.DesiredSize.Width + ActionRight.DesiredSize.Width;
+    }
+
+    private void ApplyToolbarMode(int mode)
+    {
+        _toolbarMode = mode;
+        var padding = mode switch { 0 => new Thickness(14, 7, 14, 7), 1 => new Thickness(8, 7, 8, 7), _ => new Thickness(11, 7, 11, 7) };
+
+        foreach (var (button, label) in _toolbarLabels)
+        {
+            button.Padding = padding;
+            if (mode == 2)
+            {
+                button.Content = label.Icon;
+                button.ToolTip = label.OriginalTip is null ? label.Text : $"{label.Text} - {label.OriginalTip}";
+            }
+            else
+            {
+                button.Content = $"{label.Icon} {label.Text}";
+                button.ToolTip = label.OriginalTip;
+            }
+        }
+    }
+
     private void ApplyLocalization()
     {
-        StartButton.Content = "▶ " + Strings.Get("ToolbarStart");
-        StartButton.ToolTip = Strings.Get("TooltipStart");
-        StopButton.Content = "⏹ " + Strings.Get("ToolbarStop");
-        StopButton.ToolTip = Strings.Get("TooltipStop");
-        MoveButton.Content = "↔ " + Strings.Get("ToolbarMove");
-        AddItemButton.Content = "🛒 " + Strings.Get("AddItemTitle");
-        SellButton.Content = "💰 " + Strings.Get("BarSellTitle");
-        TurnOnButton.Content = "⚡ " + Strings.Get("ToolbarTurnOn");
-        RestartButton.Content = "🔁 " + Strings.Get("ToolbarRestart");
-        ShutDownButton.Content = "⏻ " + Strings.Get("ToolbarShutDown");
-        UpdateClientButton.Content = "⬇ " + Strings.Get("ToolbarUpdateClient");
-        SettingsButton.Content = "⚙ " + Strings.Get("ToolbarSettings");
-        ReportsButton.Content = "📊 " + Strings.Get("ToolbarReports");
-        UpdateServerButton.Content = "⬆ " + Strings.Get("ToolbarUpdateServer");
+        SetToolbarLabel(StartButton, "▶", Strings.Get("ToolbarStart"), Strings.Get("TooltipStart"));
+        SetToolbarLabel(StopButton, "⏹", Strings.Get("ToolbarStop"), Strings.Get("TooltipStop"));
+        SetToolbarLabel(MoveButton, "↔", Strings.Get("ToolbarMove"));
+        SetToolbarLabel(AddItemButton, "🛒", Strings.Get("AddItemTitle"));
+        SetToolbarLabel(SellButton, "💰", Strings.Get("BarSellTitle"));
+        SetToolbarLabel(TurnOnButton, "⚡", Strings.Get("ToolbarTurnOn"));
+        SetToolbarLabel(RestartButton, "🔁", Strings.Get("ToolbarRestart"));
+        SetToolbarLabel(ShutDownButton, "⏻", Strings.Get("ToolbarShutDown"));
+        SetToolbarLabel(UpdateClientButton, "⬇", Strings.Get("ToolbarUpdateClient"));
+        SetToolbarLabel(SettingsButton, "⚙", Strings.Get("ToolbarSettings"));
+        SetToolbarLabel(ReportsButton, "📊", Strings.Get("ToolbarReports"));
+        SetToolbarLabel(UpdateServerButton, "⬆", Strings.Get("ToolbarUpdateServer"));
 
         CtxStart.Header = Strings.Get("ToolbarStart");
         CtxStop.Header = Strings.Get("ToolbarStop");
@@ -351,7 +424,10 @@ public partial class MainWindow : Window
     /// <summary>The shift chip in the header and the one button that opens or closes the shift.</summary>
     private void UpdateShiftControls(Shift? open)
     {
-        ShiftButton.Content = open is null ? "🔓 " + Strings.Get("ToolbarOpenShift") : "🔒 " + Strings.Get("ToolbarCloseShift");
+        if (open is null)
+            SetToolbarLabel(ShiftButton, "🔓", Strings.Get("ToolbarOpenShift"));
+        else
+            SetToolbarLabel(ShiftButton, "🔒", Strings.Get("ToolbarCloseShift"));
         StatShiftText.Text = open is null
             ? Strings.Get("ShiftChipNone")
             : Strings.Format("ShiftChipOpen", open.OpenedUtc.ToLocalTime().ToString("dd.MM HH:mm"));

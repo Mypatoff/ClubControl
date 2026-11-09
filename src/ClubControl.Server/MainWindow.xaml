@@ -140,16 +140,17 @@
             </Grid.RowDefinitions>
 
             <!-- Action bar -->
-            <Border Grid.Row="0" Background="{StaticResource SurfaceBrush}" BorderBrush="{StaticResource DividerBrush}"
-                    BorderThickness="1" CornerRadius="12" Padding="10,8">
+            <!-- One row always: when the window is narrow the buttons get tighter, then show only their icon (ApplyToolbarMode) -->
+            <Border x:Name="ActionBar" Grid.Row="0" Background="{StaticResource SurfaceBrush}" BorderBrush="{StaticResource DividerBrush}"
+                    BorderThickness="1" CornerRadius="12" Padding="10,8" SizeChanged="OnActionBarSizeChanged">
                 <DockPanel>
-                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Top">
+                    <StackPanel x:Name="ActionRight" DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Top" Margin="12,0,0,0">
                         <Button x:Name="ShiftButton" Margin="0,0,14,0" Style="{StaticResource SecondaryButtonStyle}" Click="OnShiftToggle" />
                         <Button x:Name="UpdateServerButton" Margin="0,0,6,0" Style="{StaticResource SecondaryButtonStyle}" Click="OnUpdateServer" />
                         <Button x:Name="SettingsButton" Margin="0,0,6,0" Style="{StaticResource SecondaryButtonStyle}" Click="OnSettings" />
                         <Button x:Name="ReportsButton" Style="{StaticResource SecondaryButtonStyle}" Click="OnReports" />
                     </StackPanel>
-                    <WrapPanel Orientation="Horizontal">
+                    <StackPanel x:Name="ActionLeft" Orientation="Horizontal">
                         <Button x:Name="StartButton" Margin="0,2,6,2" Style="{StaticResource SuccessButtonStyle}" Click="OnStart" />
                         <Button x:Name="StopButton" Margin="0,2,6,2" Style="{StaticResource DangerButtonStyle}" Click="OnStop" />
                         <Button x:Name="MoveButton" Margin="0,2,6,2" Style="{StaticResource SecondaryButtonStyle}" Click="OnMove" />
@@ -160,7 +161,7 @@
                         <Button x:Name="RestartButton" Margin="0,2,6,2" Style="{StaticResource SecondaryButtonStyle}" Click="OnRestart" />
                         <Button x:Name="ShutDownButton" Margin="0,2,6,2" Style="{StaticResource SecondaryButtonStyle}" Click="OnShutDown" />
                         <Button x:Name="UpdateClientButton" Margin="0,2,0,2" Style="{StaticResource SecondaryButtonStyle}" Click="OnUpdateClient" />
-                    </WrapPanel>
+                    </StackPanel>
                 </DockPanel>
             </Border>
 
