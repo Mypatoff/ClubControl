@@ -104,11 +104,14 @@ public partial class MainWindow : Window
 
     // ---- the action bar: always one row ----
 
-    // The label of each toolbar button, kept apart so the bar can show "icon text", a tighter "icon text", or the icon alone.
+    // The label of each toolbar button, kept apart so the bar can show "icon text" or, as a last resort, the icon alone.
     private sealed record ToolbarLabel(string Icon, string Text, string? OriginalTip);
 
     private readonly Dictionary<Button, ToolbarLabel> _toolbarLabels = new();
-    private int _toolbarMode = -1; // 0 = icon + text, 1 = icon + text with less padding, 2 = icon only
+    private bool _toolbarIconsOnly;
+
+    // How small the whole bar may get (text and buttons together) before the text is dropped.
+    private const double MinToolbarScale = 0.5;
 
     private void SetToolbarLabel(Button button, string icon, string text, string? tip = null)
     {
@@ -117,8 +120,8 @@ public partial class MainWindow : Window
             return; // the shift button asks every second; nothing to redo when the text is the same
 
         _toolbarLabels[button] = label;
-        ApplyToolbarMode(Math.Max(_toolbarMode, 0));
-        FitToolbar(); // a longer text (another language, "Close shift") may need a tighter look; does nothing before the first layout
+        ApplyToolbarLabels(_toolbarIconsOnly);
+        FitToolbar(); // a longer text (another language, "Close shift") may need a smaller look; does nothing before the first layout
     }
 
     private void OnActionBarSizeChanged(object sender, SizeChangedEventArgs e)
@@ -127,25 +130,26 @@ public partial class MainWindow : Window
             FitToolbar();
     }
 
-    /// <summary>Picks the roomiest look whose buttons all fit in one row; the icon-only look when none does.</summary>
+    /// <summary>Shrinks the whole bar (buttons and text together) just enough to stay in one row. Only when it would
+    /// become unreadably small does it fall back to icons.</summary>
     private void FitToolbar()
     {
         if (ActionBar.ActualWidth <= 0 || _toolbarLabels.Count == 0)
             return;
 
         var available = ActionBar.ActualWidth - ActionBar.Padding.Left - ActionBar.Padding.Right - ActionBar.BorderThickness.Left - ActionBar.BorderThickness.Right;
-        var chosen = 2;
-        for (var mode = 0; mode < 2; mode++)
+
+        ApplyToolbarLabels(false);
+        var scale = available / ToolbarWidth();
+        if (scale < MinToolbarScale)
         {
-            ApplyToolbarMode(mode);
-            if (ToolbarWidth() <= available)
-            {
-                chosen = mode;
-                break;
-            }
+            ApplyToolbarLabels(true);
+            scale = available / ToolbarWidth();
         }
 
-        ApplyToolbarMode(chosen);
+        // Round down so a pixel of rounding never pushes the last button into a second row.
+        scale = Math.Floor(Math.Clamp(scale, MinToolbarScale, 1.0) * 100) / 100;
+        ActionPanel.LayoutTransform = scale >= 1.0 ? Transform.Identity : new ScaleTransform(scale, scale);
 
         // The real layout pass must run again with the real width, not trust the measuring done above.
         ActionLeft.InvalidateMeasure();
@@ -165,15 +169,15 @@ public partial class MainWindow : Window
         return ActionLeft.DesiredSize.Width + ActionRight.DesiredSize.Width;
     }
 
-    private void ApplyToolbarMode(int mode)
+    private void ApplyToolbarLabels(bool iconsOnly)
     {
-        _toolbarMode = mode;
-        var padding = mode switch { 0 => new Thickness(14, 7, 14, 7), 1 => new Thickness(8, 7, 8, 7), _ => new Thickness(11, 7, 11, 7) };
+        _toolbarIconsOnly = iconsOnly;
+        var padding = iconsOnly ? new Thickness(11, 7, 11, 7) : new Thickness(14, 7, 14, 7);
 
         foreach (var (button, label) in _toolbarLabels)
         {
             button.Padding = padding;
-            if (mode == 2)
+            if (iconsOnly)
             {
                 button.Content = label.Icon;
                 button.ToolTip = label.OriginalTip is null ? label.Text : $"{label.Text} - {label.OriginalTip}";

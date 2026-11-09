@@ -248,6 +248,6 @@ C# .NET 8. WPF for Server (admin panel + hosted ASP.NET Core/SignalR) and Client
 - [x] Toolbar "Sell" button right after "Add item" (`SellWindow`): a counter sale not connected to any PC (product, quantity, cups,
       optional Unpaid + comment; stays open for several sales; same `BarService.SellAsync` with no session). Copy of the "From the bar"
       tab of `AddItemWindow` without the PC part. Compiled with XAML stubs only, not click-tested.
-- [x] Main-panel action bar is always one row (`MainWindow.FitToolbar` / `ApplyToolbarMode`): the buttons first get tighter padding,
-      then show only their icon (the text moves into the tooltip) when the window is too narrow. Labels go through `SetToolbarLabel`.
-      Compiled with XAML stubs only; resize the real window to check the three looks.
+- [x] Main-panel action bar is always one row (`MainWindow.FitToolbar`): when the window is narrow the whole bar (buttons and text)
+      shrinks smoothly with a `LayoutTransform` scale; only below 50 % (unreadable) do the buttons show just their icon (text in the
+      tooltip). Labels go through `SetToolbarLabel`. Compiled with XAML stubs only; resize the real window to check.
