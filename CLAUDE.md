@@ -251,3 +251,6 @@ C# .NET 8. WPF for Server (admin panel + hosted ASP.NET Core/SignalR) and Client
 - [x] Main-panel action bar is always one row (`MainWindow.FitToolbar`): when the window is narrow the whole bar (buttons and text)
       shrinks smoothly with a `LayoutTransform` scale; only below 50 % (unreadable) do the buttons show just their icon (text in the
       tooltip). Labels go through `SetToolbarLabel`. Compiled with XAML stubs only; resize the real window to check.
+- [x] Double-click on a card in the main panel opens the Start window for it (v1.1.5; `MainWindow.PcList_MouseDoubleClick`, same as
+      pressing Enter, so a PC that is busy / has no tariff gets the same "not ready to start" message). Ctrl/Shift double-clicks and
+      double-clicks on empty space do nothing. Not compiled here (WPF) and not click-tested - the GitHub Actions build checks it compiles.

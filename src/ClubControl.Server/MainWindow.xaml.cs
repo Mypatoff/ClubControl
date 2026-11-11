@@ -697,6 +697,32 @@ public partial class MainWindow : Window
 
     private void PcList_PreviewMouseLeftButtonUp(object sender, System.Windows.Input.MouseButtonEventArgs e) => EndDrag();
 
+    // Double-click on a card = the same as pressing Enter: open the Start window for it. The first click of
+    // the double-click has already selected the card. Ctrl/Shift double-clicks are left alone (multi-select
+    // building), and a double-click on empty space or the scrollbar does nothing.
+    private void PcList_MouseDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
+    {
+        if (e.ChangedButton != System.Windows.Input.MouseButton.Left)
+            return;
+
+        var modifiers = System.Windows.Input.Keyboard.Modifiers;
+        if (modifiers.HasFlag(System.Windows.Input.ModifierKeys.Control) || modifiers.HasFlag(System.Windows.Input.ModifierKeys.Shift))
+            return;
+
+        if (FindAncestor<ListBoxItem>((DependencyObject)e.OriginalSource)?.Content is not PcRow row)
+            return;
+
+        // Make sure it is exactly this card that Start will act on.
+        if (PcList.SelectedItems.Count != 1 || !PcList.SelectedItems.Contains(row))
+        {
+            PcList.SelectedItems.Clear();
+            PcList.SelectedItems.Add(row);
+        }
+
+        e.Handled = true;
+        OnStart(sender, e);
+    }
+
     private void EndDrag()
     {
         _dragAnchor = null;

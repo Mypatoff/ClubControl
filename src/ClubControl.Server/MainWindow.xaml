@@ -175,6 +175,7 @@
                          PreviewMouseLeftButtonDown="PcList_PreviewMouseLeftButtonDown"
                          PreviewMouseMove="PcList_PreviewMouseMove"
                          PreviewMouseLeftButtonUp="PcList_PreviewMouseLeftButtonUp"
+                         MouseDoubleClick="PcList_MouseDoubleClick"
                          PreviewMouseRightButtonDown="PcList_PreviewMouseRightButtonDown"
                          ContextMenuOpening="PcList_ContextMenuOpening"
                          SelectionChanged="PcList_SelectionChanged">
