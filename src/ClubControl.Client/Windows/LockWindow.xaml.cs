@@ -48,8 +48,7 @@ public partial class LockWindow : Window
 
         PcInfoText.Text = info is { PcNumber: int number }
             ? Strings.Format("PcNumberFormat", number) +
-              (!string.IsNullOrEmpty(info.TariffName) ? $" ({info.TariffName})" : "") +
-              (info.PricePerHourUzs > 0 ? $" — {Strings.Format("PerHourFormat", info.PricePerHourUzs.ToString("N0"))}" : "")
+              (!string.IsNullOrEmpty(info.TariffName) ? $" ({info.TariffName})" : "")
             : "";
 
         MessageText.Text = info?.LimitReached == true ? Strings.Get("PleaseGoToAdmin") : "";

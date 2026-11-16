@@ -38,13 +38,13 @@ One club, one admin laptop (server), up to ~30 gaming PCs (clients) on the same 
 
 **Lock screen (Locked / Limit reached):**
 - Borderless fullscreen topmost window on every monitor; re-asserts topmost every 2 s.
-- Shows club name, PC number, class, current price per hour, custom text. "Limit reached" shows "Please go to the admin".
+- Shows club name, PC number, class, custom text (never a price). "Limit reached" shows "Please go to the admin".
 - While locked, a low-level keyboard hook (WH_KEYBOARD_LL) blocks: Win keys, Alt+Tab, Alt+Esc, Ctrl+Esc, Alt+F4. Hook is removed when unlocked.
 - Do NOT change Windows policies, registry shell, or Task Manager settings. Ctrl+Alt+Del cannot be blocked and that is accepted.
 
 **Session timer (unlocked):**
 - Small always-on-top movable window in a corner.
-- Prepay: counts down remaining time. Postpay: counts up elapsed time and shows current cost.
+- Prepay: counts down remaining time. Postpay: counts up elapsed time (the cost is never shown to the client).
 - No "Finish" button. Only the admin can end a session.
 - Warnings (popup + sound) at configurable minutes left, default 5 and 1 (prepay only).
 - Postpay: warning when cost reaches 90% of the tariff maximum.

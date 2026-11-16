@@ -30,7 +30,7 @@ public partial class TimerWindow : Window
         else
         {
             MainText.Text = FormatTime(elapsedSeconds);
-            SubText.Text = currentCostUzs > 0 ? $"{currentCostUzs:N0} {Strings.Get("CurrencyUzs")}" : "";
+            SubText.Text = ""; // the client never sees the price of a session
         }
     }
 
