@@ -930,4 +930,19 @@
   <data name="ReportsBarProductsOf" xml:space="preserve">
     <value>Товары, проданные за смену №{0}</value>
   </data>
+  <data name="LabelChangeAdminPassword" xml:space="preserve">
+    <value>Смена пароля администратора</value>
+  </data>
+  <data name="HintChangeAdminPassword" xml:space="preserve">
+    <value>Оставьте все три поля пустыми, чтобы не менять пароль.</value>
+  </data>
+  <data name="LabelCurrentAdminPassword" xml:space="preserve">
+    <value>Текущий пароль:</value>
+  </data>
+  <data name="LabelNewAdminPassword" xml:space="preserve">
+    <value>Новый пароль:</value>
+  </data>
+  <data name="AdminPasswordChangedNotice" xml:space="preserve">
+    <value>Пароль администратора изменён.</value>
+  </data>
 </root>

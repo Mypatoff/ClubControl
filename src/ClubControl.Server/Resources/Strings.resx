@@ -930,4 +930,19 @@ Mark it as paid?</value>
   <data name="ReportsBarProductsOf" xml:space="preserve">
     <value>Products sold in shift #{0}</value>
   </data>
+  <data name="LabelChangeAdminPassword" xml:space="preserve">
+    <value>Change admin password</value>
+  </data>
+  <data name="HintChangeAdminPassword" xml:space="preserve">
+    <value>Leave all three boxes empty to keep the current password.</value>
+  </data>
+  <data name="LabelCurrentAdminPassword" xml:space="preserve">
+    <value>Current password:</value>
+  </data>
+  <data name="LabelNewAdminPassword" xml:space="preserve">
+    <value>New password:</value>
+  </data>
+  <data name="AdminPasswordChangedNotice" xml:space="preserve">
+    <value>Admin password changed.</value>
+  </data>
 </root>

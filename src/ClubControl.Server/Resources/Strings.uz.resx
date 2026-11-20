@@ -930,4 +930,19 @@ To'langan deb belgilansinmi?</value>
   <data name="ReportsBarProductsOf" xml:space="preserve">
     <value>#{0}-smenada sotilgan mahsulotlar</value>
   </data>
+  <data name="LabelChangeAdminPassword" xml:space="preserve">
+    <value>Administrator parolini o'zgartirish</value>
+  </data>
+  <data name="HintChangeAdminPassword" xml:space="preserve">
+    <value>Parolni o'zgartirmaslik uchun uchala maydonni ham bo'sh qoldiring.</value>
+  </data>
+  <data name="LabelCurrentAdminPassword" xml:space="preserve">
+    <value>Joriy parol:</value>
+  </data>
+  <data name="LabelNewAdminPassword" xml:space="preserve">
+    <value>Yangi parol:</value>
+  </data>
+  <data name="AdminPasswordChangedNotice" xml:space="preserve">
+    <value>Administrator paroli o'zgartirildi.</value>
+  </data>
 </root>

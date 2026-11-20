@@ -7,6 +7,7 @@ using System.Windows;
 using ClubControl.Server.Data;
 using ClubControl.Server.Data.Models;
 using ClubControl.Server.Resources;
+using ClubControl.Server.Security;
 using ClubControl.Server.Services;
 using ClubControl.Shared;
 using ClubControl.Shared.Security;
@@ -78,6 +79,11 @@ public partial class SettingsWindow : Window
         ProcessListLabel.Text = Strings.Get("LabelProcessList");
         UnlockPasswordLabel.Text = Strings.Get("LabelUnlockPassword");
         AutoShutdownLabel.Text = Strings.Get("LabelAutoShutdown");
+        AdminPasswordSectionLabel.Text = Strings.Get("LabelChangeAdminPassword");
+        AdminPasswordHintLabel.Text = Strings.Get("HintChangeAdminPassword");
+        CurrentAdminPasswordLabel.Text = Strings.Get("LabelCurrentAdminPassword");
+        NewAdminPasswordLabel.Text = Strings.Get("LabelNewAdminPassword");
+        ConfirmAdminPasswordLabel.Text = Strings.Get("ConfirmPasswordLabel");
 
         AddTariffButton.Content = Strings.Get("ButtonAdd");
         DeleteTariffButton.Content = "🗑 " + Strings.Get("ButtonDelete");
@@ -266,6 +272,19 @@ public partial class SettingsWindow : Window
             return;
         }
 
+        // Changing the admin password: all three boxes empty = leave it alone. Anything typed is
+        // checked in full here, before any setting is touched, so a mistake never half-saves.
+        string? newAdminPasswordHash = null;
+        if (WantsAdminPasswordChange())
+        {
+            var passwordError = CheckAdminPasswordChange(out newAdminPasswordHash);
+            if (passwordError is not null)
+            {
+                ErrorText.Text = passwordError;
+                return;
+            }
+        }
+
         // A PC whose number was just cleared is being unassigned/repurposed - its auth token (if
         // any) no longer vouches for whatever ends up at that MachineGuid next, so require
         // re-provisioning (see ClubHub.Heartbeat) rather than letting a stale token keep trusting
@@ -289,6 +308,9 @@ public partial class SettingsWindow : Window
         // Empty box = keep the current unlock password; typing one replaces it.
         if (!string.IsNullOrWhiteSpace(UnlockPasswordBox.Password))
             _setting.ClientUnlockPasswordHash = PasswordHasher.Hash(UnlockPasswordBox.Password);
+
+        if (newAdminPasswordHash is not null)
+            _setting.AdminPasswordHash = newAdminPasswordHash;
 
         _setting.AutoShutdownAfterMinutes = ParseInt(AutoShutdownBox.Text, _setting.AutoShutdownAfterMinutes);
 
@@ -318,7 +340,48 @@ public partial class SettingsWindow : Window
         if (_setting.UiTheme != _openedWithTheme)
             NewThemeIfChanged = _setting.UiTheme;
 
+        if (newAdminPasswordHash is not null)
+            MessageBox.Show(Strings.Get("AdminPasswordChangedNotice"), Strings.Get("ConfirmTitle"),
+                MessageBoxButton.OK, MessageBoxImage.Information);
+
         DialogResult = true;
+    }
+
+    private bool WantsAdminPasswordChange() =>
+        CurrentAdminPasswordBox.Password.Length > 0
+        || NewAdminPasswordBox.Password.Length > 0
+        || ConfirmAdminPasswordBox.Password.Length > 0;
+
+    /// <summary>
+    /// Returns an error message, or null when the change is fine (then <paramref name="newHash"/> is
+    /// the hash to store). The new password is checked first so a typo there never counts as a
+    /// wrong-password attempt; the current password goes through the same lockout as the login window.
+    /// </summary>
+    private string? CheckAdminPasswordChange(out string? newHash)
+    {
+        newHash = null;
+        var newPassword = NewAdminPasswordBox.Password;
+
+        if (!PasswordPolicy.IsValid(newPassword, out var policyError))
+            return Strings.Get(policyError!);
+
+        if (newPassword != ConfirmAdminPasswordBox.Password)
+            return Strings.Get("PasswordsDontMatch");
+
+        if (LoginAttemptGuard.IsLockedOut(out var remaining))
+            return Strings.Format("LoginLockedOut", Math.Max(1, (int)Math.Ceiling(remaining.TotalSeconds)));
+
+        if (_setting.AdminPasswordHash is null || !PasswordHasher.Verify(CurrentAdminPasswordBox.Password, _setting.AdminPasswordHash))
+        {
+            LoginAttemptGuard.RecordFailure();
+            return LoginAttemptGuard.IsLockedOut(out remaining)
+                ? Strings.Format("LoginLockedOut", Math.Max(1, (int)Math.Ceiling(remaining.TotalSeconds)))
+                : Strings.Get("WrongPassword");
+        }
+
+        LoginAttemptGuard.RecordSuccess();
+        newHash = PasswordHasher.Hash(newPassword);
+        return null;
     }
 
     private static int ParseInt(string text, int fallback) => int.TryParse(text, out var value) ? value : fallback;

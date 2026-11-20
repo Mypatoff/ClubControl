@@ -118,7 +118,7 @@ A small shop for drinks and snacks, in the same `club.db` (a port of the useful 
 
 - **Computers:** number, class (Standard / VIP), enabled switch (disabled PCs stay locked and are hidden from "all"), IP/MAC/hostname shown read-only.
 - **Tariffs:** one per class: price per hour, minimum payment, maximum payment.
-- **General:** club name, lock-screen text, lock-screen language (Uzbek / Russian / English), admin panel language (Russian / Uzbek), warning minutes, after-session action (close process list / restart), process list, PC unlock password.
+- **General:** club name, lock-screen text, lock-screen language (Uzbek / Russian / English), admin panel language (Russian / Uzbek), warning minutes, after-session action (close process list / restart), process list, PC unlock password, change admin password (current + new + confirm; empty = unchanged).
 
 ## 9. Reports
 
