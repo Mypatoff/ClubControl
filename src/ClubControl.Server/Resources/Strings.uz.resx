@@ -97,8 +97,8 @@
   <data name="EventLogHeader" xml:space="preserve">
     <value>Voqealar jurnali</value>
   </data>
-  <data name="StatusListening" xml:space="preserve">
-    <value>TCP {0} / UDP {1} tinglanadi. {2}/{3} kompyuter onlayn.</value>
+  <data name="StatusOnline" xml:space="preserve">
+    <value>{0}/{1} kompyuter onlayn.</value>
   </data>
   <data name="StateFree" xml:space="preserve">
     <value>Boʻsh</value>

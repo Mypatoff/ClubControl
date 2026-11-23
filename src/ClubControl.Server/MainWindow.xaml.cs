@@ -383,8 +383,7 @@ public partial class MainWindow : Window
             _shownEventCulture = culture;
         }
 
-        StatusText.Text = Strings.Format("StatusListening", NetworkConstants.SignalRPort, NetworkConstants.DiscoveryPort,
-            pcs.Count(p => p.IsOnline), pcs.Count);
+        StatusText.Text = Strings.Format("StatusOnline", pcs.Count(p => p.IsOnline), pcs.Count);
         timer.Step("show");
         timer.Finish();
     }

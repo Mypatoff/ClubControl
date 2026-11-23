@@ -97,8 +97,8 @@
   <data name="EventLogHeader" xml:space="preserve">
     <value>Event log</value>
   </data>
-  <data name="StatusListening" xml:space="preserve">
-    <value>Listening on TCP {0} / UDP {1}. {2}/{3} PCs online.</value>
+  <data name="StatusOnline" xml:space="preserve">
+    <value>{0}/{1} PCs online.</value>
   </data>
   <data name="StateFree" xml:space="preserve">
     <value>Free</value>

@@ -97,8 +97,8 @@
   <data name="EventLogHeader" xml:space="preserve">
     <value>Журнал событий</value>
   </data>
-  <data name="StatusListening" xml:space="preserve">
-    <value>Слушает TCP {0} / UDP {1}. {2}/{3} ПК онлайн.</value>
+  <data name="StatusOnline" xml:space="preserve">
+    <value>{0}/{1} ПК онлайн.</value>
   </data>
   <data name="StateFree" xml:space="preserve">
     <value>Свободен</value>
