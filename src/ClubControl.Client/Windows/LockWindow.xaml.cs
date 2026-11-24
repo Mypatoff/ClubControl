@@ -46,10 +46,10 @@ public partial class LockWindow : Window
     {
         ClubNameText.Text = settings.ClubName;
 
-        PcInfoText.Text = info is { PcNumber: int number }
-            ? Strings.Format("PcNumberFormat", number) +
-              (!string.IsNullOrEmpty(info.TariffName) ? $" ({info.TariffName})" : "")
-            : "";
+        PcNumberText.Text = info?.PcNumber?.ToString() ?? "";
+        PcNumberText.Visibility = info?.PcNumber is null ? Visibility.Collapsed : Visibility.Visible;
+
+        PcInfoText.Text = info?.TariffName ?? "";
 
         MessageText.Text = info?.LimitReached == true ? Strings.Get("PleaseGoToAdmin") : "";
         CustomText.Text = settings.LockScreenText;

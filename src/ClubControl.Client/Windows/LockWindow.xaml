@@ -61,7 +61,14 @@
             <StackPanel>
                 <TextBlock x:Name="ClubNameText" Foreground="White" FontSize="44" FontWeight="Bold"
                            FontFamily="Segoe UI" HorizontalAlignment="Center" />
-                <Border Width="56" Height="4" Background="#2F6FED" CornerRadius="2" Margin="0,18,0,0"
+                <!-- The PC number the client sits at: big and glowing so it is the first thing they see. -->
+                <TextBlock x:Name="PcNumberText" Foreground="#6FA2FF" FontSize="150" FontWeight="ExtraBold"
+                           FontFamily="Segoe UI" Margin="0,6,0,0" HorizontalAlignment="Center" Visibility="Collapsed">
+                    <TextBlock.Effect>
+                        <DropShadowEffect Color="#2F6FED" BlurRadius="40" ShadowDepth="0" Opacity="0.9" />
+                    </TextBlock.Effect>
+                </TextBlock>
+                <Border Width="56" Height="4" Background="#2F6FED" CornerRadius="2" Margin="0,12,0,0"
                         HorizontalAlignment="Center" />
                 <TextBlock x:Name="PcInfoText" Foreground="#9FB4E8" FontSize="22" Margin="0,22,0,0"
                            FontFamily="Segoe UI" HorizontalAlignment="Center" />
