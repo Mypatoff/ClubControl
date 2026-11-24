@@ -242,9 +242,9 @@ C# .NET 8. WPF for Server (admin panel + hosted ASP.NET Core/SignalR) and Client
       (`EndSessionEarlyAsync` -> `BarService.SettleSessionSalesAsync`) marks those sales paid. A prepay session that just runs out
       by itself does not settle them (nobody collected the bill), they stay in the Unpaid list. "Mark paid" in the Unpaid list while
       the session runs removes the item from the bill. No schema change. Tests in `BarServiceTests`; XAML not click-tested.
-- [x] Real version number: `Directory.Build.props` holds `<Version>` (1.1.3); the assembly reports "1.1.3+<commit>", the installer
+- [x] Real version number: `Directory.Build.props` holds `<Version>` (0.1.0; numbering restarted from 0.1.0 after v1.1.8); the assembly reports "0.1.0+<commit>", the installer
       uses it, and pushing a `vX.Y.Z` tag makes a versioned GitHub release (the rolling "latest" release is unchanged and is still
-      what "Update server" reads). Bump the number in that one file for each release.
+      what "Update server" reads). Bump the number in that one file only when the owner decides to cut a release (not per commit), bundling several changes.
 - [x] Toolbar "Sell" button right after "Add item" (`SellWindow`): a counter sale not connected to any PC (product, quantity, cups,
       optional Unpaid + comment; stays open for several sales; same `BarService.SellAsync` with no session). Copy of the "From the bar"
       tab of `AddItemWindow` without the PC part. Compiled with XAML stubs only, not click-tested.
