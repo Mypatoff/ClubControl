@@ -42,7 +42,7 @@
         </StackPanel>
 
         <TabControl x:Name="SourceTabs" Margin="0,0,0,10">
-            <!-- A bar product: it is also a bar sale (stock goes down), on the session's bill only when it is unpaid (paid at once = not on the bill) -->
+            <!-- A bar product: it is also a bar sale, on the session's bill only when it is unpaid (paid at once = not on the bill) -->
             <TabItem x:Name="BarTab">
                 <StackPanel Margin="4,10,4,4">
                     <TextBlock x:Name="ProductLabel" Margin="0,0,0,2" />

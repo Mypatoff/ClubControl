@@ -242,7 +242,7 @@ public class SessionService
 
     /// <summary>
     /// Removes an item added by mistake. Only while its session is still running - after that it is part of the bill.
-    /// An item that came from a bar sale cancels that sale too, so the stock goes back on the shelf.
+    /// An item that came from a bar sale cancels that sale too.
     /// </summary>
     public async Task RemoveExtraAsync(int extraId)
     {
@@ -255,7 +255,7 @@ public class SessionService
 
         var barSale = await _db.BarSales.FirstOrDefaultAsync(b => b.SessionExtraId == extraId && b.VoidedUtc == null);
         if (barSale is not null)
-            await BarService.CancelSaleAsync(_db, barSale);
+            BarService.CancelSale(_db, barSale);
 
         _db.SessionExtras.Remove(extra);
         LogEvent(EventType.ItemAdded, extra.Session.PcId, extra.SessionId, $"Item removed: {extra.Description}, {extra.AmountUzs} UZS");

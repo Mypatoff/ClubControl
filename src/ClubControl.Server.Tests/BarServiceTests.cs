@@ -6,19 +6,19 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ClubControl.Server.Tests;
 
-/// <summary>The bar: products and stock, selling at the counter or to a PC, unpaid sales, cancelling.</summary>
+/// <summary>The bar: products, selling at the counter or to a PC, unpaid sales, cancelling.</summary>
 public class BarServiceTests : SessionTestBase
 {
     private static BarService BarFor(ClubDbContext db) => new(db, ServiceFor(db));
 
-    private async Task<int> NewProductAsync(string name = "Cola", int price = 5_000, int stock = 10)
+    private async Task<int> NewProductAsync(string name = "Cola", int price = 5_000)
     {
         using var db = NewDb();
-        return (await BarFor(db).CreateProductAsync(name, price, stock)).Id;
+        return (await BarFor(db).CreateProductAsync(name, price)).Id;
     }
 
     [Fact]
-    public async Task A_sale_lowers_stock_keeps_the_price_and_is_logged()
+    public async Task A_sale_keeps_the_price_it_was_made_at_and_is_logged()
     {
         var id = await NewProductAsync();
 
@@ -30,7 +30,6 @@ public class BarServiceTests : SessionTestBase
 
         using var check = NewDb();
         var bar = BarFor(check);
-        Assert.Equal(7, (await check.BarProducts.SingleAsync()).Stock);
 
         // A later price change must not rewrite the old sale.
         await bar.UpdateProductAsync(id, "Cola", 9_000);
@@ -38,20 +37,13 @@ public class BarServiceTests : SessionTestBase
         Assert.Equal(5_000, sale2.UnitPriceUzs);
         Assert.Equal(15_000, sale2.TotalUzs);
 
-        var log = await bar.GetStockLogAsync();
-        Assert.Equal(new[] { BarStockMovementType.Sale, BarStockMovementType.Initial }, log.Select(l => l.Type));
-        Assert.Equal(new[] { -3, 10 }, log.Select(l => l.Delta));
-        Assert.Equal(new[] { 7, 10 }, log.Select(l => l.StockAfter));
         Assert.Contains(await check.EventLogEntries.ToListAsync(), e => e.Type == EventType.BarSale && e.Message.Contains("Cola"));
     }
 
     [Fact]
-    public async Task Overselling_and_archived_products_are_rejected_and_change_nothing()
+    public async Task Archived_products_are_rejected_and_change_nothing()
     {
-        var id = await NewProductAsync(stock: 2);
-
-        using (var db = NewDb())
-            await Assert.ThrowsAsync<InvalidOperationException>(() => BarFor(db).SellAsync(new BarService.SaleRequest(id, 3)));
+        var id = await NewProductAsync();
 
         using (var db = NewDb())
             await BarFor(db).SetArchivedAsync(id, true);
@@ -59,9 +51,24 @@ public class BarServiceTests : SessionTestBase
             await Assert.ThrowsAsync<InvalidOperationException>(() => BarFor(db).SellAsync(new BarService.SaleRequest(id, 1)));
 
         using var check = NewDb();
-        Assert.Equal(2, (await check.BarProducts.SingleAsync()).Stock);
         Assert.Empty(check.BarSales);
-        Assert.Single(check.BarStockMovements); // only the initial stock
+    }
+
+    [Fact]
+    public async Task Stock_is_not_counted_any_number_can_be_sold_and_nothing_is_logged()
+    {
+        var id = await NewProductAsync();
+
+        using (var db = NewDb())
+        {
+            await BarFor(db).SellAsync(new BarService.SaleRequest(id, 500));
+            await BarFor(db).SellAsync(new BarService.SaleRequest(id, 500));
+        }
+
+        using var check = NewDb();
+        Assert.Equal(2, await check.BarSales.CountAsync());
+        Assert.Equal(0, (await check.BarProducts.SingleAsync()).Stock); // the unused column is never touched
+        Assert.Empty(check.BarStockMovements);
     }
 
     [Theory]
@@ -72,7 +79,7 @@ public class BarServiceTests : SessionTestBase
     [InlineData(BarService.MaxQuantity + 1, 0)]
     public async Task Quantity_and_cups_must_be_in_range(int quantity, int cups)
     {
-        var id = await NewProductAsync(stock: 1_000);
+        var id = await NewProductAsync();
         using var db = NewDb();
         await Assert.ThrowsAsync<InvalidOperationException>(() => BarFor(db).SellAsync(new BarService.SaleRequest(id, quantity, cups)));
     }
@@ -101,7 +108,7 @@ public class BarServiceTests : SessionTestBase
     }
 
     [Fact]
-    public async Task Cancelling_a_sale_puts_the_stock_back_and_cannot_repeat()
+    public async Task Cancelling_a_sale_marks_it_cancelled_and_cannot_repeat()
     {
         var id = await NewProductAsync();
         int saleId;
@@ -113,21 +120,18 @@ public class BarServiceTests : SessionTestBase
 
         using (var db = NewDb())
         {
-            Assert.Equal(10, (await db.BarProducts.SingleAsync()).Stock);
             Assert.NotNull((await db.BarSales.SingleAsync()).VoidedUtc);
-            Assert.Equal(BarStockMovementType.Void, (await BarFor(db).GetStockLogAsync()).First().Type);
             await Assert.ThrowsAsync<InvalidOperationException>(() => BarFor(db).VoidSaleAsync(saleId));
-            Assert.Equal(10, (await db.BarProducts.SingleAsync()).Stock);
         }
     }
 
     [Fact]
     public async Task Popular_first_counts_units_sold_ignores_cancelled_sales_and_falls_back_to_name()
     {
-        var apple = await NewProductAsync("Apple", stock: 50);
-        var bread = await NewProductAsync("bread", stock: 50);
-        var cola = await NewProductAsync("Cola", stock: 50);
-        await NewProductAsync("Dates", stock: 50); // never sold
+        var apple = await NewProductAsync("Apple");
+        var bread = await NewProductAsync("bread");
+        var cola = await NewProductAsync("Cola");
+        await NewProductAsync("Dates"); // never sold
 
         using (var db = NewDb())
         {
@@ -149,27 +153,6 @@ public class BarServiceTests : SessionTestBase
         Assert.Equal(new[] { "Cola" }, found.Select(p => p.Name));
     }
 
-    [Fact]
-    public async Task Stock_adjustments_need_a_reason_stay_in_range_and_are_logged()
-    {
-        var id = await NewProductAsync(stock: 5);
-        using var db = NewDb();
-        var bar = BarFor(db);
-
-        Assert.Equal(15, await bar.AdjustStockAsync(id, 10, "restock", " delivery "));
-        Assert.Equal(12, await bar.AdjustStockAsync(id, -3, "damaged"));
-
-        await Assert.ThrowsAsync<InvalidOperationException>(() => bar.AdjustStockAsync(id, 1, "because"));
-        await Assert.ThrowsAsync<InvalidOperationException>(() => bar.AdjustStockAsync(id, 0, "recount"));
-        await Assert.ThrowsAsync<InvalidOperationException>(() => bar.AdjustStockAsync(id, -13, "recount"));
-        Assert.Equal(12, (await db.BarProducts.SingleAsync()).Stock);
-
-        var log = await bar.GetStockLogAsync(id);
-        Assert.Equal(new[] { 12, 15, 5 }, log.Select(l => l.StockAfter));
-        Assert.Equal("delivery", log[1].Note);
-        Assert.Equal("restock", log[1].Reason);
-    }
-
     // ---- unpaid ----
 
     [Fact]
@@ -180,7 +163,7 @@ public class BarServiceTests : SessionTestBase
         var bar = BarFor(db);
 
         await Assert.ThrowsAsync<InvalidOperationException>(() => bar.SellAsync(new BarService.SaleRequest(id, 1, Unpaid: true, Comment: "  ")));
-        Assert.Equal(10, (await db.BarProducts.SingleAsync()).Stock);
+        Assert.Empty(db.BarSales);
 
         var one = await bar.SellAsync(new BarService.SaleRequest(id, 1, Unpaid: true, Comment: " Aziz, PC 4 "));
         await bar.SellAsync(new BarService.SaleRequest(id, 2)); // a normal sale is not unpaid
@@ -223,8 +206,7 @@ public class BarServiceTests : SessionTestBase
         await BarFor(db).SellAsync(new BarService.SaleRequest(id, 2, Cups: 1, SessionMachineGuid: Pc1));
 
         using var check = NewDb();
-        Assert.Equal(8, (await check.BarProducts.SingleAsync()).Stock);          // stock down: it is a bar sale
-        var stored = await check.BarSales.SingleAsync();
+        var stored = await check.BarSales.SingleAsync();                          // it is a bar sale
         Assert.Equal("PC 1", stored.PcLabel);
         Assert.Null(stored.SessionExtraId);                                       // the client already paid: not on the bill
         Assert.False(stored.IsUnpaid);
@@ -244,7 +226,6 @@ public class BarServiceTests : SessionTestBase
         var sale = await BarFor(db).SellAsync(new BarService.SaleRequest(id, 1, Cups: 1, SessionMachineGuid: Pc1, Unpaid: true, Comment: "pays at the end"));
 
         using var check = NewDb();
-        Assert.Equal(9, (await check.BarProducts.SingleAsync()).Stock);
         var stored = await check.BarSales.SingleAsync();
         Assert.Equal("PC 1", stored.PcLabel);
         Assert.NotNull(stored.SessionExtraId);
@@ -323,7 +304,6 @@ public class BarServiceTests : SessionTestBase
         await Assert.ThrowsAsync<InvalidOperationException>(() => BarFor(db).SellAsync(new BarService.SaleRequest(id, 1, SessionMachineGuid: Pc1)));
 
         using var check = NewDb();
-        Assert.Equal(10, (await check.BarProducts.SingleAsync()).Stock);
         Assert.Empty(check.BarSales);
     }
 
@@ -344,7 +324,7 @@ public class BarServiceTests : SessionTestBase
         using (var db = NewDb())
         {
             await BarFor(db).VoidSaleAsync(first);
-            Assert.Equal(8, (await db.BarProducts.SingleAsync()).Stock);
+            Assert.NotNull((await db.BarSales.SingleAsync(s => s.Id == first)).VoidedUtc);
             Assert.Equal(10_000, (await ServiceFor(db).GetExtrasAsync(Pc1)).Sum(i => i.AmountUzs)); // only the second item left
         }
 
@@ -354,7 +334,6 @@ public class BarServiceTests : SessionTestBase
         using (var db = NewDb())
         {
             await Assert.ThrowsAsync<InvalidOperationException>(() => BarFor(db).VoidSaleAsync(second));
-            Assert.Equal(8, (await db.BarProducts.SingleAsync()).Stock);
             Assert.Null((await db.BarSales.SingleAsync(s => s.Id == second)).VoidedUtc);
         }
     }
@@ -376,7 +355,6 @@ public class BarServiceTests : SessionTestBase
         }
 
         using var check = NewDb();
-        Assert.Equal(10, (await check.BarProducts.SingleAsync()).Stock);
         Assert.NotNull((await check.BarSales.SingleAsync()).VoidedUtc);
         Assert.Empty(await ServiceFor(check).GetExtrasAsync(Pc1));
     }
@@ -386,10 +364,9 @@ public class BarServiceTests : SessionTestBase
     {
         using var db = NewDb();
         var bar = BarFor(db);
-        await Assert.ThrowsAsync<InvalidOperationException>(() => bar.CreateProductAsync("  ", 1_000, 1));
-        await Assert.ThrowsAsync<InvalidOperationException>(() => bar.CreateProductAsync(new string('x', 101), 1_000, 1));
-        await Assert.ThrowsAsync<InvalidOperationException>(() => bar.CreateProductAsync("Cola", -1, 1));
-        await Assert.ThrowsAsync<InvalidOperationException>(() => bar.CreateProductAsync("Cola", 1_000, -1));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => bar.CreateProductAsync("  ", 1_000));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => bar.CreateProductAsync(new string('x', 101), 1_000));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => bar.CreateProductAsync("Cola", -1));
         Assert.Empty(db.BarProducts);
     }
 }

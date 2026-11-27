@@ -78,14 +78,14 @@ public class BarImportTests : SessionTestBase, IDisposable
         using (var db = NewDb())
         {
             var result = await new BarImportService(db).ImportAsync(shop, BackupFolder);
-            Assert.Equal(new BarImportService.Result(3, 3, 5), result);
+            Assert.Equal(new BarImportService.Result(3, 3), result);
         }
 
         using var check = NewDb();
         var products = await check.BarProducts.OrderBy(p => p.Id).ToListAsync();
         Assert.Equal(new[] { "Cola 1.5", "Tara", "Old thing" }, products.Select(p => p.Name));
         Assert.Equal(new[] { 16_000, 5_000, 1_000 }, products.Select(p => p.PriceUzs));
-        Assert.Equal(new[] { 9, 40, 0 }, products.Select(p => p.Stock));
+        Assert.All(products, p => Assert.Equal(0, p.Stock)); // stock is not counted, so the old levels are not carried over
         Assert.Equal(new[] { false, false, true }, products.Select(p => p.Archived));
         Assert.Equal(DateTimeOffset.FromUnixTimeSeconds(1_760_000_000).UtcDateTime, products[0].CreatedUtc);
 
@@ -102,14 +102,11 @@ public class BarImportTests : SessionTestBase, IDisposable
         var bar = new BarService(check, ServiceFor(check));
         Assert.Equal(500, await bar.GetCupPriceAsync());
 
-        var log = await check.BarStockMovements.Include(m => m.BarSale).OrderBy(m => m.Id).ToListAsync();
-        Assert.Equal(5, log.Count);
-        Assert.Equal(sales[1].Id, log[4].BarSaleId); // the void points at the (new id of the) cancelled sale
-        Assert.Equal(Data.Models.BarStockMovementType.Void, log[4].Type);
+        Assert.Empty(check.BarStockMovements); // the old stock log is not imported
 
-        // The imported bar behaves like any other: the stock it carries can be sold and the sale shows up.
+        // The imported bar behaves like any other: its products can be sold and the sale shows up.
         await bar.SellAsync(new BarService.SaleRequest(products[1].Id, 1));
-        Assert.Equal(39, (await check.BarProducts.SingleAsync(p => p.Name == "Tara")).Stock);
+        Assert.Equal(4, await check.BarSales.CountAsync());
         Assert.True(Directory.GetFiles(BackupFolder, "club_before-bar-import_*.db").Length == 1);
     }
 

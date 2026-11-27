@@ -12,7 +12,8 @@ namespace ClubControl.Server.Services;
 
 /// <summary>
 /// One-time import of the old ShopKeeper program's database (shop.db) into the bar: products, sales
-/// (cups and cancelled ones included), the stock log and the cup price. The old file is only read.
+/// (cups and cancelled ones included) and the cup price. The old file is only read. Stock levels and the old
+/// stock log are not imported: the bar does not count stock.
 /// Everything is copied in one transaction after a safety copy of club.db, so a failed import changes nothing.
 /// </summary>
 public class BarImportService
@@ -20,7 +21,7 @@ public class BarImportService
     /// <summary>The ShopKeeper schema version this reads (v1.3.x). Older files must be opened once with ShopKeeper to upgrade them.</summary>
     public const int SupportedShopVersion = 5;
 
-    public record Result(int Products, int Sales, int Movements);
+    public record Result(int Products, int Sales);
 
     private readonly ClubDbContext _db;
 
@@ -30,10 +31,9 @@ public class BarImportService
     }
 
     // What was read from the old file, before anything is written.
-    private sealed record OldProduct(long Id, string Name, long Price, long Stock, bool Archived, long CreatedAt);
+    private sealed record OldProduct(long Id, string Name, long Price, bool Archived, long CreatedAt);
     private sealed record OldSale(long Id, long ProductId, string ProductName, long Quantity, long UnitPrice, long Cups, long CupPrice, long Total, long CreatedAt, long? VoidedAt);
-    private sealed record OldMovement(long ProductId, string Type, long Delta, long StockAfter, string Reason, string Note, long? SaleId, long CreatedAt);
-    private sealed record OldData(List<OldProduct> Products, List<OldSale> Sales, List<OldMovement> Movements, long CupPrice);
+    private sealed record OldData(List<OldProduct> Products, List<OldSale> Sales, long CupPrice);
 
     /// <param name="backupDirectory">Where the safety copy of club.db goes; the normal backup folder when null.</param>
     public async Task<Result> ImportAsync(string shopDbPath, string? backupDirectory = null)
@@ -58,7 +58,6 @@ public class BarImportService
             {
                 Name = Clean(p.Name, BarService.MaxNameLength),
                 PriceUzs = ToUzs(p.Price, $"the price of \"{p.Name}\""),
-                Stock = ToStock(p.Stock, p.Name),
                 Archived = p.Archived,
                 CreatedUtc = FromUnix(p.CreatedAt)
             };
@@ -66,7 +65,6 @@ public class BarImportService
             _db.BarProducts.Add(product);
         }
 
-        var sales = new Dictionary<long, BarSale>();
         foreach (var s in old.Sales)
         {
             var sale = new BarSale
@@ -82,31 +80,7 @@ public class BarImportService
                 CreatedUtc = FromUnix(s.CreatedAt),
                 VoidedUtc = s.VoidedAt is { } v ? FromUnix(v) : null
             };
-            sales[s.Id] = sale;
             _db.BarSales.Add(sale);
-        }
-
-        foreach (var m in old.Movements)
-        {
-            _db.BarStockMovements.Add(new BarStockMovement
-            {
-                BarProduct = products.GetValueOrDefault(m.ProductId)
-                    ?? throw new InvalidOperationException("A stock record refers to a product that is not in the file."),
-                Type = m.Type switch
-                {
-                    "initial" => BarStockMovementType.Initial,
-                    "sale" => BarStockMovementType.Sale,
-                    "void" => BarStockMovementType.Void,
-                    "adjust" => BarStockMovementType.Adjust,
-                    _ => throw new InvalidOperationException($"Unknown stock record type \"{m.Type}\".")
-                },
-                Delta = ToInt(m.Delta, "a stock change"),
-                StockAfter = ToInt(m.StockAfter, "a stock level"),
-                Reason = m.Reason,
-                Note = m.Note,
-                BarSale = m.SaleId is { } id ? sales.GetValueOrDefault(id) : null,
-                CreatedUtc = FromUnix(m.CreatedAt)
-            });
         }
 
         if (old.CupPrice > 0)
@@ -115,12 +89,12 @@ public class BarImportService
         _db.EventLogEntries.Add(new EventLogEntry
         {
             Type = EventType.BarSale,
-            Message = $"Bar import: {old.Products.Count} products, {old.Sales.Count} sales, {old.Movements.Count} stock records"
+            Message = $"Bar import: {old.Products.Count} products, {old.Sales.Count} sales"
         });
 
         await _db.SaveChangesAsync();
         await transaction.CommitAsync();
-        return new Result(old.Products.Count, old.Sales.Count, old.Movements.Count);
+        return new Result(old.Products.Count, old.Sales.Count);
     }
 
     // ---- reading the old file ----
@@ -146,21 +120,15 @@ public class BarImportService
                     : $"This database is from a newer ShopKeeper (version {version}) than this ClubControl can read.");
 
             var products = new List<OldProduct>();
-            using (var r = Query(conn, "SELECT id, name, price, stock, archived, created_at FROM products ORDER BY id"))
+            using (var r = Query(conn, "SELECT id, name, price, archived, created_at FROM products ORDER BY id"))
                 while (r.Read())
-                    products.Add(new OldProduct(r.GetInt64(0), r.GetString(1), r.GetInt64(2), r.GetInt64(3), r.GetInt64(4) != 0, r.GetInt64(5)));
+                    products.Add(new OldProduct(r.GetInt64(0), r.GetString(1), r.GetInt64(2), r.GetInt64(3) != 0, r.GetInt64(4)));
 
             var sales = new List<OldSale>();
             using (var r = Query(conn, "SELECT id, product_id, product_name, quantity, unit_price, cups, cup_price, total, created_at, voided_at FROM sales ORDER BY id"))
                 while (r.Read())
                     sales.Add(new OldSale(r.GetInt64(0), r.GetInt64(1), r.GetString(2), r.GetInt64(3), r.GetInt64(4), r.GetInt64(5), r.GetInt64(6),
                         r.GetInt64(7), r.GetInt64(8), r.IsDBNull(9) ? null : r.GetInt64(9)));
-
-            var movements = new List<OldMovement>();
-            using (var r = Query(conn, "SELECT product_id, type, delta, stock_after, reason, note, sale_id, created_at FROM stock_movements ORDER BY id"))
-                while (r.Read())
-                    movements.Add(new OldMovement(r.GetInt64(0), r.GetString(1), r.GetInt64(2), r.GetInt64(3),
-                        r.IsDBNull(4) ? "" : r.GetString(4), r.IsDBNull(5) ? "" : r.GetString(5), r.IsDBNull(6) ? null : r.GetInt64(6), r.GetInt64(7)));
 
             long cupPrice = 0;
             using (var cmd = conn.CreateCommand())
@@ -170,7 +138,7 @@ public class BarImportService
                     cupPrice = parsed;
             }
 
-            return new OldData(products, sales, movements, cupPrice);
+            return new OldData(products, sales, cupPrice);
         }
         catch (SqliteException ex)
         {
@@ -206,20 +174,6 @@ public class BarImportService
     {
         if (value < 0 || value > BarService.MaxPriceUzs)
             throw new InvalidOperationException($"{what} ({value}) is outside what the bar can hold (0 to {BarService.MaxPriceUzs} UZS).");
-        return (int)value;
-    }
-
-    private static int ToStock(long value, string product)
-    {
-        if (value < 0 || value > BarService.MaxStock)
-            throw new InvalidOperationException($"The stock of \"{product}\" ({value}) is outside 0 to {BarService.MaxStock}.");
-        return (int)value;
-    }
-
-    private static int ToInt(long value, string what)
-    {
-        if (value < int.MinValue || value > int.MaxValue)
-            throw new InvalidOperationException($"{what} ({value}) is not valid.");
         return (int)value;
     }
 

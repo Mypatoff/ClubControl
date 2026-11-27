@@ -18,18 +18,18 @@ using Microsoft.Win32;
 namespace ClubControl.Server.Views;
 
 /// <summary>
-/// The second main page: sell from the bar (best sellers first), and manage products, sales and the stock log.
+/// The second main page: sell from the bar (best sellers first), and manage products and sales.
 /// All rules live in <see cref="BarService"/>; this class only reads the boxes, calls it and shows the result.
 /// </summary>
 public partial class BarView : UserControl
 {
     // ---- what the grids show ----
 
-    private sealed record ProductRow(int Id, string Name, int Price, int Stock, bool Archived)
+    private sealed record ProductRow(int Id, string Name, int Price, bool Archived)
     {
         public string PriceDisplay => $"{Price:N0}";
         public string NameDisplay => Archived ? $"{Name} ({Strings.Get("BarArchivedMark")})" : Name;
-        public bool IsAvailable => !Archived && Stock > 0;
+        public bool IsAvailable => !Archived;
     }
 
     private sealed record SaleRow(int Id, string TimeDisplay, string Product, int Quantity, int Cups, string AmountDisplay,
@@ -37,11 +37,9 @@ public partial class BarView : UserControl
 
     private sealed record UnpaidRow(int Id, string TimeDisplay, string Product, string AmountDisplay, string Where, string Comment, int Amount, string Summary);
 
-    private sealed record LogRow(string TimeDisplay, string Product, string TypeDisplay, string ChangeDisplay, int StockAfter, string ReasonDisplay, string Note);
-
     private sealed record SellTarget(string Label, Guid? MachineGuid);
 
-    /// <summary>The sales tab shows only the newest sales, so it stays short; everything is still in the stock log and the reports.</summary>
+    /// <summary>The sales tab shows only the newest sales, so it stays short; everything is still in the reports.</summary>
     private const int SalesShown = 30;
 
     private IServiceProvider Services => ((App)Application.Current).Services!;
@@ -78,12 +76,10 @@ public partial class BarView : UserControl
 
         ListNameColumn.Header = Strings.Get("BarColProduct");
         ListPriceColumn.Header = Strings.Get("BarColPrice");
-        ListStockColumn.Header = Strings.Get("BarColStock");
 
         SalesTab.Header = Strings.Get("BarTabSales");
         ShowUnpaidTabHeader(0);
         ProductsTab.Header = Strings.Get("BarTabProducts");
-        StockLogTab.Header = Strings.Get("BarTabStockLog");
 
         SaleTimeColumn.Header = Strings.Get("BarColTime");
         SaleProductColumn.Header = Strings.Get("BarColProduct");
@@ -106,30 +102,20 @@ public partial class BarView : UserControl
 
         AddProductButton.Content = "＋ " + Strings.Get("BarAddProduct");
         EditProductButton.Content = Strings.Get("BarEditProduct");
-        AdjustStockButton.Content = Strings.Get("BarAdjustStock");
         ArchiveButton.Content = Strings.Get("BarArchive") + " / " + Strings.Get("BarUnarchive");
         ShowArchivedCheck.Content = Strings.Get("BarShowArchived");
         ProductNameColumn.Header = Strings.Get("BarProductName");
         ProductPriceColumn.Header = Strings.Get("BarColPrice");
-        ProductStockColumn.Header = Strings.Get("BarColStock");
         CupPriceLabel.Text = Strings.Get("BarCupPriceLabel");
         CupPriceSaveButton.Content = Strings.Get("Save");
         ImportButton.Content = Strings.Get("BarImportButton");
-
-        LogTimeColumn.Header = Strings.Get("BarColTime");
-        LogProductColumn.Header = Strings.Get("BarColProduct");
-        LogTypeColumn.Header = Strings.Get("BarColType");
-        LogChangeColumn.Header = Strings.Get("BarColChange");
-        LogAfterColumn.Header = Strings.Get("BarColAfter");
-        LogReasonColumn.Header = Strings.Get("BarColReason");
-        LogNoteColumn.Header = Strings.Get("BarColNote");
     }
 
     // ---- loading ----
 
     /// <summary>Everything one refresh reads from the database (raw data; the rows are built on the UI thread because the texts need its language).</summary>
     private sealed record BarData(int CupPrice, List<BarProduct> Products, Dictionary<int, int> UnitsSold, List<BarSale> Sales,
-        List<BarSale> Unpaid, List<BarService.StockLogLine> StockLog, List<Pc> RunningTargets);
+        List<BarSale> Unpaid, List<Pc> RunningTargets);
 
     // Each refresh gets a number; a slow one that finishes after a newer one must not overwrite it.
     private int _refreshTicket;
@@ -155,9 +141,8 @@ public partial class BarView : UserControl
                 var unitsSold = await bar.GetUnitsSoldAsync();
                 var sales = await bar.GetRecentSalesAsync(SalesShown);
                 var unpaid = await bar.GetUnpaidAsync();
-                var stockLog = await bar.GetStockLogAsync();
                 var running = await LoadRunningTargetsAsync(db);
-                return new BarData(cupPrice, products, unitsSold, sales, unpaid, stockLog, running);
+                return new BarData(cupPrice, products, unitsSold, sales, unpaid, running);
             });
 
             if (ticket != _refreshTicket)
@@ -183,7 +168,6 @@ public partial class BarView : UserControl
             UnpaidEmptyText.Visibility = unpaid.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
             UnpaidPaidButton.IsEnabled = UnpaidVoidButton.IsEnabled = unpaid.Count > 0;
             ShowUnpaidTabHeader(unpaid.Count);
-            StockLogGrid.ItemsSource = data.StockLog.Select(ToLogRow).ToList();
 
             if (!CupPriceBox.IsKeyboardFocusWithin)
                 CupPriceBox.Text = _cupPrice.ToString();
@@ -218,7 +202,7 @@ public partial class BarView : UserControl
         SellToBox.SelectedItem = targets.FirstOrDefault(t => t.MachineGuid == chosen) ?? targets[0];
     }
 
-    private static ProductRow ToProductRow(BarProduct p) => new(p.Id, p.Name, p.PriceUzs, p.Stock, p.Archived);
+    private static ProductRow ToProductRow(BarProduct p) => new(p.Id, p.Name, p.PriceUzs, p.Archived);
 
     private static string Money(int uzs) => $"{uzs:N0} UZS";
 
@@ -248,28 +232,6 @@ public partial class BarView : UserControl
         };
     }
 
-    private static LogRow ToLogRow(BarService.StockLogLine l) => new(
-        l.CreatedUtc.ToLocalTime().ToString("dd.MM HH:mm"), l.ProductName, TypeName(l.Type), l.Delta > 0 ? $"+{l.Delta}" : l.Delta.ToString(),
-        l.StockAfter, ReasonName(l.Reason), l.Note);
-
-    private static string TypeName(BarStockMovementType type) => type switch
-    {
-        BarStockMovementType.Initial => Strings.Get("BarMoveInitial"),
-        BarStockMovementType.Sale => Strings.Get("BarMoveSale"),
-        BarStockMovementType.Void => Strings.Get("BarMoveVoid"),
-        _ => Strings.Get("BarMoveAdjust")
-    };
-
-    /// <summary>The localized name of a stock-adjustment reason (the database keeps the English key).</summary>
-    public static string ReasonName(string reason) => reason switch
-    {
-        "restock" => Strings.Get("BarReasonRestock"),
-        "recount" => Strings.Get("BarReasonRecount"),
-        "damaged" => Strings.Get("BarReasonDamaged"),
-        "other" => Strings.Get("BarReasonOther"),
-        _ => reason
-    };
-
     // ---- selling ----
 
     private void OnSearchChanged(object sender, TextChangedEventArgs e) => ApplySearch();
@@ -285,7 +247,7 @@ public partial class BarView : UserControl
         ProductList.ItemsSource = shown;
         var again = shown.FirstOrDefault(p => p.Id == keep);
         if (again is not null)
-            ProductList.SelectedItem = again; // the refreshed copy, with the current stock
+            ProductList.SelectedItem = again; // the refreshed copy
 
         _selected = again;
         ShowSelected();
@@ -312,15 +274,15 @@ public partial class BarView : UserControl
     {
         SelectedText.Text = _selected is null
             ? Strings.Get("BarChooseProduct")
-            : Strings.Format("BarProductLine", _selected.Name, _selected.PriceDisplay, _selected.Stock);
-        SellButton.IsEnabled = _selected is { IsAvailable: true };
+            : Strings.Format("BarProductLine", _selected.Name, _selected.PriceDisplay);
+        SellButton.IsEnabled = _selected is not null;
         UpdateTotal();
     }
 
     private void OnAmountsChanged(object sender, TextChangedEventArgs e) => UpdateTotal();
 
-    private void OnQuantityMinus(object sender, RoutedEventArgs e) => Step(QuantityBox, -1, 1, _selected?.Stock ?? 1);
-    private void OnQuantityPlus(object sender, RoutedEventArgs e) => Step(QuantityBox, +1, 1, _selected?.Stock ?? 1);
+    private void OnQuantityMinus(object sender, RoutedEventArgs e) => Step(QuantityBox, -1, 1, BarService.MaxQuantity);
+    private void OnQuantityPlus(object sender, RoutedEventArgs e) => Step(QuantityBox, +1, 1, BarService.MaxQuantity);
     private void OnCupsMinus(object sender, RoutedEventArgs e) => Step(CupsBox, -1, 0, BarService.MaxCups);
     private void OnCupsPlus(object sender, RoutedEventArgs e) => Step(CupsBox, +1, 0, BarService.MaxCups);
 
@@ -381,8 +343,7 @@ public partial class BarView : UserControl
             CommentBox.Clear();
             await RefreshAsync();
 
-            var left = _sellable.FirstOrDefault(p => p.Name == name)?.Stock ?? 0;
-            ShowMessage(Strings.Format("BarSoldFormat", quantity, name, left), error: false);
+            ShowMessage(Strings.Format("BarSoldFormat", quantity, name), error: false);
         }
         catch (InvalidOperationException ex)
         {
@@ -487,7 +448,7 @@ public partial class BarView : UserControl
 
     private async void OnAddProduct(object sender, RoutedEventArgs e)
     {
-        new ProductWindow(Services, null, null, 0, 0) { Owner = Window.GetWindow(this) }.ShowDialog();
+        new ProductWindow(Services, null, null, 0) { Owner = Window.GetWindow(this) }.ShowDialog();
         await RefreshAsync();
     }
 
@@ -496,16 +457,7 @@ public partial class BarView : UserControl
         if (SelectedManagedProduct() is not { } p)
             return;
 
-        new ProductWindow(Services, p.Id, p.Name, p.Price, p.Stock) { Owner = Window.GetWindow(this) }.ShowDialog();
-        await RefreshAsync();
-    }
-
-    private async void OnAdjustStock(object sender, RoutedEventArgs e)
-    {
-        if (SelectedManagedProduct() is not { } p)
-            return;
-
-        new AdjustStockWindow(Services, p.Id, p.Name) { Owner = Window.GetWindow(this) }.ShowDialog();
+        new ProductWindow(Services, p.Id, p.Name, p.Price) { Owner = Window.GetWindow(this) }.ShowDialog();
         await RefreshAsync();
     }
 
@@ -562,7 +514,7 @@ public partial class BarView : UserControl
                 result = await scope.ServiceProvider.GetRequiredService<BarImportService>().ImportAsync(dialog.FileName);
 
             await RefreshAsync();
-            MessageBox.Show(Strings.Format("BarImportDoneFormat", result.Products, result.Sales, result.Movements),
+            MessageBox.Show(Strings.Format("BarImportDoneFormat", result.Products, result.Sales),
                 Strings.Get("ConfirmTitle"), MessageBoxButton.OK, MessageBoxImage.Information);
         }
         catch (Exception ex) when (ex is InvalidOperationException or Microsoft.Data.Sqlite.SqliteException or System.IO.IOException)

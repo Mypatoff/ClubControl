@@ -10,31 +10,24 @@ using Microsoft.EntityFrameworkCore;
 namespace ClubControl.Server.Services;
 
 /// <summary>
-/// The bar: products with stock, sales (at the counter or added to a PC's running session, paid or
-/// on credit), cancelling a sale, and the stock log. A port of the useful parts of the old
-/// ShopKeeper program. Every change that touches stock runs in one transaction together with its
-/// stock-log row and event-log entry, so the numbers can always be explained.
+/// The bar: products, sales (at the counter or added to a PC's running session, paid or on credit)
+/// and cancelling a sale. A port of the useful parts of the old ShopKeeper program. Stock is NOT
+/// counted: selling never checks or changes how many are left. (<c>BarProduct.Stock</c> and the
+/// <c>BarStockMovements</c> table still exist in the database but nothing reads or writes them.)
 /// </summary>
 public class BarService
 {
     public const int MaxPriceUzs = SessionService.MaxExtraUzs;
-    public const int MaxStock = 1_000_000;
     public const int MaxQuantity = 100_000;
     public const int MaxCups = 1_000;
     public const int MaxNameLength = 100;
     public const int MaxCommentLength = 200;
-
-    /// <summary>The reasons a manual stock change can have, stored as this lower-case text.</summary>
-    public static readonly string[] AdjustReasons = { "restock", "recount", "damaged", "other" };
 
     /// <summary>One sale to make. A null <paramref name="SessionMachineGuid"/> means a counter sale.</summary>
     public record SaleRequest(int ProductId, int Quantity, int Cups = 0, Guid? SessionMachineGuid = null, bool Unpaid = false, string? Comment = null);
 
     /// <summary>What the unpaid chip shows: how many sales are waiting for payment and how much they add up to.</summary>
     public record UnpaidSummary(int Count, long TotalUzs);
-
-    /// <summary>One row of the stock log.</summary>
-    public record StockLogLine(int Id, DateTime CreatedUtc, string ProductName, BarStockMovementType Type, int Delta, int StockAfter, string Reason, string Note, int? BarSaleId);
 
     private readonly ClubDbContext _db;
     private readonly SessionService _sessions;
@@ -91,17 +84,13 @@ public class BarService
             .ThenBy(p => p.Name, StringComparer.CurrentCultureIgnoreCase)
             .ToList();
 
-    public async Task<BarProduct> CreateProductAsync(string name, int priceUzs, int stock)
+    public async Task<BarProduct> CreateProductAsync(string name, int priceUzs)
     {
         name = CleanName(name);
         CheckPrice(priceUzs);
-        if (stock < 0 || stock > MaxStock)
-            throw new InvalidOperationException($"Stock must be between 0 and {MaxStock}.");
 
-        var product = new BarProduct { Name = name, PriceUzs = priceUzs, Stock = stock };
+        var product = new BarProduct { Name = name, PriceUzs = priceUzs };
         _db.BarProducts.Add(product);
-        if (stock > 0)
-            _db.BarStockMovements.Add(new BarStockMovement { BarProduct = product, Type = BarStockMovementType.Initial, Delta = stock, StockAfter = stock });
 
         await _db.SaveChangesAsync();
         return product;
@@ -126,36 +115,6 @@ public class BarService
         await _db.SaveChangesAsync();
     }
 
-    /// <summary>Adds (positive) or removes (negative) stock by hand, with a reason, and logs it. Returns the new stock.</summary>
-    public async Task<int> AdjustStockAsync(int productId, int delta, string reason, string? note = null)
-    {
-        reason = (reason ?? "").Trim().ToLowerInvariant();
-        if (!AdjustReasons.Contains(reason))
-            throw new InvalidOperationException("Choose a reason: restock, recount, damaged or other.");
-        if (delta == 0)
-            throw new InvalidOperationException("The change must not be zero.");
-
-        var product = await GetProductAsync(productId);
-        var newStock = (long)product.Stock + delta;
-        if (newStock < 0)
-            throw new InvalidOperationException($"Only {product.Stock} in stock; it cannot go below zero.");
-        if (newStock > MaxStock)
-            throw new InvalidOperationException($"Stock cannot go above {MaxStock}.");
-
-        product.Stock = (int)newStock;
-        _db.BarStockMovements.Add(new BarStockMovement
-        {
-            BarProductId = product.Id,
-            Type = BarStockMovementType.Adjust,
-            Delta = delta,
-            StockAfter = product.Stock,
-            Reason = reason,
-            Note = (note ?? "").Trim()
-        });
-        await _db.SaveChangesAsync();
-        return product.Stock;
-    }
-
     // ---- selling ----
 
     /// <summary>
@@ -163,7 +122,7 @@ public class BarService
     /// it must have a running session: paid (the client already paid for it), it is only a bar sale and
     /// is NOT added to the session's bill; unpaid, it is added to the bill as an item (shown in red) so
     /// the client pays it when the session is stopped, and it waits in the unpaid list until then.
-    /// Unpaid needs a comment. Stock goes down, and the sale is checked and saved in one transaction.
+    /// Unpaid needs a comment. The sale is checked and saved in one transaction.
     /// </summary>
     public async Task<BarSale> SellAsync(SaleRequest request)
     {
@@ -183,8 +142,6 @@ public class BarService
         var product = await GetProductAsync(request.ProductId);
         if (product.Archived)
             throw new InvalidOperationException("That product is archived and cannot be sold.");
-        if (request.Quantity > product.Stock)
-            throw new InvalidOperationException($"Only {product.Stock} in stock.");
 
         var cupPrice = request.Cups > 0 ? (await SettingsHelper.GetOrCreateAsync(_db)).BarCupPriceUzs : 0;
         var total = (long)product.PriceUzs * request.Quantity + (long)request.Cups * cupPrice;
@@ -221,16 +178,7 @@ public class BarService
         if (session is not null && request.Unpaid)
             sale.SessionExtra = new SessionExtra { SessionId = session.Id, Description = Describe(sale), AmountUzs = sale.TotalUzs };
 
-        product.Stock -= request.Quantity;
         _db.BarSales.Add(sale);
-        _db.BarStockMovements.Add(new BarStockMovement
-        {
-            BarProduct = product,
-            Type = BarStockMovementType.Sale,
-            Delta = -request.Quantity,
-            StockAfter = product.Stock,
-            BarSale = sale
-        });
 
         var where = pc is null ? "" : $" at {sale.PcLabel}";
         var how = request.Unpaid ? $", UNPAID ({comment})" : "";
@@ -248,7 +196,7 @@ public class BarService
     }
 
     /// <summary>
-    /// Cancels a sale and puts its stock back. A sale on a PC's bill can only be cancelled while that
+    /// Cancels a sale. A sale on a PC's bill can only be cancelled while that
     /// session is still running (afterwards it is part of what the client paid).
     /// </summary>
     public async Task VoidSaleAsync(int saleId)
@@ -271,29 +219,19 @@ public class BarService
             }
         }
 
-        await CancelSaleAsync(_db, sale);
+        CancelSale(_db, sale);
         await _db.SaveChangesAsync();
         await transaction.CommitAsync();
     }
 
     /// <summary>
-    /// Marks the sale cancelled, restores the stock, and adds the stock-log and event-log rows. Does not save:
+    /// Marks the sale cancelled and adds the event-log row. Does not save:
     /// the caller saves it together with whatever else it changes (<see cref="SessionService.RemoveExtraAsync"/> uses it too).
     /// </summary>
-    public static async Task CancelSaleAsync(ClubDbContext db, BarSale sale)
+    public static void CancelSale(ClubDbContext db, BarSale sale)
     {
-        var product = await db.BarProducts.FirstAsync(p => p.Id == sale.BarProductId);
-        product.Stock += sale.Quantity;
         sale.VoidedUtc = DateTime.UtcNow;
 
-        db.BarStockMovements.Add(new BarStockMovement
-        {
-            BarProductId = product.Id,
-            Type = BarStockMovementType.Void,
-            Delta = sale.Quantity,
-            StockAfter = product.Stock,
-            BarSale = sale
-        });
         db.EventLogEntries.Add(new EventLogEntry
         {
             Type = EventType.BarSale,
@@ -378,19 +316,6 @@ public class BarService
     /// <summary>The newest sales first, cancelled ones included (shown struck out).</summary>
     public Task<List<BarSale>> GetRecentSalesAsync(int limit = 200) =>
         _db.BarSales.AsNoTracking().OrderByDescending(s => s.Id).Take(limit).ToListAsync();
-
-    public async Task<List<StockLogLine>> GetStockLogAsync(int? productId = null, int limit = 300)
-    {
-        var query = _db.BarStockMovements.AsNoTracking().AsQueryable();
-        if (productId.HasValue)
-            query = query.Where(m => m.BarProductId == productId.Value);
-
-        return await query
-            .OrderByDescending(m => m.Id)
-            .Take(limit)
-            .Select(m => new StockLogLine(m.Id, m.CreatedUtc, m.BarProduct!.Name, m.Type, m.Delta, m.StockAfter, m.Reason, m.Note, m.BarSaleId))
-            .ToListAsync();
-    }
 
     // ---- cups ----
 

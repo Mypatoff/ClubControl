@@ -11,16 +11,16 @@ namespace ClubControl.Server.Windows;
 
 /// <summary>
 /// Adds something the client bought to a running session. Either a bar product (it is also a bar
-/// sale: stock goes down; paid at once it stays off the bill, marked unpaid it is added to the bill
+/// sale; paid at once it stays off the bill, marked unpaid it is added to the bill
 /// in red and paid when the session is stopped) or anything else as a name + price. Items on the bill
 /// are listed in the stop / payment dialog and added to the total. The dialog
 /// stays open after each item so several can be entered in a row; Close finishes.
 /// </summary>
 public partial class AddItemWindow : Window
 {
-    private sealed record ProductItem(int Id, string Name, int Price, int Stock)
+    private sealed record ProductItem(int Id, string Name, int Price)
     {
-        public string Display => Strings.Format("BarProductLine", Name, $"{Price:N0}", Stock);
+        public string Display => Strings.Format("BarProductLine", Name, $"{Price:N0}");
     }
 
     private readonly IServiceProvider _services;
@@ -66,7 +66,7 @@ public partial class AddItemWindow : Window
         _cupPrice = await bar.GetCupPriceAsync();
 
         var chosen = (ProductBox.SelectedItem as ProductItem)?.Id;
-        var items = products.Where(p => p.Stock > 0).Select(p => new ProductItem(p.Id, p.Name, p.PriceUzs, p.Stock)).ToList();
+        var items = products.Select(p => new ProductItem(p.Id, p.Name, p.PriceUzs)).ToList();
         ProductBox.ItemsSource = items;
         ProductBox.SelectedItem = items.FirstOrDefault(i => i.Id == chosen);
         UpdateBarTotal();
@@ -169,11 +169,11 @@ public partial class AddItemWindow : Window
         catch (InvalidOperationException ex)
         {
             ErrorText.Text = ex.Message;
-            await LoadProductsAsync(); // the stock may have changed
+            await LoadProductsAsync(); // the product may have been archived or removed
             return;
         }
 
-        ResultText.Text = Strings.Format("BarSoldFormat", quantity, product.Name, product.Stock - quantity);
+        ResultText.Text = Strings.Format("BarSoldFormat", quantity, product.Name);
         QuantityBox.Text = "1";
         CupsBox.Text = "0";
         UnpaidCheck.IsChecked = false;

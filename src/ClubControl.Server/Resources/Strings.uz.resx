@@ -680,19 +680,16 @@
     <value>Ro'yxatdan mahsulotni tanlang.</value>
   </data>
   <data name="BarProductLine" xml:space="preserve">
-    <value>{0} — {1} UZS — omborda {2} ta</value>
+    <value>{0} — {1} UZS</value>
   </data>
   <data name="BarSoldFormat" xml:space="preserve">
-    <value>Sotildi: {0} × {1}, {2} ta qoldi</value>
+    <value>Sotildi: {0} × {1}</value>
   </data>
   <data name="BarTabSales" xml:space="preserve">
     <value>Sotuvlar</value>
   </data>
   <data name="BarTabProducts" xml:space="preserve">
     <value>Mahsulotlar</value>
-  </data>
-  <data name="BarTabStockLog" xml:space="preserve">
-    <value>Ombor tarixi</value>
   </data>
   <data name="BarColTime" xml:space="preserve">
     <value>Vaqt</value>
@@ -720,24 +717,6 @@
   </data>
   <data name="BarColPrice" xml:space="preserve">
     <value>Narxi</value>
-  </data>
-  <data name="BarColStock" xml:space="preserve">
-    <value>Zaxira</value>
-  </data>
-  <data name="BarColChange" xml:space="preserve">
-    <value>O'zgarish</value>
-  </data>
-  <data name="BarColAfter" xml:space="preserve">
-    <value>Keyingi zaxira</value>
-  </data>
-  <data name="BarColType" xml:space="preserve">
-    <value>Turi</value>
-  </data>
-  <data name="BarColReason" xml:space="preserve">
-    <value>Sabab</value>
-  </data>
-  <data name="BarColNote" xml:space="preserve">
-    <value>Izoh</value>
   </data>
   <data name="BarWhereCounter" xml:space="preserve">
     <value>Kassa</value>
@@ -774,9 +753,6 @@
   <data name="BarEditProduct" xml:space="preserve">
     <value>Mahsulotni tahrirlash</value>
   </data>
-  <data name="BarAdjustStock" xml:space="preserve">
-    <value>Zaxirani sozlash</value>
-  </data>
   <data name="BarArchive" xml:space="preserve">
     <value>Arxivlash</value>
   </data>
@@ -795,50 +771,8 @@
   <data name="BarProductPrice" xml:space="preserve">
     <value>Narxi (UZS)</value>
   </data>
-  <data name="BarProductStart" xml:space="preserve">
-    <value>Boshlang'ich zaxira</value>
-  </data>
   <data name="BarEnterNumbers" xml:space="preserve">
     <value>Narx va zaxira uchun butun son kiriting.</value>
-  </data>
-  <data name="BarAdjustFor" xml:space="preserve">
-    <value>Zaxirani sozlash: {0}</value>
-  </data>
-  <data name="BarAdjustDelta" xml:space="preserve">
-    <value>Zaxirani o'zgartirish (masalan 10 yoki -2)</value>
-  </data>
-  <data name="BarAdjustDeltaInvalid" xml:space="preserve">
-    <value>10 yoki -2 kabi butun son kiriting.</value>
-  </data>
-  <data name="BarAdjustReason" xml:space="preserve">
-    <value>Sabab</value>
-  </data>
-  <data name="BarAdjustNote" xml:space="preserve">
-    <value>Izoh (ixtiyoriy)</value>
-  </data>
-  <data name="BarReasonRestock" xml:space="preserve">
-    <value>Kirim</value>
-  </data>
-  <data name="BarReasonRecount" xml:space="preserve">
-    <value>Qayta sanash</value>
-  </data>
-  <data name="BarReasonDamaged" xml:space="preserve">
-    <value>Shikastlangan</value>
-  </data>
-  <data name="BarReasonOther" xml:space="preserve">
-    <value>Boshqa</value>
-  </data>
-  <data name="BarMoveInitial" xml:space="preserve">
-    <value>Boshlang'ich</value>
-  </data>
-  <data name="BarMoveSale" xml:space="preserve">
-    <value>Sotuv</value>
-  </data>
-  <data name="BarMoveVoid" xml:space="preserve">
-    <value>Bekor qilish</value>
-  </data>
-  <data name="BarMoveAdjust" xml:space="preserve">
-    <value>Tuzatish</value>
   </data>
   <data name="BarCupPriceLabel" xml:space="preserve">
     <value>Bitta stakan narxi (UZS)</value>
@@ -856,12 +790,12 @@
     <value>ShopKeeper bazasi (*.db)|*.db|Barcha fayllar (*.*)|*.*</value>
   </data>
   <data name="BarImportConfirm" xml:space="preserve">
-    <value>Mahsulotlar, sotuvlar va ombor tarixi shu fayldan ClubControl'ga import qilinsinmi?
+    <value>Mahsulotlar va sotuvlar shu fayldan ClubControl'ga import qilinsinmi?
 
 Avval joriy bazaning zaxira nusxasi olinadi. Buni faqat bir marta qilish mumkin.</value>
   </data>
   <data name="BarImportDoneFormat" xml:space="preserve">
-    <value>Import qilindi: mahsulot {0}, sotuv {1}, ombor yozuvi {2}.</value>
+    <value>Import qilindi: mahsulot {0}, sotuv {1}.</value>
   </data>
   <data name="BarImportFailed" xml:space="preserve">
     <value>Import amalga oshmadi: {0}</value>

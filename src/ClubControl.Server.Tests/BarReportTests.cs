@@ -10,10 +10,10 @@ public class BarReportTests : SessionTestBase
 {
     private static BarService BarFor(ClubDbContext db) => new(db, ServiceFor(db));
 
-    private async Task<int> NewColaAsync(int stock = 100)
+    private async Task<int> NewColaAsync()
     {
         using var db = NewDb();
-        return (await BarFor(db).CreateProductAsync("Cola", 5_000, stock)).Id;
+        return (await BarFor(db).CreateProductAsync("Cola", 5_000)).Id;
     }
 
     private async Task CloseShiftAsync()

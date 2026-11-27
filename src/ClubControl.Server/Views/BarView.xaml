@@ -109,13 +109,12 @@
                     <DataGrid.Columns>
                         <DataGridTextColumn x:Name="ListNameColumn" Binding="{Binding Name}" Width="*" />
                         <DataGridTextColumn x:Name="ListPriceColumn" Binding="{Binding PriceDisplay}" Width="100" />
-                        <DataGridTextColumn x:Name="ListStockColumn" Binding="{Binding Stock}" Width="70" />
                     </DataGrid.Columns>
                 </DataGrid>
             </DockPanel>
         </Border>
 
-        <!-- Sales, products, stock log -->
+        <!-- Sales, unpaid, products -->
         <Border Grid.Column="1" Margin="6,0,0,0" Style="{StaticResource PanelStyle}" Padding="8">
             <TabControl>
                 <TabItem x:Name="SalesTab">
@@ -174,7 +173,6 @@
                         <WrapPanel DockPanel.Dock="Top" Margin="0,0,0,8">
                             <Button x:Name="AddProductButton" Margin="0,0,6,4" Style="{StaticResource SuccessButtonStyle}" Click="OnAddProduct" />
                             <Button x:Name="EditProductButton" Margin="0,0,6,4" Style="{StaticResource SecondaryButtonStyle}" Click="OnEditProduct" />
-                            <Button x:Name="AdjustStockButton" Margin="0,0,6,4" Style="{StaticResource SecondaryButtonStyle}" Click="OnAdjustStock" />
                             <Button x:Name="ArchiveButton" Margin="0,0,14,4" Style="{StaticResource SecondaryButtonStyle}" Click="OnArchive" />
                             <CheckBox x:Name="ShowArchivedCheck" VerticalAlignment="Center" Margin="0,0,0,4" Checked="OnShowArchivedToggled" Unchecked="OnShowArchivedToggled" />
                         </WrapPanel>
@@ -183,25 +181,9 @@
                             <DataGrid.Columns>
                                 <DataGridTextColumn x:Name="ProductNameColumn" Binding="{Binding NameDisplay}" Width="*" />
                                 <DataGridTextColumn x:Name="ProductPriceColumn" Binding="{Binding PriceDisplay}" Width="110" />
-                                <DataGridTextColumn x:Name="ProductStockColumn" Binding="{Binding Stock}" Width="80" />
                             </DataGrid.Columns>
                         </DataGrid>
                     </DockPanel>
-                </TabItem>
-
-                <TabItem x:Name="StockLogTab">
-                    <DataGrid x:Name="StockLogGrid" Margin="4" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False"
-                              BorderThickness="0">
-                        <DataGrid.Columns>
-                            <DataGridTextColumn x:Name="LogTimeColumn" Binding="{Binding TimeDisplay}" Width="100" />
-                            <DataGridTextColumn x:Name="LogProductColumn" Binding="{Binding Product}" Width="*" />
-                            <DataGridTextColumn x:Name="LogTypeColumn" Binding="{Binding TypeDisplay}" Width="110" />
-                            <DataGridTextColumn x:Name="LogChangeColumn" Binding="{Binding ChangeDisplay}" Width="70" />
-                            <DataGridTextColumn x:Name="LogAfterColumn" Binding="{Binding StockAfter}" Width="80" />
-                            <DataGridTextColumn x:Name="LogReasonColumn" Binding="{Binding ReasonDisplay}" Width="100" />
-                            <DataGridTextColumn x:Name="LogNoteColumn" Binding="{Binding Note}" Width="120" />
-                        </DataGrid.Columns>
-                    </DataGrid>
                 </TabItem>
             </TabControl>
         </Border>

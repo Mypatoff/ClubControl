@@ -964,7 +964,7 @@ public partial class MainWindow : Window
     private async void OnSell(object sender, RoutedEventArgs e)
     {
         new SellWindow(Services) { Owner = this }.ShowDialog();
-        await RefreshAsync(); // the Unpaid chip and the Bar page's stock
+        await RefreshAsync(); // the Unpaid chip and the Bar page
     }
 
     private async void OnMove(object sender, RoutedEventArgs e)

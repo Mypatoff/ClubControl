@@ -680,19 +680,16 @@
     <value>Выберите товар из списка.</value>
   </data>
   <data name="BarProductLine" xml:space="preserve">
-    <value>{0} — {1} UZS — на складе: {2}</value>
+    <value>{0} — {1} UZS</value>
   </data>
   <data name="BarSoldFormat" xml:space="preserve">
-    <value>Продано: {0} × {1}, осталось {2}</value>
+    <value>Продано: {0} × {1}</value>
   </data>
   <data name="BarTabSales" xml:space="preserve">
     <value>Продажи</value>
   </data>
   <data name="BarTabProducts" xml:space="preserve">
     <value>Товары</value>
-  </data>
-  <data name="BarTabStockLog" xml:space="preserve">
-    <value>Журнал склада</value>
   </data>
   <data name="BarColTime" xml:space="preserve">
     <value>Время</value>
@@ -720,24 +717,6 @@
   </data>
   <data name="BarColPrice" xml:space="preserve">
     <value>Цена</value>
-  </data>
-  <data name="BarColStock" xml:space="preserve">
-    <value>Остаток</value>
-  </data>
-  <data name="BarColChange" xml:space="preserve">
-    <value>Изменение</value>
-  </data>
-  <data name="BarColAfter" xml:space="preserve">
-    <value>Остаток после</value>
-  </data>
-  <data name="BarColType" xml:space="preserve">
-    <value>Тип</value>
-  </data>
-  <data name="BarColReason" xml:space="preserve">
-    <value>Причина</value>
-  </data>
-  <data name="BarColNote" xml:space="preserve">
-    <value>Примечание</value>
   </data>
   <data name="BarWhereCounter" xml:space="preserve">
     <value>Касса</value>
@@ -774,9 +753,6 @@
   <data name="BarEditProduct" xml:space="preserve">
     <value>Изменить товар</value>
   </data>
-  <data name="BarAdjustStock" xml:space="preserve">
-    <value>Корректировка остатка</value>
-  </data>
   <data name="BarArchive" xml:space="preserve">
     <value>В архив</value>
   </data>
@@ -795,50 +771,8 @@
   <data name="BarProductPrice" xml:space="preserve">
     <value>Цена (UZS)</value>
   </data>
-  <data name="BarProductStart" xml:space="preserve">
-    <value>Начальный остаток</value>
-  </data>
   <data name="BarEnterNumbers" xml:space="preserve">
     <value>Введите целые числа для цены и остатка.</value>
-  </data>
-  <data name="BarAdjustFor" xml:space="preserve">
-    <value>Корректировка остатка: {0}</value>
-  </data>
-  <data name="BarAdjustDelta" xml:space="preserve">
-    <value>Изменить остаток на (например, 10 или -2)</value>
-  </data>
-  <data name="BarAdjustDeltaInvalid" xml:space="preserve">
-    <value>Введите целое число, например 10 или -2.</value>
-  </data>
-  <data name="BarAdjustReason" xml:space="preserve">
-    <value>Причина</value>
-  </data>
-  <data name="BarAdjustNote" xml:space="preserve">
-    <value>Примечание (необязательно)</value>
-  </data>
-  <data name="BarReasonRestock" xml:space="preserve">
-    <value>Поступление</value>
-  </data>
-  <data name="BarReasonRecount" xml:space="preserve">
-    <value>Пересчёт</value>
-  </data>
-  <data name="BarReasonDamaged" xml:space="preserve">
-    <value>Повреждено</value>
-  </data>
-  <data name="BarReasonOther" xml:space="preserve">
-    <value>Другое</value>
-  </data>
-  <data name="BarMoveInitial" xml:space="preserve">
-    <value>Начальный остаток</value>
-  </data>
-  <data name="BarMoveSale" xml:space="preserve">
-    <value>Продажа</value>
-  </data>
-  <data name="BarMoveVoid" xml:space="preserve">
-    <value>Аннулирование</value>
-  </data>
-  <data name="BarMoveAdjust" xml:space="preserve">
-    <value>Корректировка</value>
   </data>
   <data name="BarCupPriceLabel" xml:space="preserve">
     <value>Цена одного стакана (UZS)</value>
@@ -856,12 +790,12 @@
     <value>База ShopKeeper (*.db)|*.db|Все файлы (*.*)|*.*</value>
   </data>
   <data name="BarImportConfirm" xml:space="preserve">
-    <value>Импортировать товары, продажи и историю склада из этого файла в ClubControl?
+    <value>Импортировать товары и продажи из этого файла в ClubControl?
 
 Сначала будет сделана резервная копия текущей базы. Это можно сделать только один раз.</value>
   </data>
   <data name="BarImportDoneFormat" xml:space="preserve">
-    <value>Импортировано: товаров {0}, продаж {1}, записей склада {2}.</value>
+    <value>Импортировано: товаров {0}, продаж {1}.</value>
   </data>
   <data name="BarImportFailed" xml:space="preserve">
     <value>Импорт не удался: {0}</value>

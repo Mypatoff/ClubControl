@@ -6,14 +6,14 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace ClubControl.Server.Windows;
 
-/// <summary>Adds a bar product (name, price, starting stock) or edits an existing one (name and price).</summary>
+/// <summary>Adds a bar product (name, price) or edits an existing one (name and price).</summary>
 public partial class ProductWindow : Window
 {
     private readonly IServiceProvider _services;
     private readonly int? _productId;
 
     /// <param name="productId">null to add a new product.</param>
-    public ProductWindow(IServiceProvider services, int? productId, string? name, int price, int stock)
+    public ProductWindow(IServiceProvider services, int? productId, string? name, int price)
     {
         InitializeComponent();
         _services = services;
@@ -22,14 +22,11 @@ public partial class ProductWindow : Window
         Title = Strings.Get(productId is null ? "BarAddProduct" : "BarEditProduct");
         NameLabel.Text = Strings.Get("BarProductName");
         PriceLabel.Text = Strings.Get("BarProductPrice");
-        StockLabel.Text = Strings.Get("BarProductStart");
         CancelButton.Content = Strings.Get("Cancel");
         SaveButton.Content = Strings.Get("Save");
 
         NameBox.Text = name ?? "";
         PriceBox.Text = productId is null ? "" : price.ToString();
-        StockBox.Text = stock.ToString();
-        StockPanel.Visibility = productId is null ? Visibility.Visible : Visibility.Collapsed;
 
         Loaded += (_, _) => NameBox.Focus();
     }
@@ -38,7 +35,7 @@ public partial class ProductWindow : Window
     {
         ErrorText.Text = "";
 
-        if (!int.TryParse(PriceBox.Text.Replace(" ", ""), out var price) || !int.TryParse(StockBox.Text.Replace(" ", ""), out var stock))
+        if (!int.TryParse(PriceBox.Text.Replace(" ", ""), out var price))
         {
             ErrorText.Text = Strings.Get("BarEnterNumbers");
             return;
@@ -51,7 +48,7 @@ public partial class ProductWindow : Window
             if (_productId is { } id)
                 await bar.UpdateProductAsync(id, NameBox.Text, price);
             else
-                await bar.CreateProductAsync(NameBox.Text, price, stock);
+                await bar.CreateProductAsync(NameBox.Text, price);
         }
         catch (InvalidOperationException ex)
         {

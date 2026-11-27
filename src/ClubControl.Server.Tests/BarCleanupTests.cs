@@ -5,10 +5,22 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ClubControl.Server.Tests;
 
-/// <summary>The bar keeps one month of history; older sales and their stock-log lines are removed.</summary>
+/// <summary>
+/// The bar keeps one month of history; older sales and their stock-log lines are removed. The bar no longer
+/// writes stock-log lines, but databases from older versions still hold them, so the tests add such lines by hand.
+/// </summary>
 public class BarCleanupTests : SessionTestBase
 {
     private static BarService BarFor(ClubDbContext db) => new(db, ServiceFor(db));
+
+    /// <summary>Adds a stock-log line like the ones older versions wrote, one per sale (null = a manual change not tied to a sale).</summary>
+    private async Task AddLegacyLinesAsync(int productId, params int?[] saleIds)
+    {
+        using var db = NewDb();
+        foreach (var saleId in saleIds)
+            db.BarStockMovements.Add(new BarStockMovement { BarProductId = productId, BarSaleId = saleId, Type = BarStockMovementType.Sale, Delta = -1 });
+        await db.SaveChangesAsync();
+    }
 
     /// <summary>Moves a sale, and the stock-log lines that belong to it, back in time.</summary>
     private async Task AgeAsync(int saleId, int days, bool alsoPaid = false, bool alsoVoided = false)
@@ -25,13 +37,13 @@ public class BarCleanupTests : SessionTestBase
     }
 
     [Fact]
-    public async Task Old_sales_and_their_stock_lines_go_but_recent_ones_unpaid_ones_and_the_stock_stay()
+    public async Task Old_sales_and_their_stock_lines_go_but_recent_ones_and_unpaid_ones_stay()
     {
         int old, oldVoided, oldDebtPaidLongAgo, oldDebtPaidRecently, oldDebtStillOwed, recent, productId;
         using (var db = NewDb())
         {
             var bar = BarFor(db);
-            productId = (await bar.CreateProductAsync("Cola", 5_000, 100)).Id;
+            productId = (await bar.CreateProductAsync("Cola", 5_000)).Id;
             old = (await bar.SellAsync(new BarService.SaleRequest(productId, 1))).Id;
             oldVoided = (await bar.SellAsync(new BarService.SaleRequest(productId, 1))).Id;
             await bar.VoidSaleAsync(oldVoided);
@@ -42,6 +54,8 @@ public class BarCleanupTests : SessionTestBase
             await bar.MarkPaidAsync(oldDebtPaidRecently);
             recent = (await bar.SellAsync(new BarService.SaleRequest(productId, 1))).Id;
         }
+
+        await AddLegacyLinesAsync(productId, old, oldVoided, oldDebtPaidLongAgo, oldDebtPaidRecently, oldDebtStillOwed, recent);
 
         await AgeAsync(old, 40);
         await AgeAsync(oldVoided, 40, alsoVoided: true);
@@ -60,9 +74,6 @@ public class BarCleanupTests : SessionTestBase
         var left = await check.BarSales.OrderBy(s => s.Id).Select(s => s.Id).ToListAsync();
         Assert.Equal(new[] { oldDebtPaidRecently, oldDebtStillOwed, recent }, left);
 
-        // The stock level lives on the product, so removing history does not change it: 100 - 6 sold + 1 cancelled.
-        Assert.Equal(95, (await check.BarProducts.SingleAsync()).Stock);
-
         // No stock-log line is left pointing at a deleted sale, and the kept sales keep theirs.
         var lines = await check.BarStockMovements.ToListAsync();
         Assert.All(lines.Where(l => l.BarSaleId.HasValue), l => Assert.Contains(l.BarSaleId!.Value, left));
@@ -75,14 +86,14 @@ public class BarCleanupTests : SessionTestBase
     }
 
     [Fact]
-    public async Task Old_manual_stock_changes_are_removed_too_and_a_second_run_changes_nothing()
+    public async Task Old_manual_stock_lines_are_removed_too_and_a_second_run_changes_nothing()
     {
         int productId;
         using (var db = NewDb())
         {
-            productId = (await BarFor(db).CreateProductAsync("Cola", 5_000, 10)).Id;
-            await BarFor(db).AdjustStockAsync(productId, 5, "restock");
+            productId = (await BarFor(db).CreateProductAsync("Cola", 5_000)).Id;
         }
+        await AddLegacyLinesAsync(productId, null, null);
         using (var db = NewDb())
         {
             foreach (var m in await db.BarStockMovements.ToListAsync())
@@ -96,6 +107,6 @@ public class BarCleanupTests : SessionTestBase
             Assert.Equal(new BarCleanupService.Result(0, 0), await BarCleanupService.PurgeOldAsync(db, DateTime.UtcNow));
 
         using var check = NewDb();
-        Assert.Equal(15, (await check.BarProducts.SingleAsync()).Stock);
+        Assert.Empty(check.BarStockMovements);
     }
 }

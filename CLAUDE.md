@@ -257,3 +257,10 @@ C# .NET 8. WPF for Server (admin panel + hosted ASP.NET Core/SignalR) and Client
 - [x] Clients never see a session's price (v1.1.6): the lock screen shows no price per hour and the timer shows no running cost
       (postpay shows elapsed time only). The numbers are still sent to the client because the offline cost-limit lock needs them.
       Not compiled here (WPF) - the GitHub Actions build checks it compiles.
+- [x] Post-phase-6 change: the Bar no longer counts stock. Selling never checks or changes how many are left; removed the stock
+      column, "Adjust stock" button/window, the Stock log tab and the starting-stock box; product lines show only name + price;
+      cancelling a sale no longer "puts stock back"; the ShopKeeper import skips stock levels and the old stock log. No schema
+      change on purpose (no migration): `BarProduct.Stock` and the `BarStockMovements` table stay in the database unused (like
+      `OfflineUnlockWaitSeconds`), and `BarCleanupService` still purges old stock-log rows. Server logic and tests were run on Linux
+      in a scratch harness (60 tests pass); the XAML/WPF files (BarView, ProductWindow, AddItemWindow, SellWindow, resx) were NOT
+      compiled or click-tested - build on Windows and click through the Bar page, Products tab, Sell and Add item windows.

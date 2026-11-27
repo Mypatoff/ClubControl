@@ -16,9 +16,9 @@ namespace ClubControl.Server.Windows;
 /// </summary>
 public partial class SellWindow : Window
 {
-    private sealed record ProductItem(int Id, string Name, int Price, int Stock)
+    private sealed record ProductItem(int Id, string Name, int Price)
     {
-        public string Display => Strings.Format("BarProductLine", Name, $"{Price:N0}", Stock);
+        public string Display => Strings.Format("BarProductLine", Name, $"{Price:N0}");
     }
 
     private readonly IServiceProvider _services;
@@ -55,7 +55,7 @@ public partial class SellWindow : Window
         _cupPrice = await bar.GetCupPriceAsync();
 
         var chosen = (ProductBox.SelectedItem as ProductItem)?.Id;
-        var items = products.Where(p => p.Stock > 0).Select(p => new ProductItem(p.Id, p.Name, p.PriceUzs, p.Stock)).ToList();
+        var items = products.Select(p => new ProductItem(p.Id, p.Name, p.PriceUzs)).ToList();
         ProductBox.ItemsSource = items;
         ProductBox.SelectedItem = items.FirstOrDefault(i => i.Id == chosen);
         UpdateTotal();
@@ -110,11 +110,11 @@ public partial class SellWindow : Window
         catch (InvalidOperationException ex)
         {
             ErrorText.Text = ex.Message;
-            await LoadProductsAsync(); // the stock may have changed
+            await LoadProductsAsync(); // the product may have been archived or removed
             return;
         }
 
-        ResultText.Text = Strings.Format("BarSoldFormat", quantity, product.Name, product.Stock - quantity);
+        ResultText.Text = Strings.Format("BarSoldFormat", quantity, product.Name);
         QuantityBox.Text = "1";
         CupsBox.Text = "0";
         UnpaidCheck.IsChecked = false;
