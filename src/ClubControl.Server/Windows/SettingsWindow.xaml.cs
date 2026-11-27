@@ -112,7 +112,7 @@ public partial class SettingsWindow : Window
     {
         _setting = await SettingsHelper.GetOrCreateAsync(_db);
         _tariffs = new ObservableCollection<Tariff>(await TariffsHelper.GetAllAsync(_db));
-        _pcs = await _db.Pcs.OrderBy(p => p.Number).ToListAsync();
+        _pcs = await LoadPcsAsync();
         _openedWithNumbers = _pcs.ToDictionary(p => p.Id, p => p.Number);
         _openedWithLanguage = _setting.AdminPanelLanguage;
 
@@ -192,6 +192,10 @@ public partial class SettingsWindow : Window
         _tariffs.Remove(tariff);
     }
 
+    /// <summary>The PCs and resources in the grid. Deleted ones that are kept only for the reports ("*Old PC 6") are not listed.</summary>
+    private Task<List<Pc>> LoadPcsAsync() =>
+        _db.Pcs.Where(p => !p.Name.StartsWith(Pc.RetiredPrefix)).OrderBy(p => p.Number).ToListAsync();
+
     private async void OnAddComputer(object sender, RoutedEventArgs e) => await AddResourceAsync(ResourceKind.Computer);
 
     private async void OnAddOther(object sender, RoutedEventArgs e) => await AddResourceAsync(ResourceKind.Other);
@@ -203,7 +207,7 @@ public partial class SettingsWindow : Window
         var window = new AddResourceWindow(_services, kind) { Owner = this };
         if (window.ShowDialog() == true)
         {
-            _pcs = await _db.Pcs.OrderBy(p => p.Number).ToListAsync();
+            _pcs = await LoadPcsAsync();
             PcGrid.ItemsSource = _pcs;
         }
     }
@@ -217,30 +221,61 @@ public partial class SettingsWindow : Window
             return;
         }
 
-        // Deleting a PC/resource with any billing history would cascade-delete its Sessions and
-        // SessionSegments too (required FK), silently erasing past reports - block that and point
-        // the admin at "Enabled" instead, which hides it without touching history.
-        if (await _db.Sessions.AnyAsync(s => s.PcId == pc.Id))
-        {
-            MessageBox.Show(Strings.Get("CannotDeleteResourceWithHistory"), Strings.Get("ConfirmTitle"),
-                MessageBoxButton.OK, MessageBoxImage.Warning);
-            return;
-        }
-
         if (MessageBox.Show(Strings.Get("DeleteResourceConfirm"), Strings.Get("ConfirmTitle"),
                 MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes)
             return;
 
-        _db.Pcs.Remove(pc);
-        await _db.SaveChangesAsync();
+        // One with session history is not erased (that would wipe it from past reports): it is renamed "*Old PC 6",
+        // loses its number and is hidden. One without any history is removed completely.
+        try
+        {
+            await PcRetirement.RemoveAsync(_db, pc);
+        }
+        catch (InvalidOperationException ex)
+        {
+            MessageBox.Show(ex.Message, Strings.Get("ConfirmTitle"), MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
 
-        _pcs = await _db.Pcs.OrderBy(p => p.Number).ToListAsync();
+        _pcs = await LoadPcsAsync();
         PcGrid.ItemsSource = _pcs;
+    }
+
+    /// <summary>
+    /// A "New PC" given a number that an offline PC already has is probably that PC after a Windows reinstall (its machine
+    /// id changed). Asks once per such pair; returns the pairs the admin confirmed, or null when the admin said no.
+    /// </summary>
+    private List<(Pc Old, Pc New)>? AskAboutReinstalledPcs()
+    {
+        var pairs = new List<(Pc Old, Pc New)>();
+        foreach (var added in _pcs.Where(p => p.Number.HasValue && _openedWithNumbers.TryGetValue(p.Id, out var was) && was is null))
+        {
+            var old = _pcs.FirstOrDefault(o => o.Id != added.Id && o.Number == added.Number
+                && _openedWithNumbers.TryGetValue(o.Id, out var oldWas) && oldWas == added.Number && PcRetirement.CanTakeOver(o, added));
+            if (old is null)
+                continue;
+
+            var answer = MessageBox.Show(Strings.Format("TakeOverConfirmFormat", added.Number!.Value, added.Hostname, added.IpAddress),
+                Strings.Get("ConfirmTitle"), MessageBoxButton.YesNo, MessageBoxImage.Question);
+            if (answer != MessageBoxResult.Yes)
+                return null;
+
+            pairs.Add((old, added));
+        }
+
+        return pairs;
     }
 
     private async void OnSave(object sender, RoutedEventArgs e)
     {
-        var numbers = _pcs.Where(p => p.Number.HasValue).Select(p => p.Number!.Value).ToList();
+        var reinstalled = AskAboutReinstalledPcs();
+        if (reinstalled is null)
+        {
+            ErrorText.Text = Strings.Get("PcNumbersMustBeUnique");
+            return;
+        }
+
+        var numbers = _pcs.Where(p => p.Number.HasValue && !reinstalled.Any(r => r.New == p)).Select(p => p.Number!.Value).ToList();
         if (numbers.Count != numbers.Distinct().Count())
         {
             ErrorText.Text = Strings.Get("PcNumbersMustBeUnique");
@@ -316,6 +351,13 @@ public partial class SettingsWindow : Window
 
         foreach (var tariff in _tariffs)
             tariff.Name = tariff.Name.Trim();
+
+        // Reinstalled computers: the old PC row takes over the new machine id (this also saves what is pending above).
+        foreach (var (old, added) in reinstalled)
+        {
+            await PcRetirement.TakeOverAsync(_db, old, added);
+            _pcs.Remove(added);
+        }
 
         await _db.SaveChangesAsync();
 

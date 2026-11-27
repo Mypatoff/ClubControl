@@ -293,10 +293,7 @@
     <value>Select a computer or resource to delete.</value>
   </data>
   <data name="DeleteResourceConfirm" xml:space="preserve">
-    <value>Delete this computer/resource? This cannot be undone.</value>
-  </data>
-  <data name="CannotDeleteResourceWithHistory" xml:space="preserve">
-    <value>This computer/resource has session history and can't be deleted, since that would also erase it from past reports. Uncheck "Enabled" instead to hide it.</value>
+    <value>Delete this computer/resource? If it has session history it stays in the reports as "*Old ..." (for example "*Old PC 6") and its number becomes free; otherwise it is removed completely.</value>
   </data>
   <data name="SelectATariffToDelete" xml:space="preserve">
     <value>Select a tariff to delete.</value>
@@ -324,6 +321,12 @@
   </data>
   <data name="ColumnOnline" xml:space="preserve">
     <value>Online</value>
+  </data>
+  <data name="TakeOverConfirmFormat" xml:space="preserve">
+    <value>PC {0} already exists and is not connected now. Is the new machine ({1}, {2}) the same computer after a Windows reinstall?
+
+Yes: the new machine becomes PC {0} and keeps its tariff and history.
+No: cancel, so you can choose another number.</value>
   </data>
   <data name="PcNumbersMustBeUnique" xml:space="preserve">
     <value>PC numbers must be unique.</value>

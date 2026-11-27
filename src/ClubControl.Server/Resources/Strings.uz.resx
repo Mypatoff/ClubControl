@@ -293,10 +293,7 @@
     <value>Oʻchirish uchun kompyuter yoki resursni tanlang.</value>
   </data>
   <data name="DeleteResourceConfirm" xml:space="preserve">
-    <value>Bu kompyuter/resurs oʻchirilsinmi? Bu amalni ortga qaytarib boʻlmaydi.</value>
-  </data>
-  <data name="CannotDeleteResourceWithHistory" xml:space="preserve">
-    <value>Bu kompyuter/resursda sessiyalar tarixi bor, shuning uchun uni oʻchirib boʻlmaydi - bu uni oldingi hisobotlardan ham oʻchirib yuboradi. Oʻchirish oʻrniga "Yoqilgan" belgisini olib tashlang.</value>
+    <value>Bu kompyuter/resurs oʻchirilsinmi? Sessiyalar tarixi boʻlsa, u hisobotlarda "*Old ..." (masalan "*Old PC 6") boʻlib qoladi va raqami boʻshaydi; aks holda toʻliq oʻchiriladi.</value>
   </data>
   <data name="SelectATariffToDelete" xml:space="preserve">
     <value>Oʻchirish uchun tarifni tanlang.</value>
@@ -324,6 +321,12 @@
   </data>
   <data name="ColumnOnline" xml:space="preserve">
     <value>Onlayn</value>
+  </data>
+  <data name="TakeOverConfirmFormat" xml:space="preserve">
+    <value>{0}-kompyuter allaqachon mavjud va hozir ulanmagan. Yangi mashina ({1}, {2}) Windows qayta oʻrnatilgandan keyingi oʻsha kompyuter mi?
+
+Ha: yangi mashina {0}-kompyuter boʻladi, tarif va tarixi saqlanadi.
+Yoʻq: bekor qilish, boshqa raqam tanlang.</value>
   </data>
   <data name="PcNumbersMustBeUnique" xml:space="preserve">
     <value>Kompyuter raqamlari takrorlanmasligi kerak.</value>

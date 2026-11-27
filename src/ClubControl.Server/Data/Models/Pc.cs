@@ -45,4 +45,9 @@ public class Pc
     public string? AuthTokenHash { get; set; }
 
     public bool IsConfigured => Number.HasValue && TariffId.HasValue;
+
+    /// <summary>A deleted PC that had history is kept under this name prefix ("*Old PC 6") so reports still show it.</summary>
+    public const string RetiredPrefix = "*Old ";
+
+    public bool IsRetired => Name.StartsWith(RetiredPrefix, StringComparison.Ordinal);
 }

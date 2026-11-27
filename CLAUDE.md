@@ -264,3 +264,11 @@ C# .NET 8. WPF for Server (admin panel + hosted ASP.NET Core/SignalR) and Client
       `OfflineUnlockWaitSeconds`), and `BarCleanupService` still purges old stock-log rows. Server logic and tests were run on Linux
       in a scratch harness (60 tests pass); the XAML/WPF files (BarView, ProductWindow, AddItemWindow, SellWindow, resx) were NOT
       compiled or click-tested - build on Windows and click through the Bar page, Products tab, Sell and Add item windows.
+- [x] Post-phase-6 changes (PC identity): (1) Settings > Computers "Delete" now works for PCs with history: they are kept as
+      "*Old PC 6" (`PcRetirement.RemoveAsync`: renamed, number/token cleared, new random machine id, disabled, hidden from the grid;
+      `NewPcLimit` and `Strings.ResourceLabel`/Reports know the prefix), a PC without sessions is still removed completely, a running
+      session blocks it. (2) Windows reinstall: typing the old PC's number on the new "New PC" row asks "same computer?" and on Yes
+      the old row takes over the new machine id (`PcRetirement.TakeOverAsync`, called from `SettingsWindow.OnSave`), keeping number,
+      tariff and history. No schema change, no migration. Service logic covered by `PcRetirementTests` (run on Linux, 73 tests
+      pass in the scratch harness); `SettingsWindow` / `ReportsWindow` / resx edits were NOT compiled or click-tested - build on
+      Windows, delete a PC with history, then reinstall-simulate by changing a test client's machine id.

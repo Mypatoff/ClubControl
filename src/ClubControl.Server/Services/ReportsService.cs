@@ -144,7 +144,9 @@ public class ReportsService
         var byPc = sessions
             .GroupBy(s => (Number: s.PcNumber, Name: s.PcName))
             .Select(g => new PcRow(g.Key.Number, g.Key.Name, g.Sum(s => s.AmountUzs), g.Count(), g.Sum(HoursOf)))
-            .OrderBy(r => r.PcNumber)
+            .OrderBy(r => r.PcNumber is null)   // deleted ("*Old") ones last
+            .ThenBy(r => r.PcNumber)
+            .ThenBy(r => r.PcName)
             .ToList();
 
         var byTariff = sessions

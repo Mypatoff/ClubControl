@@ -1,6 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using ClubControl.Server.Data;
+using ClubControl.Server.Data.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace ClubControl.Server.Services;
@@ -25,7 +26,7 @@ public static class NewPcLimit
 
     /// <summary>PCs that connected but have no number yet (manual resources have no heartbeat and never count).</summary>
     public static Task<int> CountUnassignedAsync(ClubDbContext db) =>
-        db.Pcs.CountAsync(p => !p.IsManual && p.Number == null);
+        db.Pcs.CountAsync(p => !p.IsManual && p.Number == null && !p.Name.StartsWith(Pc.RetiredPrefix));
 
     /// <summary>True once per <see cref="WarnEvery"/>, so a flood writes one log line, not one per heartbeat.</summary>
     public static bool ShouldWarn(DateTime nowUtc)

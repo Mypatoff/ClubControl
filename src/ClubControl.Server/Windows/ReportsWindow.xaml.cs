@@ -261,7 +261,7 @@ public partial class ReportsWindow : Window
 
         SessionsGrid.ItemsSource = report.Sessions.Select(s => new
         {
-            ResourceLabel = s.PcNumber.HasValue ? Strings.ResourceLabel(_kind, s.PcName, s.PcNumber) : "—",
+            ResourceLabel = (s.PcNumber.HasValue || s.PcName != "") ? Strings.ResourceLabel(_kind, s.PcName, s.PcNumber) : "—",
             StartDisplay = s.StartUtc.ToLocalTime().ToString(TimeFormat),
             EndDisplay = EndText(s),
             DurationDisplay = TimeText.Duration((s.EndUtc ?? DateTime.UtcNow) - s.StartUtc),
@@ -274,7 +274,7 @@ public partial class ReportsWindow : Window
 
         ByPcGrid.ItemsSource = report.ByPc.Select(r => new
         {
-            PcLabel = r.PcNumber.HasValue ? Strings.ResourceLabel(_kind, r.PcName, r.PcNumber) : "—",
+            PcLabel = (r.PcNumber.HasValue || r.PcName != "") ? Strings.ResourceLabel(_kind, r.PcName, r.PcNumber) : "—",
             IncomeDisplay = $"{r.IncomeUzs:N0} UZS",
             r.SessionCount,
             HoursDisplay = r.Hours.ToString("N1")
@@ -368,7 +368,7 @@ public partial class ReportsWindow : Window
         WriteRow(Strings.Get("ColumnPcNumber"), Strings.Get("ColumnStart"), Strings.Get("ColumnEnd"), Strings.Get("ColumnDuration"),
             Strings.Get("ColumnType"), Strings.Get("ColumnTariff"), Strings.Get("ColumnIncome"), Strings.Get("ReportItemsSold"), Strings.Get("ColumnNote"));
         foreach (var s in report.Sessions)
-            WriteRow(s.PcNumber.HasValue ? Strings.ResourceLabel(_kind, s.PcName, s.PcNumber) : "-",
+            WriteRow((s.PcNumber.HasValue || s.PcName != "") ? Strings.ResourceLabel(_kind, s.PcName, s.PcNumber) : "-",
                 s.StartUtc.ToLocalTime().ToString(TimeFormat), EndText(s), TimeText.Duration((s.EndUtc ?? DateTime.UtcNow) - s.StartUtc),
                 Strings.SessionTypeName(s.Type, s.IsFree), string.IsNullOrEmpty(s.TariffName) ? "-" : s.TariffName,
                 s.AmountUzs, s.ExtrasUzs, s.Note);

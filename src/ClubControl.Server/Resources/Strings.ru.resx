@@ -293,10 +293,7 @@
     <value>Выберите компьютер или объект для удаления.</value>
   </data>
   <data name="DeleteResourceConfirm" xml:space="preserve">
-    <value>Удалить этот компьютер/объект? Это действие нельзя отменить.</value>
-  </data>
-  <data name="CannotDeleteResourceWithHistory" xml:space="preserve">
-    <value>У этого компьютера/объекта есть история сессий, поэтому его нельзя удалить - это удалило бы его и из прошлых отчётов. Снимите галочку «Включён», чтобы скрыть его вместо удаления.</value>
+    <value>Удалить этот компьютер/объект? Если у него есть история сессий, он останется в отчётах как «*Old ...» (например «*Old PC 6»), а его номер освободится; иначе он будет удалён полностью.</value>
   </data>
   <data name="SelectATariffToDelete" xml:space="preserve">
     <value>Выберите тариф для удаления.</value>
@@ -324,6 +321,12 @@
   </data>
   <data name="ColumnOnline" xml:space="preserve">
     <value>Онлайн</value>
+  </data>
+  <data name="TakeOverConfirmFormat" xml:space="preserve">
+    <value>ПК {0} уже существует и сейчас не подключён. Новая машина ({1}, {2}) — это тот же компьютер после переустановки Windows?
+
+Да: новая машина станет ПК {0} и сохранит тариф и историю.
+Нет: отмена, чтобы выбрать другой номер.</value>
   </data>
   <data name="PcNumbersMustBeUnique" xml:space="preserve">
     <value>Номера ПК должны быть уникальными.</value>
