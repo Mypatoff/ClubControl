@@ -20,7 +20,15 @@ public static class MachineIdentity
             : throw new InvalidOperationException("Could not read MachineGuid from the registry.");
     }
 
-    public static string GetHostname() => Dns.GetHostName();
+    /// <summary>
+    /// The name this PC reports to the server (it is the heartbeat's Hostname): the one the admin typed when
+    /// installing the client ("no23"), otherwise the Windows computer name.
+    /// </summary>
+    public static string GetHostname()
+    {
+        var name = ClientNameStore.Load();
+        return name != "" ? name : Dns.GetHostName();
+    }
 
     /// <summary>
     /// "1.0.0+f4545fa": the assembly version plus the git commit it was built from (the SDK adds the

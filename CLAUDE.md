@@ -272,3 +272,19 @@ C# .NET 8. WPF for Server (admin panel + hosted ASP.NET Core/SignalR) and Client
       tariff and history. No schema change, no migration. Service logic covered by `PcRetirementTests` (run on Linux, 73 tests
       pass in the scratch harness); `SettingsWindow` / `ReportsWindow` / resx edits were NOT compiled or click-tested - build on
       Windows, delete a PC with history, then reinstall-simulate by changing a test client's machine id.
+- [x] Post-phase-6 change (PC name from the installer): the client installer (and `install-client.ps1 -PcName`, `/PcName=` for silent
+      installs) asks for a short name ("no23") and saves it as UTF-8 in `%ProgramData%\ClubControl\client-name.txt`
+      (`ClientName` in Shared: file name, 32-char limit, `Clean`). `ClientNameStore` (Client) reads it on every heartbeat and
+      `MachineIdentity.GetHostname` sends it as `HeartbeatRequest.Hostname`, falling back to the Windows computer name. The name travels
+      in the existing Hostname field on purpose: **no migration, no DTO/protocol change**, so old clients with a new server and new
+      clients with an old server both work. Server: `PcRow.Hostname`; `CardTitle` shows it for a computer without a number instead of
+      "–" (the title is already `MaxWidth=78` + ellipsis), the tooltip lists it for every computer, Settings' existing read-only
+      Hostname column is now labelled "PC name" (English; uz/ru already said computer name). An empty name in the installer changes
+      nothing, so updating over an existing install keeps the name. The installer writes the file through PowerShell (Inno's own
+      `SaveStringToFile` is ANSI, which would garble Cyrillic/Uzbek names). Tests: `ClientNameTests` (run on Linux, 230 pass) and
+      new `PcRowTests` (card title, tooltip, redraw). Checked on a Windows 11 VM (.NET 8 SDK + Inno Setup 6.7.4): `ClubControl.Tests`,
+      `ClubControl.Server.Tests` (compiles the WPF server, runs `PcRowTests`) and the Client build pass; `ClubControl.iss` compiles; a
+      silent `/TYPE=client /PcName="<Cyrillic> no23"` install writes the name as UTF-8 and it reads back intact; an update without
+      `/PcName` keeps it; the startup task is created and uninstall removes it. NOT checked: the interactive wizard page, the card in a
+      running admin panel, a client and server talking to each other, and `/DIR=` (it was not honoured for the client in one run that
+      also had a test-script quoting bug - unclear whether that is old behaviour).

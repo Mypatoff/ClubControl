@@ -22,8 +22,14 @@ bundled - and asks for Administrator rights once.
      folder only an administrator can change, because the client starts with administrator rights at
      logon (a folder anyone can write to would let a player swap its program). It asks which
      Windows account logs on automatically on that PC (the kiosk account from "Configure Windows
-     auto-logon" below). It creates the "ClubControl Client" startup task for that account, the same
-     one `install-client.ps1` makes, and starts it.
+     auto-logon" below), then a **short name for the PC** (for example `no23`, at most 32 characters).
+     Until you give the PC a number in the admin panel, its card shows this name instead of a dash,
+     so many freshly installed PCs can be told apart; later it stays in the card's tooltip and in
+     Settings > Computers & Other ("PC name" column). Leave it empty to keep the name a PC already
+     has (an update), or to use the Windows computer name on a new one. The name is saved in
+     `%ProgramData%\ClubControl\client-name.txt` (edit that file to rename a PC later; the client
+     re-reads it within seconds). It creates the "ClubControl Client" startup task for that account,
+     the same one `install-client.ps1` makes, and starts it.
 2. The per-PC Windows settings below (Wake-on-LAN, Fast Startup, auto-logon) are still done by hand.
 3. To update, run a newer `ClubControl-Setup.exe` over the old install with the same type. It stops
    the running program first and keeps the database. An existing install stays in the folder it is in
@@ -34,9 +40,9 @@ bundled - and asks for Administrator rights once.
    startup task and the firewall rules, and **leaves `%ProgramData%\ClubControl` (database, backups,
    logs) untouched**.
 
-For unattended installs the setup accepts the usual Inno Setup switches plus two of its own:
-`ClubControl-Setup.exe /VERYSILENT /TYPE=client /KioskUser="ClubPC1"` installs the client for that
-auto-logon account without any questions (add `/NoStart=1` to not start it right away), and
+For unattended installs the setup accepts the usual Inno Setup switches plus three of its own:
+`ClubControl-Setup.exe /VERYSILENT /TYPE=client /KioskUser="ClubPC1" /PcName="no23"` installs the client for that
+auto-logon account and PC name without any questions (add `/NoStart=1` to not start it right away; `/PcName` is optional), and
 `/TYPE=server` installs the server (to `C:\ClubControl`; `/DIR="D:\Club"` picks another folder).
 
 To build the setup yourself you need [Inno Setup 6](https://jrsoftware.org/isdl.php) installed, then:

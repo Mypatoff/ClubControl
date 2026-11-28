@@ -6,6 +6,7 @@ public class HeartbeatRequest
     public Guid MachineGuid { get; set; }
     public string IpAddress { get; set; } = "";
     public string MacAddress { get; set; } = "";
+    /// <summary>The name the PC reports: what the admin typed in the client installer ("no23", see ClientName), else the Windows computer name.</summary>
     public string Hostname { get; set; } = "";
 
     /// <summary>Build of the client that sent this, shown in the admin panel so "did the update land?" has an answer. Empty from older clients.</summary>

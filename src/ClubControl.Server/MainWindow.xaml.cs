@@ -523,6 +523,7 @@ public partial class MainWindow : Window
             Kind = pc.Kind,
             Number = pc.Number,
             Name = pc.Name,
+            Hostname = pc.Hostname,
             TariffId = pc.TariffId,
             State = pc.State,
             KindIcon = pc.Kind == ResourceKind.Other ? "📦" : "🖥",

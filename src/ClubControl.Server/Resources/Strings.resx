@@ -311,7 +311,7 @@
     <value>Enabled</value>
   </data>
   <data name="ColumnHostname" xml:space="preserve">
-    <value>Hostname</value>
+    <value>PC name</value>
   </data>
   <data name="ColumnIp" xml:space="preserve">
     <value>IP</value>

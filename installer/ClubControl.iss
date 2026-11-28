@@ -62,6 +62,11 @@ english.KioskTitle=Windows account of this gaming PC
 english.KioskDescription=The client starts automatically when this account logs on.
 english.KioskLabel=Account that logs on automatically (see "Configure Windows auto-logon" in the README):
 english.KioskEmpty=Please enter the Windows account name.
+english.NameTitle=Name of this gaming PC
+english.NameDescription=The admin panel shows this name until the PC is given a number.
+english.NameLabel=Short name, for example no23 (leave empty to keep the current name, or the Windows computer name if there is none):
+english.NameTooLong=The name is too long (at most %1 characters).
+english.NameQuote=The name must not contain a double quote (").
 english.TaskFailed=The client could not be set to start automatically (error %1). Create the task by hand with scripts\install-client.ps1.
 russian.TypeServer=Сервер - компьютер администратора (панель, оплата, отчёты)
 russian.TypeClient=Клиент - игровой компьютер (экран блокировки и таймер)
@@ -77,6 +82,11 @@ russian.KioskTitle=Учётная запись Windows этого игровог
 russian.KioskDescription=Клиент запускается автоматически, когда эта учётная запись входит в систему.
 russian.KioskLabel=Учётная запись с автоматическим входом (см. «Настройка автовхода Windows» в README):
 russian.KioskEmpty=Введите имя учётной записи Windows.
+russian.NameTitle=Имя этого игрового компьютера
+russian.NameDescription=Панель администратора показывает это имя, пока компьютеру не присвоен номер.
+russian.NameLabel=Короткое имя, например no23 (оставьте пустым, чтобы сохранить текущее имя или, если его нет, имя компьютера в Windows):
+russian.NameTooLong=Имя слишком длинное (не более %1 символов).
+russian.NameQuote=Имя не должно содержать двойную кавычку (").
 russian.TaskFailed=Не удалось настроить автозапуск клиента (ошибка %1). Создайте задачу вручную: scripts\install-client.ps1.
 
 [Types]
@@ -114,9 +124,11 @@ const
   ClientTaskName = 'ClubControl Client';
   TcpRuleName = 'ClubControl Server (TCP 5050)';
   UdpRuleName = 'ClubControl Discovery (UDP 5051)';
+  MaxClientNameLength = 32; // same as ClientName.MaxLength in ClubControl.Shared
 
 var
   KioskPage: TInputQueryWizardPage;
+  NamePage: TInputQueryWizardPage;
   DirPage: TInputDirWizardPage;
   ProposedDir: String; // what the folder box was last filled with, to tell if the admin typed their own
 
@@ -167,6 +179,13 @@ begin
   if KioskPage.Values[0] = '' then
     KioskPage.Values[0] := GetUserNameString;
 
+  // The name the admin panel shows for this PC before it has a number. Asked right after the account.
+  // /PcName=no23 supplies it for unattended installs. Left empty, an existing name file is kept.
+  NamePage := CreateInputQueryPage(KioskPage.ID, CustomMessage('NameTitle'),
+    CustomMessage('NameDescription'), CustomMessage('NameLabel'));
+  NamePage.Add('', False);
+  NamePage.Values[0] := ExpandConstant('{param:PcName|}');
+
   // Created after the kiosk page so that it comes right after the type page and before it.
   DirPage := CreateInputDirPage(wpSelectComponents, CustomMessage('DirTitle'), CustomMessage('DirDescription'),
     CustomMessage('DirLabel'), False, '');
@@ -189,7 +208,7 @@ end;
 
 function ShouldSkipPage(PageID: Integer): Boolean;
 begin
-  Result := (PageID = KioskPage.ID) and not WizardIsComponentSelected('client');
+  Result := ((PageID = KioskPage.ID) or (PageID = NamePage.ID)) and not WizardIsComponentSelected('client');
 end;
 
 function NextButtonClick(CurPageID: Integer): Boolean;
@@ -210,6 +229,19 @@ begin
   begin
     MsgBox(CustomMessage('KioskEmpty'), mbError, MB_OK);
     Result := False;
+  end;
+  if CurPageID = NamePage.ID then
+  begin
+    if Length(Trim(NamePage.Values[0])) > MaxClientNameLength then
+    begin
+      MsgBox(FmtMessage(CustomMessage('NameTooLong'), [IntToStr(MaxClientNameLength)]), mbError, MB_OK);
+      Result := False;
+    end
+    else if Pos('"', NamePage.Values[0]) > 0 then
+    begin
+      MsgBox(CustomMessage('NameQuote'), mbError, MB_OK);
+      Result := False;
+    end;
   end;
 end;
 
@@ -280,6 +312,27 @@ begin
     RunHidden(ExpandConstant('{sys}\schtasks.exe'), '/Run /TN "' + ClientTaskName + '"');
 end;
 
+// Saves the name the admin typed where the client reads it (%ProgramData%\ClubControl\client-name.txt, UTF-8, so
+// Cyrillic / Uzbek names survive). Done with PowerShell because Inno's own SaveStringToFile writes ANSI. An empty name
+// changes nothing: a fresh PC reports its Windows computer name, an updated PC keeps the name it already has.
+procedure SaveClientName;
+var
+  Name, Script: String;
+begin
+  Name := Trim(NamePage.Values[0]);
+  StringChangeEx(Name, '"', '', True); // it sits inside a double-quoted command line
+  if Name = '' then
+    Exit;
+  StringChangeEx(Name, '''', '''''', True);
+
+  Script := '$d = Join-Path $env:ProgramData ''ClubControl''; ' +
+    'New-Item -ItemType Directory -Force -Path $d | Out-Null; ' +
+    '[IO.File]::WriteAllText((Join-Path $d ''client-name.txt''), ''' + Name + ''', (New-Object Text.UTF8Encoding $false))';
+
+  RunHidden(ExpandConstant('{sys}\WindowsPowerShell\v1.0\powershell.exe'),
+    '-NoProfile -NonInteractive -Command "' + Script + '"');
+end;
+
 procedure CurStepChanged(CurStep: TSetupStep);
 begin
   if CurStep = ssPostInstall then
@@ -287,7 +340,10 @@ begin
     if WizardIsComponentSelected('server') then
       AddFirewallRules;
     if WizardIsComponentSelected('client') then
+    begin
+      SaveClientName; // before the task starts the client, so its very first heartbeat already carries the name
       CreateClientTask;
+    end;
   end;
 end;
 

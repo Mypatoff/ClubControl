@@ -36,12 +36,61 @@ public class PcRowTests
         fresh.ExtrasUzs = 5_000;
         fresh.ClientMissing = true;
         fresh.AuthRejected = true;
+        fresh.Hostname = "no23";
 
         shown.CopyFrom(fresh);
 
         // Compared property by property, so a property added to PcRow later cannot be forgotten by CopyFrom unnoticed.
         foreach (var property in typeof(PcRow).GetProperties().Where(p => p.CanRead && p.CanWrite))
             Assert.Equal(property.GetValue(fresh), property.GetValue(shown));
+    }
+
+    [Fact]
+    public void A_pc_without_a_number_shows_the_name_its_client_reported()
+    {
+        var row = Row();
+        row.Number = null;
+        row.Hostname = "no23";
+
+        Assert.Equal("no23", row.CardTitle);
+    }
+
+    [Fact]
+    public void A_pc_with_a_number_shows_the_number_and_keeps_the_name_in_the_tooltip()
+    {
+        var row = Row();
+        row.Number = 5;
+        row.Hostname = "no23";
+
+        Assert.Equal("5", row.CardTitle);
+        Assert.Contains("no23", row.TooltipText);
+    }
+
+    [Fact]
+    public void A_pc_without_a_number_and_without_a_name_still_shows_a_dash()
+    {
+        var row = Row();
+        row.Number = null;
+        row.Hostname = "";
+
+        Assert.Equal("–", row.CardTitle);
+    }
+
+    [Fact]
+    public void A_new_name_redraws_the_card()
+    {
+        var shown = Row();
+        shown.Number = null;
+        var redraws = 0;
+        shown.PropertyChanged += (_, _) => redraws++;
+
+        var fresh = Row();
+        fresh.Number = null;
+        fresh.Hostname = "no23";
+        shown.CopyFrom(fresh);
+
+        Assert.True(redraws > 0);
+        Assert.Equal("no23", shown.CardTitle);
     }
 
     [Fact]

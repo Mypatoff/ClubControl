@@ -46,6 +46,7 @@ public class PcRow : INotifyPropertyChanged
         if (Kind != fresh.Kind) { Kind = fresh.Kind; otherChanged = true; }
         if (Number != fresh.Number) { Number = fresh.Number; otherChanged = true; }
         if (Name != fresh.Name) { Name = fresh.Name; otherChanged = true; }
+        if (Hostname != fresh.Hostname) { Hostname = fresh.Hostname; otherChanged = true; }
         if (TariffId != fresh.TariffId) { TariffId = fresh.TariffId; otherChanged = true; }
         if (State != fresh.State) { State = fresh.State; otherChanged = true; }
         if (KindIcon != fresh.KindIcon) { KindIcon = fresh.KindIcon; otherChanged = true; }
@@ -81,6 +82,12 @@ public class PcRow : INotifyPropertyChanged
     public required ResourceKind Kind { get; set; }
     public required int? Number { get; set; }
     public string Name { get; set; } = "";
+
+    /// <summary>
+    /// The name a client PC reports about itself: what the admin typed in the client installer ("no23"), otherwise the
+    /// Windows computer name. Empty for resources without a client. It stands in for the number on a PC that has none yet.
+    /// </summary>
+    public string Hostname { get; set; } = "";
     public required int? TariffId { get; set; }
     public required PcState State { get; set; }
 
@@ -153,7 +160,13 @@ public class PcRow : INotifyPropertyChanged
     /// <summary>What the admin calls this resource: the chosen name for a named "Other" resource, otherwise its number.</summary>
     public string Label => Strings.ResourceLabel(Kind, Name, Number);
 
-    public string CardTitle => IsOther && Name != "" ? Name : NumberDisplay;
+    /// <summary>
+    /// The big text on the card: a named "Other" resource shows its name, a PC its number. A PC that has no number yet
+    /// shows the name its client reported ("no23") instead of a dash, so new PCs can be told apart before numbering them.
+    /// </summary>
+    public string CardTitle => IsOther && Name != ""
+        ? Name
+        : Number is null && !IsOther && Hostname != "" ? Hostname : NumberDisplay;
 
     /// <summary>The big line on the card: time left for prepay, running cost for postpay / limit reached.</summary>
     public string PrimaryDisplay => RemainingDisplay != "" ? RemainingDisplay : AmountDisplay;
@@ -162,6 +175,7 @@ public class PcRow : INotifyPropertyChanged
     public string TooltipText => string.Join("\n", new[]
     {
         IsOther && Name != "" ? Name : "",
+        !IsOther && Hostname != "" ? Hostname : "", // the card can show a number only; this says which installed client it is
         Update is null ? "" : UpdateDisplay + (Update.Status == ClientUpdateStatus.Updated ? $" (v{Update.VersionBefore} → v{Update.VersionNow})" : ""),
         IsAuthRejected ? Strings.Get("AuthRejectedTooltip") : "",
         IsClientMissing ? Strings.Get("ClientMissingTooltip") : "",

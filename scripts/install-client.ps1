@@ -27,12 +27,17 @@
     Usage:
       powershell -ExecutionPolicy Bypass -File install-client.ps1
       powershell -ExecutionPolicy Bypass -File install-client.ps1 -UserId ClubPC1
+      powershell -ExecutionPolicy Bypass -File install-client.ps1 -UserId ClubPC1 -PcName no23
+
+    -PcName (optional) is the short name the admin panel shows for this PC until it is given a number. It is saved in
+    %ProgramData%\ClubControl\client-name.txt. Left out, an existing name is kept (a new PC reports its Windows computer name).
 #>
 
 param(
     [string]$ExePath = (Join-Path $PSScriptRoot "ClubControl.Client.exe"),
     [string]$TaskName = "ClubControl Client",
-    [string]$UserId = $env:USERNAME
+    [string]$UserId = $env:USERNAME,
+    [string]$PcName = ""
 )
 
 $ErrorActionPreference = "Stop"
@@ -45,7 +50,7 @@ function Test-IsAdmin {
 
 if (-not (Test-IsAdmin)) {
     Write-Host "Elevation required - relaunching as Administrator..."
-    $arguments = "-NoProfile -ExecutionPolicy Bypass -File `"$PSCommandPath`" -ExePath `"$ExePath`" -TaskName `"$TaskName`" -UserId `"$UserId`""
+    $arguments = "-NoProfile -ExecutionPolicy Bypass -File `"$PSCommandPath`" -ExePath `"$ExePath`" -TaskName `"$TaskName`" -UserId `"$UserId`" -PcName `"$PcName`""
     Start-Process -FilePath "powershell.exe" -ArgumentList $arguments -Verb RunAs
     exit
 }
@@ -53,6 +58,16 @@ if (-not (Test-IsAdmin)) {
 if (-not (Test-Path $ExePath)) {
     Write-Error "Could not find $ExePath. Pass -ExePath, or run this script from the publish folder."
     exit 1
+}
+
+if ($PcName.Trim() -ne "") {
+    # Same file the installer writes; the client reads it and reports it as this PC's name (max 32 characters).
+    $dataDir = Join-Path $env:ProgramData "ClubControl"
+    New-Item -ItemType Directory -Force -Path $dataDir | Out-Null
+    $name = $PcName.Trim()
+    if ($name.Length -gt 32) { $name = $name.Substring(0, 32).TrimEnd() }
+    [IO.File]::WriteAllText((Join-Path $dataDir "client-name.txt"), $name, (New-Object Text.UTF8Encoding $false))
+    Write-Host "PC name: $name"
 }
 
 Write-Host "Using exe: $ExePath"
